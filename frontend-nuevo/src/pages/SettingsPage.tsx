@@ -1,9 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Link2, LogOut, Moon, Sun } from 'lucide-react';
+import { Link2, LogOut, Moon, Sun, Trash2 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { ApiError, apiFetch } from '../api/client';
-import { queryKeys, useSyncNow, useSyncStatus } from '../api/queries';
+import { queryKeys } from '../api/queries';
+import { useDeleteAccount, useSyncNow, useSyncStatus } from '../api/queries';
 import type { GarminLinkResult } from '../api/types';
 import { EXTENDED_SECTIONS_KEY, setExtendedSections, useExtendedSections } from '../config/features';
 import { Badge, Button, Card, ErrorState, Field, PageHeader, SectionTitle } from '../components/ui';
@@ -146,12 +147,16 @@ function GarminLinkForm() {
 }
 
 export function SettingsPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, forgetSession } = useAuth();
   const sync = useSyncStatus();
   const syncNow = useSyncNow();
+  const deleteAccount = useDeleteAccount();
   const extended = useExtendedSections();
   const [theme, setTheme] = useState<Theme>(readTheme);
   const [showLink, setShowLink] = useState(false);
+  const [deleteRevealed, setDeleteRevealed] = useState(false);
+  const [deletePhrase, setDeletePhrase] = useState('');
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     applyTheme(theme);
@@ -277,6 +282,62 @@ export function SettingsPage() {
           <LogOut aria-hidden="true" className="size-4" />
           Cerrar sesión
         </Button>
+      </Card>
+
+      <Card className="mt-6 border-danger">
+        <SectionTitle>Borrar cuenta</SectionTitle>
+        <p className="mb-3 max-w-prose text-body text-ink-muted">
+          Se borran tu biometría y tus datos de salud, tus actividades, tus sesiones y series, tus
+          plantillas y tus ejercicios propios. Es irreversible: no hay copia que recuperar.
+        </p>
+        {deleteError ? (
+          <p role="alert" className="mb-3 text-body text-danger">
+            {deleteError}
+          </p>
+        ) : null}
+        {deleteRevealed ? (
+          <div className="flex flex-col gap-3">
+            <Field
+              id="delete-account-confirm"
+              label="Escribe BORRAR MI CUENTA para confirmar"
+              autoComplete="off"
+              value={deletePhrase}
+              onChange={(event) => setDeletePhrase(event.target.value)}
+              hint="La frase tiene que coincidir exactamente; es la última barrera."
+            />
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="danger"
+                disabled={deletePhrase.trim() !== 'BORRAR MI CUENTA' || deleteAccount.isPending}
+                onClick={() => {
+                  setDeleteError(null);
+                  deleteAccount.mutate(undefined, {
+                    onSuccess: () => forgetSession(),
+                    onError: (cause) => setDeleteError(cause.message),
+                  });
+                }}
+              >
+                <Trash2 aria-hidden="true" className="size-4" />
+                {deleteAccount.isPending ? 'Borrando…' : 'Borrar mi cuenta definitivamente'}
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setDeleteRevealed(false);
+                  setDeletePhrase('');
+                  setDeleteError(null);
+                }}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button variant="danger" onClick={() => setDeleteRevealed(true)}>
+            <Trash2 aria-hidden="true" className="size-4" />
+            Borrar mi cuenta
+          </Button>
+        )}
       </Card>
     </>
   );

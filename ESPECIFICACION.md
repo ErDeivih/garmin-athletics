@@ -123,3 +123,22 @@ David ha decidido que el frontend nuevo arranca con **Hoy, Gimnasio y Ajustes** 
 2. **Criterio de entrada.** Solo entra lo que **resuelve una pregunta que el usuario se hace de verdad**. Lo que no cumple el criterio se queda fuera y se justifica en `INVESTIGACION.md` §8.2.
 3. **Misma calidad y los cuatro estados.** Vacío, cargando, error y sin permiso en todas, visibles y de bandera, igual que exige esta especificación.
 4. **Sin decisiones adelantadas.** Lo que sigue siendo Nivel 3 (supersets, offline, envío al reloj, RPE por serie y 1RM) no se implementa ni se da por decidido.
+
+## Decision de coordinacion (2026-11-04, tarde)
+
+- **T-22 (borrado de cuenta)**: autorizado. Texto de confirmación: el usuario
+  escribe literalmente `BORRAR MI CUENTA` y se le dice qué se borra (salud,
+  sesiones, gimnasio) y qué no (nada, se borra todo lo suyo). Debe cubrir las 5
+  tablas del gimnasio.
+- **Siguiente por valor**: T-03 (panel Hoy con gráficas de carga) y T-04
+  (registrador de sesión con descanso y series).
+
+### Estado de estas decisiones (2026-11-04, noche)
+
+- **T-22 hecha**: el borrado cubre las cinco tablas del gimnasio, la confirmación literal y la
+  limpieza de sesión y caché. Probado con dos cuentas en una copia de la BD.
+- **T-03 hecha**: panel Hoy completo con la gráfica de carga de 30 días y la curva de Body Battery,
+  con estados vacío/carga/error y una prueba para el fallo aislado de la serie de carga.
+- **T-13 a T-20**: confirmadas como alcance; todas son Nivel 1/2 y siguen en el backlog.
+- **T-21**: pendiente de una tanda de backend (readiness nulo cuando falta biometría).
+- **T-04**: la siguiente; la capa de API (tipos, hooks y contrato verificado) ya está preparada.

@@ -62,6 +62,19 @@ export const dailyEmpty = {
   readiness,
 };
 
+export const load = {
+  start_date: '2026-10-06',
+  end_date: '2026-11-04',
+  total_days: 30,
+  series: [
+    { date: '2026-10-31', atl: 38, ctl: 44, tsb: -6, tss: 20 },
+    { date: '2026-11-01', atl: 40, ctl: 45, tsb: -5, tss: 35 },
+    { date: '2026-11-02', atl: 41, ctl: 45.5, tsb: -4.5, tss: 0 },
+    { date: '2026-11-03', atl: 43, ctl: 46, tsb: -4, tss: 50 },
+    { date: '2026-11-04', atl: 42, ctl: 46, tsb: -4, tss: 0 },
+  ],
+};
+
 export const alerts = {
   date: '2026-11-04',
   count: 1,

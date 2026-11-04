@@ -147,6 +147,21 @@ export interface TrendResponse {
   series: TrendPoint[];
 }
 
+export interface LoadPoint {
+  date: string;
+  atl: number;
+  ctl: number;
+  tsb: number;
+  tss: number;
+}
+
+export interface LoadResponse {
+  start_date: string;
+  end_date: string;
+  total_days: number;
+  series: LoadPoint[];
+}
+
 // --- Gimnasio ---------------------------------------------------------------
 
 export interface ExerciseBrief {

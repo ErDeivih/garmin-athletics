@@ -11,6 +11,7 @@ const apiBásica = () =>
     'POST /api/v1/auth/login': json(f.token),
     'GET /api/v1/auth/me': json(f.me),
     'GET /api/v1/metrics/daily': json(f.daily),
+    'GET /api/v1/metrics/load': json(f.load),
     'GET /api/v1/alerts': json(f.alerts),
     'GET /api/v1/sync/status': json(f.syncStatus),
   });
@@ -73,6 +74,7 @@ describe('entrar en la app', () => {
     installFakeApi({
       'GET /api/v1/auth/me': json(f.me),
       'GET /api/v1/metrics/daily': json({ detail: 'Sesión caducada.' }, 401),
+      'GET /api/v1/metrics/load': json(f.load),
       'GET /api/v1/alerts': json(f.alerts),
       'GET /api/v1/sync/status': json(f.syncStatus),
     });
@@ -95,6 +97,7 @@ describe('entrar en la app', () => {
         ),
       'GET /api/v1/metrics/daily': () =>
         json({ ...f.daily, readiness: { ...f.daily.readiness, score: current === 'a' ? 74 : 11 } }),
+      'GET /api/v1/metrics/load': json(f.load),
       'GET /api/v1/alerts': json({ date: '2026-11-04', count: 0, alerts: [] }),
       'GET /api/v1/sync/status': json(f.syncStatus),
       'POST /api/v1/auth/logout': json({ status: 'logged_out' }),

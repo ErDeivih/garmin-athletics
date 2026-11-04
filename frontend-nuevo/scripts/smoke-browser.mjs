@@ -30,15 +30,20 @@ const executablePath = chromeCandidates.find((candidate) => existsSync(candidate
 if (!executablePath) throw new Error('No hay Chrome/Edge instalado para la prueba de humo.');
 
 const stamp = Date.now();
-const email = `smoke+${stamp}@example.com`;
-const password = 'secreto-123';
-const registration = await fetch(`${API}/api/v1/auth/register`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ email, username: `smoke${stamp}`, display_name: 'Atleta de prueba', password }),
-});
-if (registration.status !== 201) {
-  throw new Error(`No se pudo crear la cuenta de humo: ${registration.status} ${await registration.text()}`);
+const providedEmail = process.env.SMOKE_EMAIL;
+const providedPassword = process.env.SMOKE_PASSWORD;
+const email = providedEmail ?? `smoke+${stamp}@example.com`;
+const password = providedPassword ?? 'secreto-123';
+
+if (!providedEmail) {
+  const registration = await fetch(`${API}/api/v1/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, username: `smoke${stamp}`, display_name: 'Atleta de prueba', password }),
+  });
+  if (registration.status !== 201) {
+    throw new Error(`No se pudo crear la cuenta de humo: ${registration.status} ${await registration.text()}`);
+  }
 }
 
 const browser = await chromium.launch({ executablePath, headless: true });
@@ -67,9 +72,16 @@ try {
   await page.getByLabel(/contraseña/i).fill(password);
   await page.getByRole('button', { name: /^entrar$/i }).click();
   await page.getByRole('heading', { name: 'Hoy', exact: true }).waitFor({ timeout: 15000 });
-  // La cuenta de humo es nueva: el panel tiene que llegar al estado vacío real.
-  await page.getByText('Sin datos de hoy', { exact: true }).waitFor({ timeout: 15000 });
-  await shot('02-hoy-sin-datos');
+  // El panel resuelve a estado vacío o a datos; en ambos casos hay que esperar
+  // a que las consultas terminen antes de capturar.
+  await page.getByText(/sin datos de hoy|carga de entrenamiento/i).first().waitFor({ timeout: 15000 });
+  const emptyToday = (await page.getByText('Sin datos de hoy', { exact: true }).count()) > 0;
+  // Alto de viewport suficiente para que la barra fija no tape el contenido al
+  // capturar la página entera. Con datos hay que ver el panel completo; con el
+  // estado vacío, basta la pantalla real de móvil.
+  await page.setViewportSize({ width: 390, height: emptyToday ? 844 : 2600 });
+  await shot(emptyToday ? '02-hoy-sin-datos' : '02-hoy-datos');
+  await page.setViewportSize({ width: 390, height: 844 });
 
   await page.getByRole('link', { name: 'Gimnasio' }).click();
   await page.getByRole('heading', { name: 'Gimnasio', exact: true }).waitFor();
@@ -89,7 +101,7 @@ try {
   await page.goto(`${APP}/`, { waitUntil: 'domcontentloaded' });
   await page.getByRole('heading', { name: 'Hoy', exact: true }).waitFor();
   // Espera a que el panel resuelva las consultas (dato o vacío), no a un esqueleto.
-  await page.getByText('Sin datos de hoy', { exact: true }).waitFor({ timeout: 15000 });
+  await page.getByText(/sin datos de hoy|carga de entrenamiento/i).first().waitFor({ timeout: 15000 });
   await shot('05-hoy-escritorio');
 
   if (consoleErrors.length > 0 || pageErrors.length > 0) {

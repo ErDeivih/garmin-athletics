@@ -58,7 +58,7 @@ entre secciones; `tsc --noEmit` limpio; `frontend/` y `frontend_mvp/` intactos.
 **Resultado (2026-11-04).** Sistema de diseño en `designs/garmin-athletics-design-system/`
 (escala de 4 px, AA calculado: 52 pares, 2 temas) y app con login real, navegación generada desde el
 registro de pantallas, Hoy, Gimnasio y Ajustes, más seis secciones de bandera (Actividades,
-Calendario, Tendencias, Rendimiento, Rutas, Social). Pruebas: 17 flujos en verde (Vitest + Testing
+Calendario, Tendencias, Rendimiento, Rutas, Social). Pruebas: 19 flujos en verde (Vitest + Testing
 Library), contrato verificado contra el backend real sobre una copia de la BD (102 comprobaciones,
 incluye crear plantilla y sesión y validar sus series), humo en navegador real con 5 capturas y cero
 errores de consola, y `tsc --noEmit` + build limpios. La revisión adversarial posterior a la primera
@@ -69,7 +69,7 @@ cuando puede venir de valores por defecto del backend (T-21). Quedan en backlog 
 ---
 
 ### T-03 · Panel del día ("Hoy")
-**Nivel 2** · **Estado**: `pendiente` · **Origen**: `ESPECIFICACION.md` familia A + `INVESTIGACION.md` §5
+**Nivel 2** · **Estado**: `hecha` (2026-11-04) · **Origen**: `ESPECIFICACION.md` familia A + `INVESTIGACION.md` §5
 
 La pantalla que se abre al entrar. Readiness con su semáforo y **sus tres componentes**
 (sueño/HRV/TSB), sueño, HRV, Body Battery, FC en reposo, estrés, carga ATL/CTL/TSB, avisos de
@@ -78,6 +78,14 @@ La pantalla que se abre al entrar. Readiness con su semáforo y **sus tres compo
 **Criterio de aceptación**: con la BD actual (datos parados) muestra estados vacíos honestos, sin
 inventar; con datos sembrados muestra el panel completo; los números coinciden con la respuesta
 cruda de la API; sin errores de consola.
+
+**Resultado (2026-11-04).** Además del panel ya montado en T-02, ahora incluye **gráfica de carga de
+30 días** (`/metrics/load`: ATL y CTL con leyenda y cifras) y **curva de Body Battery** del día
+(`/metrics/daily.body_battery.curve`), dibujadas en SVG sin añadir librería. Si la serie de carga
+falla, se avisa en su tarjeta y el resto del panel sigue; si no hay biometría, no se pinta ninguna
+gráfica. Verificado con un usuario con datos en una **copia** de la BD: disposición 76, carga
+ATL/CTL/TSB coherente con la respuesta cruda y Body Battery de 30 a 79. Cuatro flujos de prueba
+(vacío, datos, fallo de carga, error de red) y capturas móvil/escritorio sin errores de consola.
 
 ---
 
@@ -176,9 +184,10 @@ que el OpenAPI deje de estar vacío y T-11 se pueda generar.
 
 ---
 
-**Ampliación del 2026-11-04 — T-13 a T-20.** Nacen de `INVESTIGACION.md` §8 y de la decisión D-09. La
+**Ampliación del 2026-11-04 — T-13 a T-20.** Nacen de `INVESTIGACION.md` §8 y de la decisión D-09.
+David ha confirmado que **entra todo lo que sea Nivel 1/2** de esta ampliación. La
 mayoría de las pantallas nuevas vive detrás de `VITE_FEATURE_EXTENDED` (D-08); lo que cae dentro de
-pantallas visibles (T-13, T-14, T-17, T-19) y en Ajustes (T-20) se ve desde el primer día.
+pantallas visibles (T-13, T-14, T-17, T-19) y en Ajustes (T-20) no necesita bandera.
 
 ### T-13 · Entrenar sin plantilla (sesión libre)
 **Nivel 2** · **Estado**: `pendiente` · **Origen**: `INVESTIGACION.md` §8 (adopción 1)
@@ -296,17 +305,24 @@ la BD parada y con la sembrada. Reversible: es un cambio de respuesta, no de esq
 ---
 
 ### T-22 · Borrado de cuenta completo (backend + Ajustes)
-**Nivel 2** · **Estado**: `pendiente` · **Origen**: revisión adversarial de T-02 (2026-11-04)
+**Nivel 2** · **Estado**: `hecha` (2026-11-04) · **Origen**: revisión adversarial de T-02; **autorizada por David**
 
-La especificación pone "borrar cuenta" en Ajustes. `DELETE /auth/account` existe, pero **no borra**
+La especificación pone "borrar cuenta" en Ajustes. `DELETE /auth/account` existía, pero **no borraba**
 las cinco tablas del gimnasio (`workout_templates`, `template_exercises`, `workout_sessions`,
-`session_sets`, `exercises` propias): dejaría sesiones, series y ejercicios en la base después de
-prometer un borrado. No se enseña el botón hasta que el borrado sea verdad.
+`session_sets`, `exercises` propias): dejaba sesiones, series y ejercicios en la base después de
+prometer un borrado. David autorizó el flujo con confirmación literal `BORRAR MI CUENTA`.
 
 **Criterio de aceptación**: el endpoint borra también el gimnasio (respetando el orden de claves);
-Ajustes pide confirmación fuerte (escribir una palabra), limpia token y caché y vuelve a la entrada;
-una prueba cuenta filas antes y después en una copia de la BD. **Nivel 3 antes de ejecutarla** por
-ser un borrado de datos: David confirma el texto de la confirmación.
+Ajustes pide la frase exacta, dice qué se borra (salud, actividades, sesiones y series, plantillas,
+ejercicios propios) y vuelve a la entrada; una prueba cuenta filas antes y después en una copia de
+la BD.
+
+**Resultado (2026-11-04).** Backend: borra series → sesiones → ejercicios de plantilla → plantillas
+→ ejercicios propios → actividades y el resto, en `social_auth.delete_account`.
+`tests/test_account_deletion.py` crea dos cuentas con gimnasio, borra una y comprueba en SQLite que
+no quedan filas ni huérfanas y que la otra sigue intacta. Ajustes: zona de peligro con explicación,
+frase literal y botón deshabilitado hasta que coincide; al borrar limpia token y caché y vuelve a la
+entrada (prueba de flujo).
 
 ---
 
@@ -384,4 +400,6 @@ dicen qué hacer; pruebas de los cuatro estados en Hoy, Gimnasio, Ajustes y una 
 |---|---|---|---|
 | — | Investigación de competencia + inventario del backend | 2026-11-04 | `INVESTIGACION.md` (competencia + 58 endpoints + 10 huecos + propuesta) |
 | T-01 | Backend del gimnasio (catálogo, plantillas, sesiones con series) | 2026-11-04 | 17 endpoints, 5 tablas, 52 ejercicios, pruebas 8/8 en verde |
-| T-02 | Frontend nuevo: sistema de diseño, login, navegación y API tipada | 2026-11-04 | `frontend-nuevo/` + `designs/…`; 11 flujos, 61 comprobaciones de contrato y humo en navegador |
+| T-02 | Frontend nuevo: sistema de diseño, login, navegación y API tipada | 2026-11-04 | `frontend-nuevo/` + `designs/…`; 19 flujos, 102 comprobaciones de contrato y humo en navegador |
+| T-03 | Panel Hoy completo: carga de 30 días y curva de Body Battery | 2026-11-04 | Gráficas SVG propias; pruebas de vacío/datos/fallo de carga/red y capturas con datos de una copia |
+| T-22 | Borrado de cuenta completo (gimnasio incluido) y confirmación en Ajustes | 2026-11-04 | `tests/test_account_deletion.py` + flujo con frase literal y capturas |

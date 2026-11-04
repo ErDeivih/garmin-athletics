@@ -14,6 +14,8 @@ interface AuthContextValue {
   sessionExpired: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  /** Cierra la sesión local sin llamar al backend (cuenta ya borrada). */
+  forgetSession: () => void;
   retry: () => void;
 }
 
@@ -102,25 +104,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [queryClient],
   );
 
+  const forgetSession = useCallback(() => {
+    clearToken();
+    queryClient.clear();
+    setUser(null);
+    setSessionExpired(false);
+    setStatus('anonymous');
+  }, [queryClient]);
+
   const logout = useCallback(async () => {
     try {
       await apiFetch<{ status: string }>('/api/v1/auth/logout', { method: 'POST' });
     } catch {
       // Un fallo al revocar no puede dejar la sesión abierta en el navegador.
     } finally {
-      clearToken();
-      queryClient.clear();
-      setUser(null);
-      setSessionExpired(false);
-      setStatus('anonymous');
+      forgetSession();
     }
-  }, [queryClient]);
+  }, [forgetSession]);
 
   const retry = useCallback(() => setAttempt((value) => value + 1), []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ status, user, error, sessionExpired, login, logout, retry }),
-    [status, user, error, sessionExpired, login, logout, retry],
+    () => ({ status, user, error, sessionExpired, login, logout, forgetSession, retry }),
+    [status, user, error, sessionExpired, login, logout, forgetSession, retry],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

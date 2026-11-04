@@ -10,6 +10,7 @@ const apiConSesión = () =>
   installFakeApi({
     'GET /api/v1/auth/me': json(f.me),
     'GET /api/v1/metrics/daily': json(f.daily),
+    'GET /api/v1/metrics/load': json(f.load),
     'GET /api/v1/alerts': json(f.alerts),
     'GET /api/v1/sync/status': json(f.syncStatus),
     'GET /api/v1/strength/templates': json(f.templates),

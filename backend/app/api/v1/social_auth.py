@@ -13,6 +13,7 @@ from app.db.models import (
     User, GarminCredential, Activity, DailyBiometrics, DailyStat,
     FatigueMetric, StrengthLog, PersonalRecord, CalendarEvent,
     PrivacyZone, Friendship, FriendInvite, Route,
+    Exercise, SessionSet, TemplateExercise, WorkoutSession, WorkoutTemplate,
 )
 from app.api.deps import require_current_user
 from app.services.garmin_service import GarminService
@@ -118,8 +119,18 @@ async def delete_account(
 ) -> Dict[str, Any]:
     """Elimina filas propias de todas las tablas + tokens + tracks + rutas."""
     import shutil
-    from sqlalchemy import delete as _delete
+    from sqlalchemy import delete as _delete, select as _select
     uid = user.id
+    # Gimnasio (T-01): primero las filas hijas, luego plantillas y sesiones, y al
+    # final los ejercicios propios. Sin esto, borrar la cuenta dejaba series,
+    # sesiones y ejercicios en la base aunque la API dijera "cuenta borrada".
+    await db.execute(_delete(SessionSet).where(SessionSet.session_id.in_(
+        _select(WorkoutSession.id).where(WorkoutSession.user_id == uid))))
+    await db.execute(_delete(TemplateExercise).where(TemplateExercise.template_id.in_(
+        _select(WorkoutTemplate.id).where(WorkoutTemplate.user_id == uid))))
+    await db.execute(_delete(WorkoutSession).where(WorkoutSession.user_id == uid))
+    await db.execute(_delete(WorkoutTemplate).where(WorkoutTemplate.user_id == uid))
+    await db.execute(_delete(Exercise).where(Exercise.user_id == uid))
     await db.execute(_delete(Activity).where(Activity.user_id == uid))
     await db.execute(_delete(DailyBiometrics).where(DailyBiometrics.user_id == uid))
     await db.execute(_delete(DailyStat).where(DailyStat.user_id == uid))

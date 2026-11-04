@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { useAlerts, useDailyMetrics, useSyncNow, useSyncStatus } from '../api/queries';
+import { useAlerts, useDailyMetrics, useLoad, useSyncNow, useSyncStatus } from '../api/queries';
 import type { AlertSeverity, ReadinessStatus } from '../api/types';
 import {
   Badge,
@@ -13,6 +13,7 @@ import {
   SectionTitle,
   StatCard,
 } from '../components/ui';
+import { BodyBatteryChart, LoadChart } from '../components/charts';
 import { formatLongDate, formatNumber, formatRelative } from '../lib/format';
 
 const statusTone: Record<ReadinessStatus, 'go' | 'warn' | 'stop'> = {
@@ -31,6 +32,16 @@ const alertLabel: Record<AlertSeverity, string> = {
   high: 'Importante',
   warn: 'Aviso',
   info: 'Info',
+};
+
+// El backend puede devolver el estado de HRV como `normal` (calculado) o con el
+// texto que manda Garmin (`BALANCED`); la interfaz habla siempre en español.
+const HRV_STATUS_LABEL: Record<string, string> = {
+  normal: 'En tu media',
+  balanced: 'En tu media',
+  low: 'Por debajo de tu media',
+  high: 'Por encima de tu media',
+  unknown: 'Sin dato',
 };
 
 function SyncBanner() {
@@ -84,6 +95,7 @@ export function TodayPage() {
   const daily = useDailyMetrics();
   const alerts = useAlerts();
   const sync = useSyncStatus();
+  const load = useLoad(30);
   const syncNow = useSyncNow();
 
   const header = (
@@ -211,14 +223,8 @@ export function TodayPage() {
           label="HRV"
           value={metrics.hrv.overnight ?? '—'}
           unit={metrics.hrv.overnight === null ? 'sin dato' : 'ms'}
-          delta={metrics.hrv.status === 'normal' ? 'En tu media' : `Estado ${metrics.hrv.status}`}
+          delta={HRV_STATUS_LABEL[metrics.hrv.status.toLowerCase()] ?? 'Sin dato'}
           foot={`Media 7 d: ${formatNumber(metrics.hrv.avg_7d, 'ms')}`}
-        />
-        <StatCard
-          label="Body Battery"
-          value={metrics.body_battery.wake ?? metrics.body_battery.max ?? '—'}
-          unit="/ 100"
-          foot={`Máx ${formatNumber(metrics.body_battery.max)} · mín ${formatNumber(metrics.body_battery.min)}`}
         />
         <StatCard
           label="FC en reposo"
@@ -238,6 +244,31 @@ export function TodayPage() {
           unit="TSB"
           foot={`ATL ${formatNumber(metrics.atl)} · CTL ${formatNumber(metrics.ctl)}`}
         />
+      </section>
+
+      <section aria-label="Carga y energía" className="mt-6 grid gap-4 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <SectionTitle hint="30 días · ATL fatiga, CTL forma">Carga de entrenamiento</SectionTitle>
+          {load.isPending ? (
+            <p role="status" className="text-body text-ink-muted">
+              Cargando la serie de carga…
+            </p>
+          ) : load.isError ? (
+            <p role="alert" className="text-body text-danger">
+              No se pudo cargar la serie de carga: {load.error.message}
+            </p>
+          ) : (
+            <LoadChart series={load.data.series} />
+          )}
+        </Card>
+        <Card>
+          <SectionTitle hint="curva de hoy">Body Battery</SectionTitle>
+          <BodyBatteryChart curve={metrics.body_battery.curve ?? []} />
+          <p className="mt-2 text-caption text-ink-muted">
+            Al despertar {formatNumber(metrics.body_battery.wake)} / 100 · máx{' '}
+            {formatNumber(metrics.body_battery.max)} · mín {formatNumber(metrics.body_battery.min)}
+          </p>
+        </Card>
       </section>
 
       <Card className="mt-6">

@@ -39,9 +39,9 @@ tarea T-23 del backlog.
 | Sistema de diseño | `../designs/garmin-athletics-design-system/` — tokens, README, componentes y contraste AA calculado. La app consume `src/styles/tokens.generated.css`. |
 | Autenticación | Login, restauración de sesión contra `/auth/me`, cierre de sesión, 401 global. |
 | Navegación | Registro de secciones: **Hoy · Gimnasio · Ajustes** visibles; el resto tras `VITE_FEATURE_EXTENDED` con interruptor en Ajustes. Barra lateral en escritorio, pestañas abajo en móvil. |
-| Hoy | Readiness con sus tres componentes, sueño, HRV, Body Battery, FC en reposo, estrés, carga TSB/ATL/CTL, avisos y estado de sync. **Sin datos no inventa nada**: estado vacío que explica qué falta. |
+| Hoy | Readiness con sus tres componentes, sueño, HRV, Body Battery, FC en reposo, estrés, carga TSB/ATL/CTL, avisos y estado de sync. **Gráfica de carga de 30 días** (ATL/CTL) y **curva de Body Battery** del día, en SVG propio. **Sin datos no inventa nada**: estado vacío que explica qué falta. |
 | Gimnasio | Plantilla del día, plantillas reales, últimas sesiones con tonelaje/TSS/duración. |
-| Ajustes | Estado de Garmin, sync manual, vinculación con contraseña de un solo uso y 2FA, tema oscuro/claro, bandera de secciones, cuenta y cierre de sesión. |
+| Ajustes | Estado de Garmin, sync manual, vinculación con contraseña de un solo uso y 2FA, tema oscuro/claro, bandera de secciones, cuenta, cierre de sesión y **borrado de cuenta** con confirmación literal (borra también el gimnasio). |
 | Secciones de bandera | Actividades, Calendario, Tendencias, Rendimiento, Rutas y Social, con datos reales de la API; vacío, carga y error en todas. El estado de "sin permiso" por pantalla es T-25. |
 | Todavía no | Entrenar (T-04), editor de plantilla (T-05), catálogo (T-06), historial por ejercicio (T-07/T-08), subnavegación de Gimnasio (T-24) y las ampliaciones T-13 a T-20. Están en `../BACKLOG.md`. |
 

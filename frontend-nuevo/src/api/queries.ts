@@ -12,6 +12,7 @@ import type {
   GarminStatus,
   LastMarksResponse,
   LeaderboardResponse,
+  LoadResponse,
   PerformanceSummary,
   PersonalRecord,
   PlannedRoute,
@@ -33,6 +34,7 @@ import type {
 export const queryKeys = {
   me: ['me'] as const,
   daily: ['metrics', 'daily'] as const,
+  load: (days: number) => ['metrics', 'load', days] as const,
   alerts: ['alerts'] as const,
   sync: ['sync', 'status'] as const,
   garmin: ['garmin', 'status'] as const,
@@ -74,6 +76,14 @@ export function useAlerts() {
   });
 }
 
+/** Serie ATL/CTL/TSB de los últimos días: la gráfica de carga del panel Hoy (T-03). */
+export function useLoad(days = 30) {
+  return useQuery({
+    queryKey: queryKeys.load(days),
+    queryFn: () => apiFetch<LoadResponse>(`/api/v1/metrics/load?days=${days}`),
+  });
+}
+
 export function useSyncStatus() {
   return useQuery({
     queryKey: queryKeys.sync,
@@ -88,8 +98,14 @@ export function useGarminStatus() {
   });
 }
 
-export function useSyncNow() {
-  const queryClient = useQueryClient();
+/** Borrado GDPR: el backend debe borrar también el gimnasio (T-22). */
+export function useDeleteAccount() {
+  return useMutation({
+    mutationFn: () => apiFetch<{ status: string }>('/api/v1/auth/account', { method: 'DELETE' }),
+  });
+}
+
+export function useSyncNow() {  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => apiFetch<SyncResult>('/api/v1/sync/garmin', { method: 'POST' }),
     onSuccess: async () => {
