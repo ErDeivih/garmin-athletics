@@ -87,6 +87,24 @@ try {
   await page.getByRole('heading', { name: 'Gimnasio', exact: true }).waitFor();
   await shot('03-gimnasio');
 
+  // T-04: empezar la plantilla del día, marcar una serie y terminar la sesión
+  // contra el backend real (copia). Esto crea una sesión de verdad.
+  await page.getByRole('link', { name: /empezar sesión/i }).click();
+  await page.getByRole('heading', { name: 'Entrenar', exact: true }).waitFor();
+  await page.getByText(/objetivo 4×8/i).waitFor({ timeout: 15000 });
+  await page.getByRole('checkbox', { name: /serie 1 de press de banca/i }).click();
+  await page.getByRole('status').filter({ hasText: /descanso/i }).waitFor();
+  await page.setViewportSize({ width: 390, height: 2000 });
+  await shot('08-entrenar');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: /terminar sesión/i }).first().click();
+  await page.getByRole('heading', { name: /sesión terminada/i }).waitFor({ timeout: 15000 });
+  await page.setViewportSize({ width: 390, height: 2000 });
+  await shot('09-resumen-sesion');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('link', { name: /volver a gimnasio/i }).click();
+  await page.getByRole('heading', { name: 'Gimnasio', exact: true }).waitFor();
+
   await page.getByRole('link', { name: 'Ajustes' }).click();
   await page.getByRole('heading', { name: 'Ajustes', exact: true }).waitFor();
   await page.getByRole('checkbox', { name: /secciones ampliadas/i }).check();

@@ -157,7 +157,7 @@ const sessionCreated = await request('/api/v1/strength/sessions', {
     finished_at: finishedAt,
     notes: 'temporal',
     sets: [
-      { exercise_id: exerciseId, set_number: 1, weight_kg: 60, reps: 8, rest_seconds: 120 },
+      { exercise_id: exerciseId, set_number: 1, weight_kg: 60, reps: 8, rest_seconds: 120, rpe: 8 },
       { exercise_id: exerciseId, set_number: 2, weight_kg: 62.5, reps: 6, rest_seconds: 150 },
     ],
   }),
@@ -172,7 +172,7 @@ if (hasKeys(sessionCreated.body, ['id', 'name', 'template_id', 'started_at', 'fi
   const sessionExercise = sessionCreated.body.exercises?.[0];
   if (hasKeys(sessionExercise, ['exercise', 'position', 'sets', 'tonnage_kg'], 'sesión.exercises[0]')) {
     const firstSet = sessionExercise.sets?.[0];
-    hasKeys(firstSet, ['id', 'exercise_id', 'set_number', 'weight_kg', 'reps', 'rir', 'is_warmup', 'set_type', 'rest_seconds', 'completed_at'], 'sesión.exercises[0].sets[0]');
+    hasKeys(firstSet, ['id', 'exercise_id', 'set_number', 'weight_kg', 'reps', 'rir', 'rpe', 'is_warmup', 'set_type', 'rest_seconds', 'completed_at'], 'sesión.exercises[0].sets[0]');
   }
 }
 

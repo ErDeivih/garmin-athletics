@@ -94,6 +94,7 @@ class SetIn(BaseModel):
     weight_kg: float = Field(0.0, ge=0, le=2000)
     reps: int = Field(0, ge=0, le=1000)
     rir: Optional[int] = Field(None, ge=0, le=10)
+    rpe: Optional[int] = Field(None, ge=0, le=10)
     is_warmup: bool = False
     set_type: str = "normal"
     rest_seconds: Optional[int] = Field(None, ge=0, le=3600)
@@ -172,6 +173,7 @@ def _set_out(s: SessionSet) -> Dict[str, Any]:
         "weight_kg": s.weight_kg,
         "reps": s.reps,
         "rir": s.rir,
+        "rpe": s.rpe,
         "is_warmup": bool(s.is_warmup),
         "set_type": s.set_type,
         "rest_seconds": s.rest_seconds,
@@ -937,6 +939,7 @@ async def create_session(
             position=positions[item.exercise_id],
             set_number=item.set_number or counters[item.exercise_id],
             weight_kg=item.weight_kg, reps=item.reps, rir=item.rir,
+            rpe=item.rpe,
             is_warmup=(item.is_warmup or stype == "warmup"), set_type=stype,
             rest_seconds=item.rest_seconds, completed_at=item.completed_at,
         )
@@ -1050,6 +1053,7 @@ async def update_session(
             position=positions[item.exercise_id],
             set_number=item.set_number or counters[item.exercise_id],
             weight_kg=item.weight_kg, reps=item.reps, rir=item.rir,
+            rpe=item.rpe,
             is_warmup=(item.is_warmup or stype == "warmup"), set_type=stype,
             rest_seconds=item.rest_seconds, completed_at=item.completed_at,
         )

@@ -90,7 +90,7 @@ ATL/CTL/TSB coherente con la respuesta cruda y Body Battery de 30 a 79. Cuatro f
 ---
 
 ### T-04 · Ejecutar la sesión (el logger)
-**Nivel 2** · **Estado**: `pendiente` · **Origen**: `ESPECIFICACION.md` §3 + `INVESTIGACION.md` §2.7
+**Nivel 2** · **Estado**: `hecha` (2026-11-04) · **Origen**: `ESPECIFICACION.md` §3 + `INVESTIGACION.md` §2.7
 
 El corazón del encargo. Plantilla del día, **última marca de cada ejercicio precargada**, marcar
 serie hecha con corrección de peso/reps en el momento, descanso por ejercicio con hora de fin
@@ -99,6 +99,16 @@ absoluta (`DECISIONES.md` D-03), estado que sobrevive a recargar (D-02), termina
 **Criterio de aceptación**: una serie se registra en ≤2 toques; se puede corregir una serie ya
 marcada sin tocar las demás; recargar la página no pierde la sesión; el descanso sigue contando
 tras apagar la pantalla; al terminar, la sesión aparece en el historial y suma en la carga.
+
+**Resultado (2026-11-04).** Pantalla `Entrenar` abierta desde la plantilla de Gimnasio: precarga la
+última marca de cada ejercicio, tabla `Serie · Peso · Reps · RPE · Hecha`, check de 44 px que marca
+y arranca el descanso (barra con hora de fin absoluta, recalculada al volver a la pestaña), edición
+de una serie ya marcada sin tocar las demás, borrador en `localStorage` por usuario y plantilla que
+sobrevive a recargar, y `POST /strength/sessions` al terminar con resumen de tonelaje, series, TSS y
+reparto muscular. Backend: columna `rpe` por serie (migración aditiva) y contrato actualizado.
+Pruebas: 3 flujos (persistencia, corrección + envío con Bearer, sin plantilla) y el humo real crea
+una sesión contra la copia del backend. Queda para T-13 la sesión libre, T-17 guardar como plantilla
+y T-14 el resumen comparativo con la sesión anterior.
 
 ---
 
@@ -421,13 +431,18 @@ que no lo tiene; el editor y la sesión los muestran; el mapeo Garmin cubre lo q
 lo que no.
 
 ### T-29 · Registro de sesión (T-04) con RPE y corrección
-**Nivel 2** · **Estado**: `pendiente` · **Origen**: `ALCANCE-COMPLETO.md` §3 (ya era T-04)
+**Nivel 2** · **Estado**: `hecha` (2026-11-04) · **Origen**: `ALCANCE-COMPLETO.md` §3 (ya era T-04)
 
 Cubre lo que T-04 ya pedía y añade RPE por serie además de RIR, tempo cuando exista y el resumen con
 las métricas derivadas de T-26.
 
 **Criterio de aceptación**: el de T-04, más: el RPE se guarda por serie y se ve en el historial; el
 tempo ausente se muestra como "sin tempo", no como cero.
+
+**Resultado (2026-11-04).** RPE por serie de 1 a 10 (opcional) en modelo, entrada, salida y UI; el
+resumen muestra tonelaje, series, TSS y volumen por grupo muscular. El RPE se ve en el resumen y en
+el detalle de sesión. **Tempo no existe aún** en el modelo (P3 de `INVESTIGACION-AMPLIACION.md`): no
+se pinta una fila de tempo vacía hasta que el editor lo capture.
 
 ### T-30 · Importar las series de fuerza de Garmin
 **Nivel 2** · **Estado**: `pendiente` · **Origen**: `INVESTIGACION-AMPLIACION.md` §3.3-3.4
@@ -521,4 +536,6 @@ la captura móvil es la referencia y el escritorio no es un móvil estirado.
 | T-01 | Backend del gimnasio (catálogo, plantillas, sesiones con series) | 2026-11-04 | 17 endpoints, 5 tablas, 52 ejercicios, pruebas 8/8 en verde |
 | T-02 | Frontend nuevo: sistema de diseño, login, navegación y API tipada | 2026-11-04 | `frontend-nuevo/` + `designs/…`; 19 flujos, 102 comprobaciones de contrato y humo en navegador |
 | T-03 | Panel Hoy completo: carga de 30 días y curva de Body Battery | 2026-11-04 | Gráficas SVG propias; pruebas de vacío/datos/fallo de carga/red y capturas con datos de una copia |
+| T-04/T-29 | Registro de sesión: última marca, marcado, corrección, descanso, RPE y resumen | 2026-11-04 | `Entrenar` con borrador persistente y 3 flujos; humo real con sesión terminada contra la copia |
 | T-22 | Borrado de cuenta completo (gimnasio incluido) y confirmación en Ajustes | 2026-11-04 | `tests/test_account_deletion.py` + flujo con frase literal y capturas |
+| T-26 | Métricas derivadas y agregados de gimnasio/carga | 2026-11-04 | `/strength/stats` y `/metrics/load-summary`; `tests/test_metrics_stats.py`, 119 comprobaciones de contrato |

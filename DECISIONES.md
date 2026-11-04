@@ -286,3 +286,29 @@ Se calcula una vez en servidor para que todas las pantallas den el mismo número
 
 **Cómo se revierte.** Son endpoints y cálculos nuevos; se dejan de usar sin tocar datos.
 
+---
+
+## 2026-11-04 — D-14 · El registro de sesión usa un borrador local por usuario y plantilla
+
+**Contexto.** T-04/T-29 exige marcar series en el gimnasio, corregirlas después, que el descanso
+siga contando con la pantalla apagada y que recargar no pierda la sesión. D-02 ya decidió que el
+borrador vive en el navegador y D-03 que el descanso se calcula por hora absoluta.
+
+**Decisión.**
+- El borrador se guarda en `localStorage` bajo
+  `garmin-athletics.session.<userId>.<templateId>`: cambiar de usuario o de plantilla no mezcla
+  sesiones. Se escribe en cada cambio y se borra al terminar o descartar.
+- Cada serie guarda `weight`, `reps`, `rpe` y `completedAt`; el RPE es opcional y se añade al modelo
+  como columna `rpe` (migración aditiva) y al cuerpo de `POST /strength/sessions`.
+- El descanso guarda `restEndsAt` (hora absoluta) y se recalcula al volver a la pestaña; la barra es
+  fija sobre la tabla, no un modal.
+- Al terminar se envía **una vez** la sesión completa; el servidor crea la sesión y su actividad
+  espejo (D-01) y devuelve el resumen.
+
+**Motivo.** Es el gesto más repetido de la app y el sitio donde Garmin falla (F2/F5/F10): la
+precarga y la corrección en el sitio eliminan memoria y scroll. Guardar por usuario/plantilla evita
+que una sesión a medias aparezca en otra cuenta.
+
+**Cómo se revierte.** Es lógica de cliente más una columna opcional; borrar el borrador local o
+ignorar la columna no afecta a las sesiones ya guardadas.
+

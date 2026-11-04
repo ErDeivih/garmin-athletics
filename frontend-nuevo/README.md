@@ -32,7 +32,7 @@ el frontend. `VITE_API_URL` solo hace falta si la API vive en otro origen. Servi
 `frontend-nuevo/dist` desde el backend, CORS de preview/LAN y el camino de producción son la
 tarea T-23 del backlog.
 
-## Qué hay implementado (T-02)
+## Qué hay implementado
 
 | Área | Estado |
 |---|---|
@@ -40,16 +40,18 @@ tarea T-23 del backlog.
 | Autenticación | Login, restauración de sesión contra `/auth/me`, cierre de sesión, 401 global. |
 | Navegación | Registro de secciones: **Hoy · Gimnasio · Ajustes** visibles; el resto tras `VITE_FEATURE_EXTENDED` con interruptor en Ajustes. Barra lateral en escritorio, pestañas abajo en móvil. |
 | Hoy | Readiness con sus tres componentes, sueño, HRV, Body Battery, FC en reposo, estrés, carga TSB/ATL/CTL, avisos y estado de sync. **Gráfica de carga de 30 días** (ATL/CTL) y **curva de Body Battery** del día, en SVG propio. **Sin datos no inventa nada**: estado vacío que explica qué falta. |
-| Gimnasio | Plantilla del día, plantillas reales, últimas sesiones con tonelaje/TSS/duración. |
+| Gimnasio | Plantilla del día, plantillas reales, últimas sesiones con tonelaje/TSS/duración y botón **Empezar** en cada plantilla. |
+| **Entrenar (T-04/T-29)** | Plantilla cargada con la **última marca precargada**, tabla `Serie · Peso · Reps · RPE · Hecha`, check de 44 px que marca y arranca el descanso (hora de fin absoluta), corrección de una serie ya marcada, borrador que **sobrevive a recargar** y resumen de tonelaje/series/TSS/reparto muscular al terminar. |
+| Tendencias | Línea de métrica, carga ATL/CTL, barras semanales, monotonía, calendario de calor, volumen por grupo muscular, empuje/tirón y top de ejercicios; periodos 7/30/90. |
 | Ajustes | Estado de Garmin, sync manual, vinculación con contraseña de un solo uso y 2FA, tema oscuro/claro, bandera de secciones, cuenta, cierre de sesión y **borrado de cuenta** con confirmación literal (borra también el gimnasio). |
 | Secciones de bandera | Actividades, Calendario, Tendencias, Rendimiento, Rutas y Social, con datos reales de la API; vacío, carga y error en todas. El estado de "sin permiso" por pantalla es T-25. |
-| Todavía no | Entrenar (T-04), editor de plantilla (T-05), catálogo (T-06), historial por ejercicio (T-07/T-08), subnavegación de Gimnasio (T-24) y las ampliaciones T-13 a T-20. Están en `../BACKLOG.md`. |
+| Todavía no | Sesión libre (T-13), guardar sesión como plantilla (T-17), editor de plantilla (T-05), catálogo (T-06), historial por ejercicio (T-07/T-08), subnavegación de Gimnasio (T-24), ampliaciones T-18/T-19/T-20, reloj (T-30/T-31/T-32) y POC IMU (T-33). Están en `../BACKLOG.md`. |
 
 ## Pruebas y puertas
 
 ```powershell
 npm run check        # tokens generados + contraste AA + typecheck + pruebas de flujo
-npm test             # Vitest + Testing Library: login, navegación, bandera, Hoy, Ajustes
+npm test             # Vitest + Testing Library: login, navegación, bandera, Hoy, Ajustes, Tendencias y sesión
 npm run build        # tsc --noEmit + build de producción
 ```
 

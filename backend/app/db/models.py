@@ -273,6 +273,7 @@ class SessionSet(Base):
     weight_kg = Column(Float, nullable=False, default=0.0)
     reps = Column(Integer, nullable=False, default=0)
     rir = Column(Integer, nullable=True)
+    rpe = Column(Integer, nullable=True)  # esfuerzo percibido por serie (1-10), T-29
     is_warmup = Column(Boolean, default=False)
     set_type = Column(String(20), nullable=False, default="normal")  # normal|warmup|drop|failure
     rest_seconds = Column(Integer, nullable=True)

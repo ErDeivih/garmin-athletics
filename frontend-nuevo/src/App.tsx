@@ -7,6 +7,7 @@ import { NAV_ITEMS } from './config/navigation';
 import { AppShell } from './components/AppShell';
 import { ErrorState, LoadingBlock, PageHeader } from './components/ui';
 import { LoginPage } from './pages/LoginPage';
+import { SessionPage } from './pages/SessionPage';
 import { UnavailablePage } from './pages/extended/UnavailablePage';
 
 const queryClient = new QueryClient({
@@ -87,6 +88,7 @@ function AuthGate() {
             <Route key={item.id} path={item.path.replace(/^\//, '')} element={element} />
           );
         })}
+        <Route path="gimnasio/entrenar" element={<SessionPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

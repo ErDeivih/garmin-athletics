@@ -62,6 +62,51 @@ export const dailyEmpty = {
   readiness,
 };
 
+export const lastMarks = {
+  marks: {
+    'e-1': { date: '2026-10-30', weight_kg: 82.5, reps: 6, set_number: 1, rest_seconds: 150 },
+  },
+};
+
+export const sessionDetail = {
+  id: 's-new',
+  name: 'Empuje A',
+  template_id: 't-1',
+  date: '2026-11-04',
+  started_at: '2026-11-04T18:00:00',
+  finished_at: '2026-11-04T19:00:00',
+  duration_min: 60,
+  status: 'done',
+  notes: null,
+  total_tonnage_kg: 660,
+  computed_tss: 13,
+  activity_id: 'a-new',
+  sets_count: 1,
+  exercises_count: 1,
+  exercises: [
+    {
+      exercise: { id: 'e-1', name: 'Press de banca', slug: 'press-de-banca', muscle_group: 'pecho', equipment: 'barra', is_timed: false, is_unilateral: false },
+      position: 0,
+      tonnage_kg: 660,
+      sets: [
+        {
+          id: 'set-new-1',
+          exercise_id: 'e-1',
+          set_number: 1,
+          weight_kg: 82.5,
+          reps: 8,
+          rir: null,
+          rpe: 8,
+          is_warmup: false,
+          set_type: 'normal',
+          rest_seconds: 150,
+          completed_at: '2026-11-04T18:05:00',
+        },
+      ],
+    },
+  ],
+};
+
 export const load = {
   start_date: '2026-10-06',
   end_date: '2026-11-04',

@@ -26,6 +26,7 @@ import type {
   TemplateList,
   TrendResponse,
   UserProfile,
+  WorkoutTemplate,
   ZonesResponse,
 } from './types';
 
@@ -162,6 +163,14 @@ export function useTemplates() {
   return useQuery({
     queryKey: queryKeys.templates,
     queryFn: () => apiFetch<TemplateList>('/api/v1/strength/templates'),
+  });
+}
+
+export function useTemplate(templateId: string | null) {
+  return useQuery({
+    queryKey: [...queryKeys.templates, templateId ?? ''],
+    queryFn: () => apiFetch<WorkoutTemplate>(`/api/v1/strength/templates/${templateId}`),
+    enabled: templateId !== null,
   });
 }
 

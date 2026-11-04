@@ -78,13 +78,18 @@ def run():
     # Sesión A: hace 10 días (semana completa). Press de banca con calentamiento
     # y curl; así hay empuje y tirón.
     day_a = datetime.combine(today - timedelta(days=10), time(18, 0))
-    _session(token, day_a, [
+    session_a = _session(token, day_a, [
         {"exercise_id": bench["id"], "weight_kg": 40, "reps": 10, "is_warmup": True, "set_type": "warmup"},
-        {"exercise_id": bench["id"], "weight_kg": 80, "reps": 8},
+        {"exercise_id": bench["id"], "weight_kg": 80, "reps": 8, "rpe": 8},
         {"exercise_id": bench["id"], "weight_kg": 60, "reps": 10},
         {"exercise_id": curl["id"], "weight_kg": 30, "reps": 12},
         {"exercise_id": curl["id"], "weight_kg": 30, "reps": 12},
     ])
+    # RPE por serie (T-29): se guarda y se devuelve en el detalle.
+    bench_sets = next(
+        exercise["sets"] for exercise in session_a["exercises"]
+        if exercise["exercise"]["id"] == bench["id"])
+    assert any(item["rpe"] == 8 for item in bench_sets), bench_sets
     # Sesión B: hace 3 días (misma semana que A si cae en la misma, o distinta).
     day_b = datetime.combine(today - timedelta(days=3), time(19, 0))
     _session(token, day_b, [

@@ -331,6 +331,7 @@ export interface SessionSet {
   weight_kg: number;
   reps: number;
   rir: number | null;
+  rpe: number | null;
   is_warmup: boolean;
   set_type: 'normal' | 'warmup' | 'drop' | 'failure';
   rest_seconds: number | null;
@@ -360,6 +361,7 @@ export interface SessionSetInput {
   weight_kg: number;
   reps: number;
   rir?: number | null;
+  rpe?: number | null;
   is_warmup?: boolean;
   set_type?: 'normal' | 'warmup' | 'drop' | 'failure';
   rest_seconds?: number | null;

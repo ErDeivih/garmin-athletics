@@ -141,7 +141,11 @@ David ha decidido que el frontend nuevo arranca con **Hoy, Gimnasio y Ajustes** 
   con estados vacío/carga/error y una prueba para el fallo aislado de la serie de carga.
 - **T-13 a T-20**: confirmadas como alcance; todas son Nivel 1/2 y siguen en el backlog.
 - **T-21**: pendiente de una tanda de backend (readiness nulo cuando falta biometría).
-- **T-04**: la siguiente; la capa de API (tipos, hooks y contrato verificado) ya está preparada.
+- **T-04/T-29 hechas**: `Entrenar` con última marca, series corregibles, descanso por hora de fin,
+  RPE por serie, borrador que sobrevive a recargar y resumen. La sesión libre (T-13) y guardar como
+  plantilla (T-17) quedan como tareas propias.
+- **T-26 hecha y T-27 en curso**: agregados de gimnasio/carga y Tendencias con línea, barras, calor,
+  monotonía, volumen muscular y empuje/tirón; faltan dispersión, fases de sueño y comparativa.
 
 ## Ampliación completa del producto (2026-11-04)
 

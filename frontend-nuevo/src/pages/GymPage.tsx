@@ -1,7 +1,13 @@
+import { Link } from 'react-router-dom';
 import { CalendarCheck, Dumbbell, History, ListChecks } from 'lucide-react';
 import { useSessions, useTemplates } from '../api/queries';
 import { Badge, Card, EmptyState, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../components/ui';
 import { formatDate, formatMinutes, formatNumber, todayWeekday, weekdayName } from '../lib/format';
+
+const startLink =
+  'focus-ring inline-flex min-h-11 items-center justify-center rounded-md bg-accent px-3 text-body font-semibold text-on-accent';
+const secondaryLink =
+  'focus-ring inline-flex min-h-11 items-center justify-center rounded-md border border-line-strong bg-raised px-3 text-body font-semibold text-ink';
 
 /** El gimnasio en una pantalla: qué toca, qué plantillas hay y qué has hecho. */
 export function GymPage() {
@@ -51,7 +57,12 @@ export function GymPage() {
                 {todaysTemplate.exercises.length} ejercicios · {todaysTemplate.total_sets} series ·{' '}
                 {formatNumber(todaysTemplate.estimated_tonnage_kg, 'kg')} estimados
               </p>
-              <Badge tone="info">La sesión guiada todavía no está en esta versión</Badge>
+              <div className="flex flex-wrap items-center gap-2">
+                <Link className={startLink} to={`/gimnasio/entrenar?template=${todaysTemplate.id}`}>
+                  Empezar sesión
+                </Link>
+                <Badge tone="info">Registro con series, descanso y RPE</Badge>
+              </div>
             </div>
           ) : (
             <p className="text-body text-ink-muted">
@@ -107,9 +118,14 @@ export function GymPage() {
                       {template.total_sets} series
                     </p>
                   </div>
-                  <span className="tnum font-display text-title text-ink">
-                    {formatNumber(template.estimated_tonnage_kg, 'kg')}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="tnum font-display text-title text-ink">
+                      {formatNumber(template.estimated_tonnage_kg, 'kg')}
+                    </span>
+                    <Link className={secondaryLink} to={`/gimnasio/entrenar?template=${template.id}`}>
+                      Empezar
+                    </Link>
+                  </div>
                 </Card>
               </li>
             ))}

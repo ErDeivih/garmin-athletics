@@ -22,6 +22,7 @@ async def _run_sqlite_migrations(conn) -> None:
 
     table_columns = {
         "strength_logs": [("user_id", "VARCHAR(36)")],
+        "session_sets": [("rpe", "INTEGER")],
         "fatigue_metrics": [("user_id", "VARCHAR(36)")],
         "garmin_credentials": [("needs_reauth", "BOOLEAN DEFAULT 0")],
         # Detalle enriquecido Fase 7
