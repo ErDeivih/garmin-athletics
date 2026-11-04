@@ -27,6 +27,10 @@ frontend-nuevo/dist/
 frontend-nuevo/.vite/
 designs/**/history/
 designs/**/.artifact-server.*
+watch/**/build/
+watch/**/*.prg
+watch/**/*.der
+watch/**/*.pem
 
 # Registros y temporales
 *.log

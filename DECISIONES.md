@@ -312,3 +312,28 @@ que una sesión a medias aparezca en otra cuenta.
 **Cómo se revierte.** Es lógica de cliente más una columna opcional; borrar el borrador local o
 ignorar la columna no afecta a las sesiones ya guardadas.
 
+---
+
+## 2026-11-04 — D-15 · Compatibilidad del reloj: fr255 como referencia, mínimo API 3.3
+
+**Contexto.** David usa un **Forerunner 255** y quiere cubrir el máximo de modelos posibles, no solo
+el suyo. La PoC Connect IQ compila en fr255, fr255m, fr265, fr965, fenix7, venu3, fr245, fenix6 y
+venu2, y no en fr235 (API 1.4).
+
+**Decisión.**
+- `minSdkVersion` **3.3.0**: cubre fr245 (API 3.3) en adelante y las APIs usadas
+  (`AccelerometerData` desde 2.3, `Communications` y `ActivityRecording` desde 1.0).
+- **No usar `AccelerometerData.timestamp`** (API 5.1.1) en el camino común: el conteo por IMU usará
+  índice de muestra y periodo; el timestamp queda como mejora opcional solo en modelos que lo
+  soportan, y se decidirá con medición.
+- Lista amplia de productos en el manifest (21) y matriz de compilación reproducible en
+  `watch/connectiq-poc/`.
+- **fr235 queda fuera** conscientemente: su API 1.4 no llega al mínimo; si se quisiera cubrir sería
+  otra app sin acelerómetro. Se puede bajar el listón solo si se renuncia al sensor.
+
+**Motivo.** Es el mínimo realista que cubre los modelos objetivo y los cercanos; el reloj de David
+(fr255) está verificado. El camino principal para llevar entrenamientos (API de workouts) no depende
+de la watch-app.
+
+**Cómo se revierte.** Cambiar `minSdkVersion` o quitar productos del manifest; no toca datos.
+

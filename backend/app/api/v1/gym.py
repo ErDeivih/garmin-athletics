@@ -680,6 +680,47 @@ async def gym_stats(
     pull = round(sum(row["tonnage_kg"] for row in by_muscle if row["muscle_group"] in PULL_MUSCLES), 2)
     unclassified = round(total_tonnage - push - pull, 2)
 
+    # Muestra de series para el gráfico de dispersión peso/reps (T-27). Es una
+    # muestra acotada, no la fuente de los totales: los totales salen de la
+    # agregación completa de arriba.
+    scatter_sets = []
+    for item, session, exercise in rows:
+        if item.is_warmup or not item.weight_kg or not item.reps:
+            continue
+        scatter_sets.append({
+            "date": session.started_at.date().isoformat() if session.started_at else None,
+            "exercise": exercise.name if exercise else "Ejercicio ya borrado",
+            "muscle_group": exercise.muscle_group if exercise else "sin_clasificar",
+            "weight_kg": item.weight_kg,
+            "reps": item.reps,
+        })
+    scatter_sets = scatter_sets[-300:]
+
+    # Comparativa con la ventana inmediatamente anterior de la misma duración.
+    span_days = (end - start).days + 1
+    prev_end = start - timedelta(days=1)
+    prev_start = prev_end - timedelta(days=span_days - 1)
+    prev_rows = (await db.execute(
+        select(SessionSet, WorkoutSession)
+        .join(WorkoutSession, SessionSet.session_id == WorkoutSession.id)
+        .where(WorkoutSession.user_id == user.id,
+               WorkoutSession.started_at >= datetime.combine(prev_start, time.min),
+               WorkoutSession.started_at < datetime.combine(prev_end + timedelta(days=1), time.min))
+    )).all()
+    prev_sessions = {sess.id for _, sess in prev_rows}
+    prev_tonnage = round(sum(
+        (item.weight_kg or 0) * (item.reps or 0)
+        for item, _ in prev_rows if not item.is_warmup
+    ), 2)
+    prev_working = sum(1 for item, _ in prev_rows if not item.is_warmup and item.weight_kg and item.reps)
+    previous = {
+        "from": prev_start.isoformat(),
+        "to": prev_end.isoformat(),
+        "sessions": len(prev_sessions),
+        "tonnage_kg": prev_tonnage,
+        "working_sets": prev_working,
+    }
+
     return {
         "from": start.isoformat(),
         "to": end.isoformat(),
@@ -695,6 +736,8 @@ async def gym_stats(
         "by_muscle": by_muscle,
         "by_week": by_week,
         "by_exercise": by_exercise,
+        "sets_sample": scatter_sets,
+        "previous": previous,
         "push_pull": {
             "push_tonnage_kg": push,
             "pull_tonnage_kg": pull,

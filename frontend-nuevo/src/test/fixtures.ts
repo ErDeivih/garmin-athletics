@@ -158,6 +158,20 @@ export const gymStats = {
     { exercise_id: 'e-1', name: 'Press de banca', muscle_group: 'pecho', sets: 8, working_sets: 6, tonnage_kg: 4000, max_weight_kg: 85, estimated_1rm_kg: 102.0 },
     { exercise_id: 'e-2', name: 'Remo con barra', muscle_group: 'espalda', sets: 10, working_sets: 8, tonnage_kg: 5000, max_weight_kg: 70, estimated_1rm_kg: 88.0 },
   ],
+  sets_sample: [
+    { date: '2026-10-30', exercise: 'Press de banca', muscle_group: 'pecho', weight_kg: 80, reps: 8 },
+    { date: '2026-10-30', exercise: 'Press de banca', muscle_group: 'pecho', weight_kg: 82.5, reps: 6 },
+    { date: '2026-11-01', exercise: 'Remo con barra', muscle_group: 'espalda', weight_kg: 60, reps: 12 },
+    { date: '2026-11-01', exercise: 'Remo con barra', muscle_group: 'espalda', weight_kg: 70, reps: 8 },
+    { date: '2026-11-03', exercise: 'Curl de bíceps', muscle_group: 'biceps', weight_kg: 30, reps: 12 },
+  ],
+  previous: {
+    from: '2026-09-06',
+    to: '2026-10-05',
+    sessions: 3,
+    tonnage_kg: 15000,
+    working_sets: 30,
+  },
   push_pull: {
     push_tonnage_kg: 6200,
     pull_tonnage_kg: 9250,
@@ -175,7 +189,25 @@ export const gymStatsEmpty = {
   by_muscle: [],
   by_week: [],
   by_exercise: [],
+  sets_sample: [],
+  previous: { ...gymStats.previous, sessions: 0, tonnage_kg: 0, working_sets: 0 },
   push_pull: { ...gymStats.push_pull, push_tonnage_kg: 0, pull_tonnage_kg: 0, ratio: null, classified_tonnage_kg: 0, unclassified_tonnage_kg: 0 },
+};
+
+export const sleepPhases = {
+  days: 30,
+  series: [
+    { date: '2026-11-01', deep_hours: 1.5, light_hours: 5.2, rem_hours: 1.1, awake_hours: 0.3, sleep_hours: 7.8, in_bed_hours: 8.1, sleep_score: 82, efficiency: 93 },
+    { date: '2026-11-02', deep_hours: 1.2, light_hours: 5.6, rem_hours: 0.9, awake_hours: 0.4, sleep_hours: 7.7, in_bed_hours: 8.1, sleep_score: 78, efficiency: 91 },
+    { date: '2026-11-03', deep_hours: 1.8, light_hours: 4.9, rem_hours: 1.3, awake_hours: 0.2, sleep_hours: 8.0, in_bed_hours: 8.2, sleep_score: 85, efficiency: 94 },
+  ],
+  note: 'Solo se devuelven noches con fases de sueño reales; el resto no se rellena.',
+};
+
+export const sleepPhasesEmpty = {
+  days: 30,
+  series: [],
+  note: 'Solo se devuelven noches con fases de sueño reales; el resto no se rellena.',
 };
 
 export const loadSummaryEmpty = {

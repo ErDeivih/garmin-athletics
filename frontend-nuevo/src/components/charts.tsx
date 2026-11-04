@@ -1,4 +1,4 @@
-import type { GymStatsMuscle, LoadPoint, LoadWeek } from '../api/types';
+import type { GymStatsMuscle, LoadPoint, LoadWeek, SleepPhasePoint } from '../api/types';
 import { formatDate, formatNumber } from '../lib/format';
 
 /*
@@ -284,8 +284,7 @@ export function ActivityHeatmap({ series }: { series: LoadPoint[] }) {
 }
 
 /** Reparto empuje/tirón del volumen de trabajo (T-26/T-27). */
-export function PushPullChart({
-  pushPull,
+export function PushPullChart({  pushPull,
 }: {
   pushPull: { push_tonnage_kg: number; pull_tonnage_kg: number; ratio: number | null; note: string };
 }) {
@@ -310,6 +309,110 @@ export function PushPullChart({
         <span>{pushPull.ratio === null ? 'ratio sin tirón' : `ratio ${formatNumber(pushPull.ratio)}`}</span>
       </figcaption>
       <p className="mt-1 text-caption text-ink-faint">{pushPull.note}</p>
+    </figure>
+  );
+}
+
+/** Fases de sueño por noche, apiladas en horas (T-27). */
+export function SleepPhasesChart({ series }: { series: SleepPhasePoint[] }) {
+  const nights = series
+    .filter((night) => (night.deep_hours ?? 0) + (night.light_hours ?? 0) + (night.rem_hours ?? 0) > 0)
+    .slice(-14);
+  if (nights.length === 0) {
+    return (
+      <p className="text-body text-ink-muted">
+        Sin noches con fases de sueño reales en el periodo: no se dibuja una noche plana.
+      </p>
+    );
+  }
+  return (
+    <figure className="m-0">
+      <div role="img" aria-label="Fases de sueño por noche: profundo, ligero y REM" className="flex flex-col gap-1">
+        {nights.map((night) => {
+          const deep = night.deep_hours ?? 0;
+          const light = night.light_hours ?? 0;
+          const rem = night.rem_hours ?? 0;
+          const total = deep + light + rem || 1;
+          return (
+            <div key={night.date} className="grid grid-cols-[3.2rem_1fr_3rem] items-center gap-2">
+              <span className="text-caption text-ink-faint">{formatDate(night.date)}</span>
+              <span className="flex h-2.5 overflow-hidden rounded-full bg-raised">
+                <span className="bg-accent" style={{ width: `${(deep / total) * 100}%` }} />
+                <span className="bg-info" style={{ width: `${(light / total) * 100}%` }} />
+                <span className="bg-warn" style={{ width: `${(rem / total) * 100}%` }} />
+              </span>
+              <span className="tnum text-right text-caption text-ink-muted">{formatNumber(total, 'h')}</span>
+            </div>
+          );
+        })}
+      </div>
+      <figcaption className="mt-2 flex flex-wrap gap-3 text-caption text-ink-muted">
+        <span className="inline-flex items-center gap-1">
+          <span aria-hidden="true" className="size-2 rounded-full bg-accent" /> Profundo
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span aria-hidden="true" className="size-2 rounded-full bg-info" /> Ligero
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span aria-hidden="true" className="size-2 rounded-full bg-warn" /> REM
+        </span>
+      </figcaption>
+    </figure>
+  );
+}
+
+/** Dispersión peso × repeticiones de las series de trabajo (T-27). */
+export function WeightRepsScatter({
+  sets,
+}: {
+  sets: { weight_kg: number; reps: number; exercise: string; muscle_group: string }[];
+}) {
+  if (sets.length < 3) {
+    return (
+      <p className="text-body text-ink-muted">
+        Faltan series de trabajo para dibujar la dispersión: hacen falta al menos tres.
+      </p>
+    );
+  }
+  const width = 560;
+  const height = 220;
+  const pad = 28;
+  const maxWeight = Math.max(...sets.map((item) => item.weight_kg));
+  const maxReps = Math.max(...sets.map((item) => item.reps));
+  const x = (reps: number) => pad + (reps / (maxReps || 1)) * (width - pad * 2);
+  const y = (weight: number) => height - pad - (weight / (maxWeight || 1)) * (height - pad * 2);
+  return (
+    <figure className="m-0">
+      <svg
+        role="img"
+        aria-label="Peso frente a repeticiones de las series de trabajo"
+        viewBox={`0 0 ${width} ${height}`}
+        className="h-56 w-full"
+      >
+        <line x1={pad} y1={height - pad} x2={width - pad} y2={height - pad} stroke="var(--ga-line)" />
+        <line x1={pad} y1={pad} x2={pad} y2={height - pad} stroke="var(--ga-line)" />
+        {sets.map((item, index) => (
+          <circle
+            key={`${item.exercise}-${index}`}
+            cx={x(item.reps)}
+            cy={y(item.weight_kg)}
+            r={5}
+            fill="var(--ga-accent)"
+            fillOpacity={0.75}
+          >
+            <title>{`${item.exercise}: ${formatNumber(item.weight_kg, 'kg')} × ${item.reps}`}</title>
+          </circle>
+        ))}
+        <text x={width - pad} y={height - 8} textAnchor="end" fill="var(--ga-ink-faint)" fontSize="11">
+          reps →
+        </text>
+        <text x={8} y={pad} fill="var(--ga-ink-faint)" fontSize="11">
+          kg
+        </text>
+      </svg>
+      <figcaption className="mt-1 text-caption text-ink-faint">
+        {sets.length} series de trabajo · cada punto es una serie real
+      </figcaption>
     </figure>
   );
 }

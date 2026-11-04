@@ -13,6 +13,7 @@ const apiConDatos = () =>
     'GET /api/v1/metrics/trends': json(f.trends),
     'GET /api/v1/metrics/load': json(f.load),
     'GET /api/v1/metrics/load-summary': json(f.loadSummary),
+    'GET /api/v1/metrics/sleep-phases': json(f.sleepPhases),
     'GET /api/v1/strength/stats': json(f.gymStats),
   });
 
@@ -31,10 +32,13 @@ describe('tendencias y métricas derivadas', () => {
     expect(screen.getByRole('img', { name: /calendario de carga/i })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: /volumen por grupo muscular/i })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: /reparto de volumen/i })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /fases de sueño por noche/i })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /peso frente a repeticiones/i })).toBeInTheDocument();
     // Cifras del backend, no inventadas.
     expect(screen.getByText(/18\.450 kg totales/i)).toBeInTheDocument();
     expect(screen.getAllByText(/1RM est\./i).length).toBeGreaterThan(0);
     expect(screen.getByText(/estimado por grupo principal/i)).toBeInTheDocument();
+    expect(screen.getByText(/vs periodo anterior: \+23 % de tonelaje/i)).toBeInTheDocument();
   });
 
   it('cambiar de periodo y de métrica consulta la API con esos parámetros', async () => {
@@ -45,7 +49,7 @@ describe('tendencias y métricas derivadas', () => {
     renderApp('/tendencias');
 
     await screen.findByRole('img', { name: /tss por semana/i });
-    await user.click(screen.getByRole('button', { name: '90 días' }));
+    await user.click(screen.getByRole('button', { name: '90 d' }));
 
     const loadCall = api.calls.find(
       (call) => call.path === '/api/v1/metrics/load' && call.query.get('days') === '90',
@@ -67,6 +71,7 @@ describe('tendencias y métricas derivadas', () => {
       'GET /api/v1/metrics/trends': json(f.trendsEmpty),
       'GET /api/v1/metrics/load': json(f.loadEmpty),
       'GET /api/v1/metrics/load-summary': json(f.loadSummaryEmpty),
+      'GET /api/v1/metrics/sleep-phases': json(f.sleepPhasesEmpty),
       'GET /api/v1/strength/stats': json(f.gymStatsEmpty),
     });
     renderApp('/tendencias');
@@ -74,7 +79,10 @@ describe('tendencias y métricas derivadas', () => {
     expect(await screen.findByText(/sin datos para esta métrica/i)).toBeInTheDocument();
     expect(screen.getByText(/sin carga semanal en el periodo/i)).toBeInTheDocument();
     expect(screen.getByText(/sin volumen clasificado de empuje o tirón/i)).toBeInTheDocument();
+    expect(screen.getByText(/sin noches con fases de sueño reales/i)).toBeInTheDocument();
+    expect(screen.getByText(/faltan series de trabajo para dibujar la dispersión/i)).toBeInTheDocument();
     expect(screen.queryByRole('img', { name: /serie de la métrica/i })).toBeNull();
     expect(screen.queryByRole('img', { name: /tss por semana/i })).toBeNull();
+    expect(screen.queryByRole('img', { name: /fases de sueño por noche/i })).toBeNull();
   });
 });

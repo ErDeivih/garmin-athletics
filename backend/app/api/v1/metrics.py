@@ -87,7 +87,7 @@ async def get_today_readiness(
 
 @router.get("/load", summary="Obtener la serie temporal de fatiga (ATL / CTL / TSB)")
 async def get_load_history(
-    days: int = Query(default=30, ge=7, le=180, description="Días de historial a calcular"),
+    days: int = Query(default=30, ge=7, le=365, description="Días de historial a calcular"),
     user: Optional[User] = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ) -> Dict[str, Any]:
@@ -288,10 +288,65 @@ async def get_daily_metrics(
         "readiness": readiness,
     }
 
+@router.get("/sleep-phases", summary="Fases de sueño por noche (para el gráfico apilado de T-27)")
+async def get_sleep_phases(
+    days: int = Query(default=30, ge=7, le=365, description="Días de historial"),
+    user: Optional[User] = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """Devuelve las fases de cada noche en horas. Solo noches con dato: una noche
+    sin biometría no se rellena con ceros, simplemente no aparece.
+    """
+    end_d = date.today()
+    start_d = end_d - timedelta(days=days)
+    query = select(DailyBiometrics).where(
+        DailyBiometrics.date >= start_d, DailyBiometrics.date <= end_d)
+    if user:
+        query = query.where(or_(DailyBiometrics.user_id == user.id,
+                                DailyBiometrics.user_id.is_(None)))
+    else:
+        query = query.where(DailyBiometrics.user_id.is_(None))
+    rows = (await db.execute(query.order_by(DailyBiometrics.date))).scalars().all()
+
+    by_date: Dict[date, DailyBiometrics] = {}
+    for row in rows:
+        # Si hay dato propio y legacy para el mismo día, gana el propio.
+        if row.date not in by_date or row.user_id is not None:
+            by_date[row.date] = row
+
+    def hours(seconds: Optional[int]) -> Optional[float]:
+        return round(seconds / 3600.0, 2) if seconds else None
+
+    series = []
+    for day in sorted(by_date):
+        row = by_date[day]
+        deep = hours(row.sleep_deep_seconds)
+        light = hours(row.sleep_light_seconds)
+        rem = hours(row.sleep_rem_seconds)
+        awake = hours(row.sleep_awake_seconds)
+        phases = [value for value in (deep, light, rem) if value is not None]
+        if not phases:
+            continue  # sin fases reales: no se inventa una noche plana
+        in_bed = hours(row.time_in_bed_seconds)
+        series.append({
+            "date": day.isoformat(),
+            "deep_hours": deep,
+            "light_hours": light,
+            "rem_hours": rem,
+            "awake_hours": awake,
+            "sleep_hours": hours(row.sleep_seconds),
+            "in_bed_hours": in_bed,
+            "sleep_score": row.sleep_score,
+            "efficiency": row.sleep_efficiency,
+        })
+    return {"days": days, "series": series,
+            "note": "Solo se devuelven noches con fases de sueño reales; el resto no se rellena."}
+
+
 @router.get("/trends", summary="Serie temporal de una métrica para sparklines y tendencias")
 async def get_metric_trends(
     metric: str = Query(..., pattern="^(sleep_score|sleep_hours|hrv|resting_hr|body_battery|readiness|stress)$"),
-    days: int = Query(default=30, ge=7, le=90),
+    days: int = Query(default=30, ge=7, le=365),
     user: Optional[User] = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:

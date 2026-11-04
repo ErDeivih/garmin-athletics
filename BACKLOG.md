@@ -403,7 +403,7 @@ semanas cerradas. 10/10 scripts de backend en verde y 119 comprobaciones de cont
 ---
 
 ### T-27 · Catálogo de gráficas y ampliación de Tendencias/Hoy
-**Nivel 2** · **Estado**: `en curso` · **Origen**: `INVESTIGACION-AMPLIACION.md` §1.2
+**Nivel 2** · **Estado**: `hecha` (2026-11-04) · **Origen**: `INVESTIGACION-AMPLIACION.md` §1.2
 
 Línea, barras, área, dispersión, calor/calendario y distribución sobre los datos reales, con
 selector 7/30/90/mes/año, comparativa con el periodo anterior, y estado vacío honesto por gráfica.
@@ -413,12 +413,13 @@ La gráfica sin datos no se pinta; se explica qué falta.
 respuesta cruda; con la BD parada se ve el vacío, no una línea plana inventada; pruebas de flujo de
 los estados y capturas móvil/escritorio.
 
-**Resultado parcial (2026-11-04).** Tendencias ya tiene: línea de métrica con selector y periodo
-7/30/90, gráfica de carga ATL/CTL, barras de TSS semanal, línea de monotonía, calendario de calor,
-barras de volumen por grupo muscular, reparto empuje/tirón y top de ejercicios con 1RM estimado.
-Todas con estados vacío/carga/error y 3 pruebas de flujo (22 en la suite). **Pendiente**: dispersión
-(ritmo vs FC), fases de sueño en serie (falta agregado por noche), comparativa superpuesta de
-periodos y capturas nuevas de Tendencias.
+**Resultado (2026-11-04).** Tendencias incluye línea de métrica, carga ATL/CTL, barras de TSS
+semanal, monotonía, calendario de calor, fases de sueño apiladas (`/metrics/sleep-phases`, solo
+noches con dato), dispersión peso×reps (`sets_sample` de `/strength/stats`), volumen por grupo
+muscular, empuje/tirón, top de ejercicios con 1RM estimado y comparativa de tonelaje con el periodo
+anterior. Periodos 7/30/90 días y año. 3 pruebas de flujo (22 en la suite de entonces; 25 ahora) y
+captura móvil con datos reales de la copia. La comparativa avisa «sin periodo anterior comparable»
+cuando no hay ventana previa.
 
 ### T-28 · Ejercicios con dibujo (inicio y fin del movimiento)
 **Nivel 2** · **Estado**: `pendiente` · **Origen**: `ALCANCE-COMPLETO.md` §2
@@ -461,6 +462,11 @@ siguiente sync. **Requiere probar con la cuenta real de David (Nivel 3).**
 Corregir el builder actual con los modelos tipados de `garminconnect` (sportType 5, repeat groups,
 unidades de peso, descansos, catálogo de 1.527 ejercicios) y probar **un** entrenamiento real en el
 reloj de David antes de activar el envío en la app.
+
+**Compatibilidad ya verificada (2026-11-04)**: la PoC Connect IQ de `watch/connectiq-poc/` compila
+para **fr255** (reloj de David, API 5.2), fr255m, fr265, fr965, fenix7, venu3, fr245 (API 3.3),
+fenix6 (3.4) y venu2 (5.0); `minSdkVersion 3.3.0`; fr235 queda fuera (API 1.4). No usa
+`AccelerometerData.timestamp` (5.1.1) para no perder compatibilidad. **No probado en un reloj real.**
 
 **Criterio de aceptación**: el JSON coincide con la estructura de la librería; el entreno aparece en
 el reloj con ejercicios, series, pesos, reps y descansos; no duplica el entreno al reenviar.
@@ -538,4 +544,6 @@ la captura móvil es la referencia y el escritorio no es un móvil estirado.
 | T-03 | Panel Hoy completo: carga de 30 días y curva de Body Battery | 2026-11-04 | Gráficas SVG propias; pruebas de vacío/datos/fallo de carga/red y capturas con datos de una copia |
 | T-04/T-29 | Registro de sesión: última marca, marcado, corrección, descanso, RPE y resumen | 2026-11-04 | `Entrenar` con borrador persistente y 3 flujos; humo real con sesión terminada contra la copia |
 | T-22 | Borrado de cuenta completo (gimnasio incluido) y confirmación en Ajustes | 2026-11-04 | `tests/test_account_deletion.py` + flujo con frase literal y capturas |
-| T-26 | Métricas derivadas y agregados de gimnasio/carga | 2026-11-04 | `/strength/stats` y `/metrics/load-summary`; `tests/test_metrics_stats.py`, 119 comprobaciones de contrato |
+| T-26 | Métricas derivadas y agregados de gimnasio/carga | 2026-11-04 | `/strength/stats` y `/metrics/load-summary`; `tests/test_metrics_stats.py`, 124 comprobaciones de contrato |
+| T-27 | Tendencias: línea, barras, calor, dispersión, sueño y comparativa | 2026-11-04 | `sleep-phases` + `sets_sample`/`previous`; 25 pruebas de frontend y captura real |
+| Reloj (base T-31) | Compatibilidad de la PoC Connect IQ con fr255 y 8 perfiles más | 2026-11-04 | `watch/connectiq-poc/` + matriz en `INVESTIGACION-AMPLIACION.md` §3.1; no probado en reloj real |

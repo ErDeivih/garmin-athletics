@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { useGymStats, useLoad, useLoadSummary, useTrends } from '../../api/queries';
+import { useGymStats, useLoad, useLoadSummary, useSleepPhases, useTrends } from '../../api/queries';
 import {
   ActivityHeatmap,
   LoadChart,
   MonotonyChart,
   MuscleVolumeChart,
   PushPullChart,
+  SleepPhasesChart,
   WeeklyTssChart,
+  WeightRepsScatter,
 } from '../../components/charts';
 import { Button, Card, EmptyState, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../../components/ui';
 import { formatDate, formatNumber } from '../../lib/format';
@@ -22,7 +24,12 @@ const METRICS = [
 // La disposición no está aquí a propósito: si falta biometría, el backend
 // rellena sueño/HRV con valores por defecto y la serie parecería real (T-21).
 
-const PERIODS = [7, 30, 90];
+const PERIODS = [
+  { days: 7, label: '7 d' },
+  { days: 30, label: '30 d' },
+  { days: 90, label: '90 d' },
+  { days: 365, label: 'Año' },
+];
 
 function TrendLine({ series }: { series: { date: string; value: number | null }[] }) {
   const values = series.map((point) => point.value).filter((value): value is number => value !== null);
@@ -77,12 +84,17 @@ export function TrendsPage() {
   const load = useLoad(period);
   const summary = useLoadSummary(period);
   const gym = useGymStats(period);
+  const sleepPhases = useSleepPhases(period);
 
   const trendValues = trends.data?.series.filter((point) => point.value !== null) ?? [];
   const latestSummary = summary.data?.latest;
   const completeWeeks = summary.data?.weeks.filter((week) => week.complete) ?? [];
   const lastWeek = [...completeWeeks].reverse().find((week) => week.tss > 0);
   const totals = gym.data?.totals;
+  const previousTonnage = gym.data?.previous.tonnage_kg ?? 0;
+  const tonnageDelta = totals && previousTonnage > 0
+    ? Math.round(((totals.tonnage_kg - previousTonnage) / previousTonnage) * 100)
+    : null;
 
   return (
     <>
@@ -91,14 +103,14 @@ export function TrendsPage() {
         description="Cómo evolucionan tus métricas, tu carga y tu gimnasio en el periodo elegido."
         actions={
           <div className="flex flex-wrap gap-2" role="group" aria-label="Periodo">
-            {PERIODS.map((days) => (
+            {PERIODS.map((option) => (
               <Button
-                key={days}
-                variant={period === days ? 'primary' : 'secondary'}
-                aria-pressed={period === days}
-                onClick={() => setPeriod(days)}
+                key={option.days}
+                variant={period === option.days ? 'primary' : 'secondary'}
+                aria-pressed={period === option.days}
+                onClick={() => setPeriod(option.days)}
               >
-                {days} días
+                {option.label}
               </Button>
             ))}
           </div>
@@ -182,6 +194,32 @@ export function TrendsPage() {
         )}
       </Card>
 
+      <section className="mt-6 grid gap-4 lg:grid-cols-2" aria-label="Sueño y dispersión">
+        <Card>
+          <SectionTitle hint={`${period} días`}>Fases de sueño</SectionTitle>
+          {sleepPhases.isPending ? (
+            <p role="status" className="text-body text-ink-muted">Cargando las fases de sueño…</p>
+          ) : sleepPhases.isError ? (
+            <p role="alert" className="text-body text-danger">{sleepPhases.error.message}</p>
+          ) : (
+            <>
+              <SleepPhasesChart series={sleepPhases.data.series} />
+              <p className="mt-2 text-caption text-ink-faint">{sleepPhases.data.note}</p>
+            </>
+          )}
+        </Card>
+        <Card>
+          <SectionTitle hint="series de trabajo">Peso × repeticiones</SectionTitle>
+          {gym.isPending ? (
+            <p role="status" className="text-body text-ink-muted">Cargando la dispersión…</p>
+          ) : gym.isError ? (
+            <p role="alert" className="text-body text-danger">{gym.error.message}</p>
+          ) : (
+            <WeightRepsScatter sets={gym.data.sets_sample} />
+          )}
+        </Card>
+      </section>
+
       <section className="mt-6 grid gap-4 lg:grid-cols-2" aria-label="Gimnasio">
         <Card>
           <SectionTitle hint={`${totals?.sessions ?? 0} ${(totals?.sessions ?? 0) === 1 ? 'sesión' : 'sesiones'}`}>
@@ -198,6 +236,11 @@ export function TrendsPage() {
                 <span>{formatNumber(totals?.working_sets)} series</span>
                 <span>{formatNumber(totals?.reps)} repeticiones</span>
               </div>
+              <p className="mb-3 text-caption text-ink-faint">
+                {tonnageDelta === null
+                  ? 'Sin periodo anterior comparable: no hay porcentaje que enseñar.'
+                  : `Vs periodo anterior: ${tonnageDelta >= 0 ? '+' : ''}${tonnageDelta} % de tonelaje.`}
+              </p>
               <MuscleVolumeChart rows={gym.data.by_muscle} />
             </>
           )}

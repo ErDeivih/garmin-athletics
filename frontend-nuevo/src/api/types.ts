@@ -231,6 +231,20 @@ export interface GymStatsResponse {
   by_muscle: GymStatsMuscle[];
   by_week: GymStatsWeek[];
   by_exercise: GymStatsExercise[];
+  sets_sample: {
+    date: string | null;
+    exercise: string;
+    muscle_group: string;
+    weight_kg: number;
+    reps: number;
+  }[];
+  previous: {
+    from: string;
+    to: string;
+    sessions: number;
+    tonnage_kg: number;
+    working_sets: number;
+  };
   push_pull: {
     push_tonnage_kg: number;
     pull_tonnage_kg: number;
@@ -240,6 +254,24 @@ export interface GymStatsResponse {
     note: string;
   };
   e1rm_note: string;
+}
+
+export interface SleepPhasePoint {
+  date: string;
+  deep_hours: number | null;
+  light_hours: number | null;
+  rem_hours: number | null;
+  awake_hours: number | null;
+  sleep_hours: number | null;
+  in_bed_hours: number | null;
+  sleep_score: number | null;
+  efficiency: number | null;
+}
+
+export interface SleepPhasesResponse {
+  days: number;
+  series: SleepPhasePoint[];
+  note: string;
 }
 
 // --- Gimnasio ---------------------------------------------------------------

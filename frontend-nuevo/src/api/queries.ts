@@ -21,6 +21,7 @@ import type {
   SessionDetail,
   SessionInput,
   SessionList,
+  SleepPhasesResponse,
   SyncResult,
   SyncStatus,
   TemplateList,
@@ -39,6 +40,7 @@ export const queryKeys = {
   daily: ['metrics', 'daily'] as const,
   load: (days: number) => ['metrics', 'load', days] as const,
   loadSummary: (days: number) => ['metrics', 'load-summary', days] as const,
+  sleepPhases: (days: number) => ['metrics', 'sleep-phases', days] as const,
   gymStats: (days: number) => ['gym', 'stats', days] as const,
   alerts: ['alerts'] as const,
   sync: ['sync', 'status'] as const,
@@ -98,6 +100,14 @@ export function useLoadSummary(days = 30) {
 }
 
 /** Volumen, series por músculo, empuje/tirón y 1RM estimado (T-26). */
+/** Fases de sueño por noche: solo noches con dato real (T-27). */
+export function useSleepPhases(days = 30) {
+  return useQuery({
+    queryKey: queryKeys.sleepPhases(days),
+    queryFn: () => apiFetch<SleepPhasesResponse>(`/api/v1/metrics/sleep-phases?days=${days}`),
+  });
+}
+
 export function useGymStats(days = 90) {
   return useQuery({
     queryKey: queryKeys.gymStats(days),

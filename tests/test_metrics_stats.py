@@ -10,6 +10,7 @@ Se ejecuta como script:
     .\\venv\\Scripts\\python.exe tests\\test_metrics_stats.py
 """
 import os
+import sqlite3
 import sys
 import tempfile
 from datetime import date, datetime, time, timedelta
@@ -19,7 +20,8 @@ backend_dir = Path(__file__).resolve().parent.parent / "backend"
 sys.path.insert(0, str(backend_dir))
 
 _tmp = tempfile.mkdtemp()
-os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{_tmp}/test_metrics_stats.db"
+DB_PATH = f"{_tmp}/test_metrics_stats.db"
+os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{DB_PATH}"
 
 from fastapi.testclient import TestClient  # noqa: E402
 from main import app  # noqa: E402
@@ -125,6 +127,15 @@ def run():
     assert bench_stats["estimated_1rm_kg"] == 101.3, bench_stats
     assert bench_stats["max_weight_kg"] == 82.5
 
+    # Muestra para la dispersión peso/reps y comparativa con la ventana anterior.
+    sample = stats["sets_sample"]
+    assert len(sample) == 5, sample
+    assert set(sample[0]) == {"date", "exercise", "muscle_group", "weight_kg", "reps"}
+    assert all(item["weight_kg"] > 0 and item["reps"] > 0 for item in sample)
+    assert stats["previous"]["sessions"] == 0
+    assert stats["previous"]["tonnage_kg"] == 0.0
+    assert stats["previous"]["to"] < stats["from"]
+
     assert len(stats["by_week"]) >= 1
     assert all(row["sessions"] >= 1 for row in stats["by_week"])
     assert "Epley" in stats["e1rm_note"]
@@ -168,6 +179,34 @@ def run():
                                params={"days": 7}).json()
     assert all(row["monotony"] is None for row in empty_summary["weeks"])
     assert empty_summary["latest"]["ctl"] == 0.0
+
+    # --- /metrics/sleep-phases (T-27) ---
+    me = client.get(f"{API}/auth/me", headers=_h(token)).json()
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        for offset, deep, light, rem in ((1, 5400, 18000, 3600), (2, 4800, 19000, 3000)):
+            conn.execute(
+                "INSERT INTO daily_biometrics (user_id, date, sleep_seconds, sleep_score, "
+                "sleep_deep_seconds, sleep_light_seconds, sleep_rem_seconds, sleep_awake_seconds, "
+                "time_in_bed_seconds, sleep_efficiency) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (me["id"], (today - timedelta(days=offset)).isoformat(), deep + light + rem, 78,
+                 deep, light, rem, 900, deep + light + rem + 900, 92.0),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+    phases = client.get(f"{API}/metrics/sleep-phases", headers=_h(token), params={"days": 30})
+    assert phases.status_code == 200, phases.text
+    phase_series = phases.json()["series"]
+    assert len(phase_series) == 2, phase_series
+    night = phase_series[-1]
+    assert night["deep_hours"] == 1.5 and night["light_hours"] == 5.0 and night["rem_hours"] == 1.0
+    assert night["in_bed_hours"] == 7.75
+    assert "no se rellena" in phases.json()["note"]
+    # Una noche sin fases no aparece como noche plana.
+    empty_phases = client.get(f"{API}/metrics/sleep-phases", headers=_h(empty))
+    assert empty_phases.json()["series"] == []
 
     print("SUCCESS: métricas derivadas OK (gimnasio agregado + monotonía/tensión de Foster).")
 

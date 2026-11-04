@@ -256,7 +256,14 @@ if (hasKeys(gymStats.body, ['from', 'to', 'days', 'totals', 'by_muscle', 'by_wee
   check('strength/stats by_muscle es array', Array.isArray(gymStats.body.by_muscle));
   check('strength/stats by_week es array', Array.isArray(gymStats.body.by_week));
   check('strength/stats by_exercise es array', Array.isArray(gymStats.body.by_exercise));
+  check('strength/stats sets_sample es array', Array.isArray(gymStats.body.sets_sample));
+  check('strength/stats declara comparativa previa', typeof gymStats.body.previous?.tonnage_kg === 'number');
   check('strength/stats declara Epley', typeof gymStats.body.e1rm_note === 'string' && gymStats.body.e1rm_note.includes('Epley'));
+}
+
+const sleepPhases = await request('/api/v1/metrics/sleep-phases?days=30', { token });
+if (hasKeys(sleepPhases.body, ['days', 'series', 'note'], 'GET /metrics/sleep-phases')) {
+  check('sleep-phases.series es array', Array.isArray(sleepPhases.body.series));
 }
 
 const loadSummary = await request('/api/v1/metrics/load-summary?days=28', { token });

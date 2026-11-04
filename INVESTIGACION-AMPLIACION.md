@@ -250,30 +250,39 @@ redistribuyen como assets del producto ni se copian símbolos ajenos.
 - **SDK instalado**: `C:\Users\David\AppData\Roaming\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-8.3.0-2025-09-22-5813687a0`
   (la ruta que dio David no existe exactamente: el gestor añade fecha y hash al nombre; el puntero
   `current-sdk.cfg` apunta a esta). Compilador **8.3.0**.
-- **Perfiles de dispositivo instalados**: **161**. Incluye `fr965` (Forerunner 965), `fr970`,
-  `fenix7/8`, `venu3`, etc.
-- **fr965** (`Devices/fr965/compiler.json`): API level **5.2**, memoria de `watchApp` **786.432 B**,
-  `datafield` 262.144 B, `background` 65.536 B, pantalla redonda 454×454.
-- **Clave de desarrollador**: se generó una clave RSA 4096 → PKCS#8 DER con OpenSSL y el compilador
-  la aceptó. Esto demuestra que se puede firmar una app propia; la clave de prueba no se guarda en
-  el repositorio.
-- **Compilación 1**: el ejemplo `SimpleDataField` del SDK compilado para `fr965` →
-  `test.prg` de **119.724 bytes**. `BUILD SUCCESSFUL`.
-- **Compilación 2 (prueba de concepto de las APIs que necesitamos)**: una watch-app propia que usa
-  - acelerómetro de alta frecuencia (`Sensor.registerSensorDataListener`, 25 Hz, timestamps),
-  - grabación de actividad (`ActivityRecording.createSession` con `SPORT_TRAINING` +
-    `SUB_SPORT_STRENGTH_TRAINING`),
-  - petición HTTPS (`Communications.makeWebRequest`),
-  - almacenamiento local (`Application.Storage`),
-  
-  compilada para `fr965` → **117.196 bytes**, `BUILD SUCCESSFUL`. Permisos necesarios confirmados por
-  el compilador: `Sensor`, `Communications` y `Fit` (sin `Fit` la compilación falla al usar
-  `ActivityRecording`).
-- Comandos exactos (sin secretos; la clave estaba en un directorio temporal):
-  `monkeyc -d fr965 -f monkey.jungle -o app.prg -y key.der`.
-- `monkeydo` solo lanza en el **simulador**; instalar en un reloj real es otro paso (§3.4).
+- **Perfiles de dispositivo instalados**: **161**. Incluye `fr255` (el reloj de David), `fr255m`,
+  `fr255s`, `fr255sm`, `fr265`, `fr965`, `fr955`, `fenix7`, `venu3`, `fr245`, `fenix6`, etc.
+- **fr255** (`Devices/fr255/compiler.json`): API level **5.2**, memoria de `watchApp`
+  **524.288 B** (la más pequeña de los objetivos), pantalla redonda 260×260 MIP.
+- **Clave de desarrollador**: generada en local (RSA 4096 → PKCS#8 DER con OpenSSL). No se commitea.
+- **Proyecto de prueba versionado en `watch/connectiq-poc/`** (fuente, manifest con 21 productos,
+  icono propio y `build-matrix.ps1`). Ejercita acelerómetro, grabación de fuerza, HTTP y
+  almacenamiento. **No usa `AccelerometerData.timestamp`** (API 5.1.1) para no perder
+  compatibilidad: el conteo de repeticiones usará índice de muestra y periodo.
+- **Matriz de compilación real** (SDK 8.3.0, `minSdkVersion="3.3.0"`):
+
+| Perfil | API level | Compila | `.prg` |
+|---|---|---:|---:|
+| **fr255** | 5.2 | **SÍ** | 94.492 B |
+| fr255m | 5.2 | SÍ | 94.492 B |
+| fr265 | 5.2 | SÍ | 100.572 B |
+| fr965 | 5.2 | SÍ | 103.292 B |
+| fenix7 | 5.2 | SÍ | 94.812 B |
+| venu3 | 5.2 | SÍ | 104.092 B |
+| fr245 | 3.3 | SÍ | 94.652 B |
+| fenix6 | 3.4 | SÍ | 94.652 B |
+| venu2 | 5.0 | SÍ | 104.092 B |
+
+- **Mínimo común de las APIs usadas**: `Sensor.AccelerometerData` desde **2.3.0**; `Communications`
+  y `ActivityRecording` desde 1.0. La compilación se prueba desde **API 3.3** (fr245), que es el
+  mínimo realista en los perfiles instalados; `minSdkVersion` queda en **3.3.0**. **fr235** (API 1.4)
+  queda fuera: no tiene `AccelerometerData` ni llega al mínimo.
+- **Tamaño**: el `.prg` de fr255 (94.492 B) entra en su presupuesto de 524.288 B con margen.
+- Comando: `watch/connectiq-poc/build-matrix.ps1 -KeyPath <clave.der>`; resultados completos en
+  `watch/connectiq-poc/README.md`.
 - **No se ha instalado en un reloj real**. Todo lo que sigue distingue "verificado en el SDK" de
-  "pendiente de probar en el reloj de David".
+  "pendiente de probar en el reloj de David" — y el camino principal (A) **no necesita instalar**
+  esta app.
 
 ### 3.2 APIs del SDK que importan (confirmadas)
 
@@ -503,3 +512,11 @@ T-34 se aplica de forma transversal en cada pantalla que se toque, no como un re
 6. La mano del reloj: no hay API; se pregunta.
 7. Las capturas de UI de la competencia: ver la nota de método de `research/UI-COMPETENCIA.md`; son
    capturas de páginas públicas para investigación interna, no assets del producto.
+## 4 · Relojes objetivo (dato de David, 2026-11-04)
+
+- **El reloj de David es un Forerunner 255.** Es el objetivo de la prueba real.
+- **Requisito de compatibilidad**: la app debe funcionar en el **mayor número de modelos posible**, no solo en el suyo.
+  - Usar el **mínimo común de API** que cubra los modelos objetivo; nada de APIs exclusivas de un modelo.
+  - Comprobar la compilación en varios perfiles del SDK (fr255, fr265, fr965, fenix7, venu3 y los que haya).
+  - Documentar en una tabla: perfil, compila sí/no, API level.
+- La **mano del reloj** no la expone ninguna API: se pregunta una vez y se guarda.

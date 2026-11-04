@@ -144,8 +144,11 @@ David ha decidido que el frontend nuevo arranca con **Hoy, Gimnasio y Ajustes** 
 - **T-04/T-29 hechas**: `Entrenar` con última marca, series corregibles, descanso por hora de fin,
   RPE por serie, borrador que sobrevive a recargar y resumen. La sesión libre (T-13) y guardar como
   plantilla (T-17) quedan como tareas propias.
-- **T-26 hecha y T-27 en curso**: agregados de gimnasio/carga y Tendencias con línea, barras, calor,
-  monotonía, volumen muscular y empuje/tirón; faltan dispersión, fases de sueño y comparativa.
+- **T-26 hecha y T-27 hecha**: agregados de gimnasio/carga y Tendencias con línea, barras, calor,
+  dispersión, fases de sueño, monotonía, volumen muscular y comparativa; periodos 7/30/90/año.
+- **Reloj**: compatibilidad verificada de la PoC Connect IQ en fr255 (el de David), fr255m, fr265,
+  fr965, fenix7, venu3, fr245, fenix6 y venu2; `minSdkVersion 3.3`; fr235 fuera. El envío real sigue
+  pendiente de la prueba en su reloj (Nivel 3).
 
 ## Ampliación completa del producto (2026-11-04)
 
