@@ -1,7 +1,7 @@
 # Ficha del agente — Garmin Athletics — panel de entrenamiento y editor de gimnasio
 
 **Id en el panel**: `garmin`
-**Ruta**: `F:\EspacioCodigo\garmin`
+**Ruta**: `F:\Proyectos\garmin`
 **Rama de trabajo**: `master`
 **Familia de interfaz**: A (panel de datos) + G (editor) — ver `F:\Inforepositorios\indice\RECETAS-UI.md`
 
