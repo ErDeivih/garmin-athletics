@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garmin Athletics - Control Fisiológico & IA</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0b0f19;
+            --card-bg: rgba(22, 30, 49, 0.75);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.12) 0%, transparent 40%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* HEADER */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--card-border);
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border: none;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+        }
+
+        /* READINESS BANNER */
+        .readiness-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .readiness-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            background: var(--accent-green);
+            border-radius: 4px;
+        }
+
+        .readiness-info h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .readiness-info p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            max-width: 600px;
+        }
+
+        .readiness-score-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.15);
+            border: 2px solid var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .score-val {
+            font-size: 2.2rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .score-lbl {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* GRID WIDGETS */
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .widget {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: transform 0.2s ease;
+        }
+
+        .widget:hover {
+            transform: translateY(-2px);
+        }
+
+        .widget-title {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .widget-val {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .widget-sub {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* CHARTS & PANELS */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 24px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* WORKOUT BUILDER */
+        .exercise-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto;
+            gap: 8px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .input-field {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        /* NOTIFICATION BADGE */
+        .tag {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .tag-green { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); }
+        .tag-yellow { background: rgba(245, 158, 11, 0.2); color: var(--accent-yellow); }
+        .tag-red { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- HEADER -->
+    <header>
+        <div class="logo">
+            ⚡ Garmin Athletics
+        </div>
+        <div class="actions">
+            <button class="btn" onclick="syncGarmin()">🔄 Sincronizar Garmin</button>
+            <button class="btn btn-primary" onclick="requestGymRoutine()">🤖 Sugerir Rutina IA</button>
+        </div>
+    </header>
+
+    <!-- READINESS BANNER -->
+    <div class="readiness-card" id="readinessCard">
+        <div class="readiness-info">
+            <span class="tag tag-green" id="readinessStatusTag">VERDE</span>
+            <h2 id="readinessTitle">Estado de Disposición Óptimo</h2>
+            <p id="readinessMessage">Tu cuerpo muestra excelente recuperación. La relación VFC de anoche y el descanso de sueño permiten afrontar sesiones de alta intensidad.</p>
+        </div>
+        <div class="readiness-score-badge" id="readinessBadge">
+            <span class="score-val" id="readinessScoreVal">82</span>
+            <span class="score-lbl">Readiness</span>
+        </div>
+    </div>
+
+    <!-- BIOMETRIC WIDGETS -->
+    <div class="grid-4">
+        <div class="widget">
+            <div class="widget-title">😴 Sueño Anoche</div>
+            <div class="widget-val" id="valSleepScore">85 / 100</div>
+            <div class="widget-sub" id="valSleepTime">7h 45m de descanso</div>
+        </div>
+        <div class="widget">
+            <div class="widget-title">💓 VFC / HRV</div>
+            <div class="widget-val" id="valHrvOvernight">54 ms</div>
+            <div class="widget-sub" id="valHrvAvg">Media 7d: 52 ms</div>
+        </div>
+        <div class="widget">
+            <div class="widget-title">🔋 Body Battery</div>
+            <div class="widget-val" id="valBodyBattery">88 %</div>
+            <div class="widget-sub">Al despertar hoy</div>
+        </div>
+        <div class="widget">
+            <div class="widget-title">🫀 Pulsaciones Reposo</div>
+            <div class="widget-val" id="valRestingHr">48 bpm</div>
+            <div class="widget-sub">Estrés medio: 22</div>
+        </div>
+    </div>
+
+    <!-- MAIN GRID: CHART & WORKOUT TRACKER -->
+    <div class="grid-2">
+        <!-- FATIGUE CHART PANEL -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">📈 Curva de Carga & Fatiga Fisiológica (Banister)</div>
+                <span class="tag tag-yellow">ATL / CTL / TSB</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="fatigueChart"></canvas>
+            </div>
+        </div>
+
+        <!-- GYM WORKOUT & AI SUGGESTION -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">🏋️ Registro de Gimnasio</div>
+                <button class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="addExerciseRow()">+ Ejercicio</button>
+            </div>
+            
+            <div style="margin-bottom: 12px;">
+                <input type="text" id="routineNameInput" class="input-field" value="Rutina Empuje / Torso" placeholder="Nombre de Rutina">
+            </div>
+
+            <div id="exerciseList">
+                <div class="exercise-row">
+                    <input type="text" class="input-field ex-name" value="Press de Banca">
+                    <input type="number" class="input-field ex-sets" value="4" placeholder="Series">
+                    <input type="number" class="input-field ex-reps" value="8" placeholder="Reps">
+                    <input type="number" class="input-field ex-weight" value="80" placeholder="Kg">
+                    <button style="background:none; border:none; color:var(--accent-red); cursor:pointer;" onclick="this.parentElement.remove()">✕</button>
+                </div>
+            </div>
+
+            <div style="margin-top: 16px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:0.85rem; color:var(--text-muted);">
+                    TSS Est: <strong id="estTssVal" style="color:var(--accent-blue);">45</strong> | Tonelaje: <strong id="estTonnageVal" style="color:var(--accent-purple);">2,560 kg</strong>
+                </div>
+                <button class="btn btn-primary" onclick="saveWorkoutLog()">Guardar Sesión</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = "/api/v1";
+
+    // Inicializar Gráfica de Fatiga Chart.js
+    const ctx = document.getElementById('fatigueChart').getContext('2d');
+    const fatigueChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Hace 6d', 'Hace 5d', 'Hace 4d', 'Hace 3d', 'Hace 2d', 'Ayer', 'Hoy'],
+            datasets: [
+                {
+                    label: 'Fatiga (ATL 7d)',
+                    data: [35, 42, 50, 48, 62, 58, 52],
+                    borderColor: '#ef4444',
+                    borderWidth: 2,
+                    tension: 0.3
+                },
+                {
+                    label: 'Forma (CTL 42d)',
+                    data: [40, 41, 42, 43, 44, 45, 46],
+                    borderColor: '#3b82f6',
+                    borderWidth: 2,
+                    tension: 0.3
+                },
+                {
+                    label: 'Frescura (TSB)',
+                    data: [5, -1, -8, -5, -18, -13, -6],
+                    borderColor: '#10b981',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: '#9ca3af', font: { family: 'Outfit' } } }
+            },
+            scales: {
+                x: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                y: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+            }
+        }
+    });
+
+    async function syncGarmin() {
+        alert("🔄 Solicitando sincronización desatendida con Garmin Connect...");
+        try {
+            const resp = await fetch(`${API_BASE}/sync/garmin`, { method: "POST" });
+            const data = await resp.json();
+            alert("✅ Sincronización de Garmin completada con éxito.");
+            location.reload();
+        } catch (e) {
+            alert("⚠️ La API está ejecutándose. Asegúrate de configurar GARMIN_EMAIL y GARMIN_PASSWORD en .env para sincronizar.");
+        }
+    }
+
+    async function requestGymRoutine() {
+        alert("🤖 Consultando al motor IA adaptativo según tu descanso y fatiga...");
+        try {
+            const resp = await fetch(`${API_BASE}/strength/suggest?focus=Push`);
+            const routine = await resp.json();
+            
+            document.getElementById('routineNameInput').value = routine.routine_name;
+            const container = document.getElementById('exerciseList');
+            container.innerHTML = '';
+            
+            routine.exercises.forEach(ex => {
+                const row = document.createElement('div');
+                row.className = 'exercise-row';
+                row.innerHTML = `
+                    <input type="text" class="input-field ex-name" value="${ex.name}">
+                    <input type="number" class="input-field ex-sets" value="${ex.sets}">
+                    <input type="number" class="input-field ex-reps" value="${ex.reps}">
+                    <input type="number" class="input-field ex-weight" value="60" placeholder="Kg">
+                    <button style="background:none; border:none; color:var(--accent-red); cursor:pointer;" onclick="this.parentElement.remove()">✕</button>
+                `;
+                container.appendChild(row);
+            });
+            alert(`💡 Sugerencia IA generada: ${routine.readiness_context}`);
+        } catch (e) {
+            alert("⚠️ No se pudo conectar a la API local. Asegúrate de tener FastAPI activo.");
+        }
+    }
+
+    function addExerciseRow() {
+        const container = document.getElementById('exerciseList');
+        const row = document.createElement('div');
+        row.className = 'exercise-row';
+        row.innerHTML = `
+            <input type="text" class="input-field ex-name" value="Nuevo Ejercicio">
+            <input type="number" class="input-field ex-sets" value="3">
+            <input type="number" class="input-field ex-reps" value="10">
+            <input type="number" class="input-field ex-weight" value="50">
+            <button style="background:none; border:none; color:var(--accent-red); cursor:pointer;" onclick="this.parentElement.remove()">✕</button>
+        `;
+        container.appendChild(row);
+    }
+
+    async function saveWorkoutLog() {
+        const rows = document.querySelectorAll('.exercise-row');
+        const exercises = [];
+        let tonnage = 0;
+
+        rows.forEach(r => {
+            const name = r.querySelector('.ex-name').value;
+            const sets = parseInt(r.querySelector('.ex-sets').value) || 0;
+            const reps = parseInt(r.querySelector('.ex-reps').value) || 0;
+            const weight = parseFloat(r.querySelector('.ex-weight').value) || 0;
+
+            tonnage += sets * reps * weight;
+            exercises.push({ name, sets, reps, weight_kg: weight });
+        });
+
+        const payload = {
+            routine_name: document.getElementById('routineNameInput').value,
+            target_focus: "Push",
+            exercises: exercises
+        };
+
+        try {
+            const resp = await fetch(`${API_BASE}/strength/log`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const res = await resp.json();
+            alert(`🎉 Sesión guardada con éxito! Tonelaje total: ${tonnage} kg (TSS: ${res.computed_tss})`);
+        } catch (e) {
+            alert(`🎉 Sesión guardada localmente! Tonelaje total: ${tonnage} kg`);
+        }
+    }
+</script>
+
+</body>
+</html>

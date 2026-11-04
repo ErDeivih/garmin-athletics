@@ -1,0 +1,33 @@
+# Secretos: NUNCA al repositorio
+.env
+.env.local
+*.env
+
+# Tokens de sesion de Garmin (equivalen a una contrasena)
+backend/garmin_tokens
+backend/garmin_tokens.json
+backend/garmin_tokens_*/
+garmin_tokens*.json
+
+# Datos personales de salud y la base de datos local
+*.db
+*.db-shm
+*.db-wal
+garmin_athletics.db
+
+# Entornos y dependencias
+venv/
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+frontend/dist/
+frontend_mvp/dist/
+
+# Registros y temporales
+*.log
+logs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+tmp/

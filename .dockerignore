@@ -1,0 +1,14 @@
+venv/
+__pycache__/
+*.pyc
+*.db
+*.sqlite*
+.env
+garmin_tokens/
+garmin_tokens_*/
+data/
+frontend/node_modules/
+frontend/dist/
+.git/
+tests/__pycache__/
+backend/__pycache__/
