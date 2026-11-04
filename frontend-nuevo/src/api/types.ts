@@ -1,0 +1,353 @@
+/**
+ * Contrato de la API, escrito a mano y contrastado con las respuestas reales
+ * (INVESTIGACION.md §4.2). El backend no declara `response_model` en casi
+ * ninguna ruta: si un campo cambia, TypeScript no se entera. Por eso existe
+ * `scripts/verify-api.mjs`, que comprueba las formas contra el backend de verdad.
+ *
+ * Regla: nada de `any` en datos de salud. Un campo puede faltar o ser null;
+ * eso se representa con `| null`.
+ */
+
+// --- Autenticación y cuenta -------------------------------------------------
+
+export interface LoginPayload {
+  email: string;
+  password: string;
+}
+
+export interface TokenResponse {
+  access_token: string;
+  token_type: 'bearer';
+  user_id: string;
+  username: string;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  username: string;
+  display_name: string;
+  created_at: string | null;
+}
+
+export interface GarminStatus {
+  linked: boolean;
+  garmin_email?: string | null;
+  needs_reauth?: boolean;
+  last_sync_at?: string | null;
+}
+
+export interface GarminLinkResult {
+  status: 'saved' | 'need_mfa';
+  garmin_email?: string;
+  ticket?: Record<string, unknown>;
+  message?: string;
+}
+
+// --- Sincronización ---------------------------------------------------------
+
+export interface SyncStatus {
+  linked: boolean;
+  garmin_email: string | null;
+  needs_reauth: boolean;
+  last_sync_at: string | null;
+  activities_7d: number;
+  tss_7d: number;
+  scheduler_running: boolean;
+}
+
+export interface SyncResult {
+  status: string;
+  message: string;
+}
+
+// --- Métricas del panel -----------------------------------------------------
+
+export type ReadinessStatus = 'VERDE' | 'AMARILLO' | 'ROJO';
+
+export interface ReadinessComponents {
+  sleep_contribution: number;
+  hrv_contribution: number;
+  tsb_contribution: number;
+}
+
+export interface Readiness {
+  score: number;
+  status: ReadinessStatus;
+  message: string;
+  components: ReadinessComponents;
+}
+
+export interface SleepMetrics {
+  score: number | null;
+  seconds: number | null;
+  hours: number | null;
+  avg_7d: number | null;
+  deep_seconds: number | null;
+  light_seconds: number | null;
+  rem_seconds: number | null;
+  awake_seconds: number | null;
+  time_in_bed_seconds: number | null;
+  efficiency: number | null;
+  bedtime: string | null;
+  wakeup: string | null;
+}
+
+export interface HrvMetrics {
+  overnight: number | null;
+  weekly_avg: number | null;
+  status: string;
+  avg_7d: number | null;
+}
+
+export interface BodyBattery {
+  max: number | null;
+  min: number | null;
+  wake: number | null;
+  curve: [number, number][] | null;
+}
+
+export interface DailyMetrics {
+  date: string;
+  biometrics_available: boolean;
+  sleep: SleepMetrics;
+  hrv: HrvMetrics;
+  resting_hr: number | null;
+  resting_hr_7d: number | null;
+  body_battery: BodyBattery;
+  stress_avg: number | null;
+  tsb: number;
+  atl: number;
+  ctl: number;
+  readiness: Readiness;
+}
+
+export type AlertSeverity = 'info' | 'warn' | 'high';
+
+export interface AppAlert {
+  type: string;
+  severity: AlertSeverity;
+  message: string;
+}
+
+export interface AlertsResponse {
+  date: string;
+  count: number;
+  alerts: AppAlert[];
+}
+
+export interface TrendPoint {
+  date: string;
+  value: number | null;
+}
+
+export interface TrendResponse {
+  metric: string;
+  days: number;
+  series: TrendPoint[];
+}
+
+// --- Gimnasio ---------------------------------------------------------------
+
+export interface ExerciseBrief {
+  id: string;
+  name: string;
+  slug: string;
+  muscle_group: string;
+  equipment: string;
+  is_timed: boolean;
+  is_unilateral: boolean;
+}
+
+export interface Exercise extends ExerciseBrief {
+  secondary_muscles: string[];
+  muscle_group_label: string;
+  equipment_label: string;
+  notes: string | null;
+  source: string;
+  garmin_enum: string | null;
+  is_custom: boolean;
+}
+
+export interface ExerciseList {
+  total: number;
+  items: Exercise[];
+  muscle_groups: { value: string; label: string }[];
+  equipment: { value: string; label: string }[];
+}
+
+export interface TemplateExercise {
+  id: string;
+  position: number;
+  exercise: ExerciseBrief | null;
+  sets: number;
+  reps: number;
+  weight_kg: number;
+  rest_seconds: number;
+  notes: string | null;
+}
+
+export interface WorkoutTemplate {
+  id: string;
+  name: string;
+  weekday: number | null;
+  weekday_label: string | null;
+  focus: string | null;
+  notes: string | null;
+  exercises: TemplateExercise[];
+  total_sets: number;
+  estimated_tonnage_kg: number;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface TemplateList {
+  total: number;
+  items: WorkoutTemplate[];
+}
+
+export interface SessionSummary {
+  id: string;
+  name: string;
+  template_id: string | null;
+  date: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+  duration_min: number | null;
+  total_tonnage_kg: number;
+  computed_tss: number;
+  sets_count: number;
+  exercises_count: number;
+  notes: string | null;
+}
+
+export interface SessionList {
+  total: number;
+  limit: number;
+  offset: number;
+  items: SessionSummary[];
+}
+
+// --- Actividades, rutas, social, rendimiento, calendario --------------------
+
+export interface ActivitySummary {
+  id: string;
+  source: string;
+  type: string;
+  name: string;
+  start_time: string;
+  duration_min: number;
+  distance_m: number | null;
+  avg_hr: number | null;
+  max_hr: number | null;
+  gain_m: number | null;
+  has_track: boolean;
+  tss: number | null;
+  rpe: number | null;
+}
+
+export interface PlannedRoute {
+  id: string;
+  name: string;
+  sport: string;
+  distance_m: number;
+  gain_m: number | null;
+  points: number;
+  created_at: string;
+}
+
+export interface LeaderboardEntry {
+  athlete: { id: string; username: string; display_name: string | null };
+  weekly_tss: number;
+  activity_count: number;
+  ctl: number;
+  tsb: number;
+  readiness_score: number | null;
+  readiness_status: string | null;
+}
+
+export interface LeaderboardResponse {
+  period_days: number;
+  order_by: string;
+  ranking: LeaderboardEntry[];
+  note: string;
+}
+
+export interface PerformanceSummary {
+  sport: string;
+  days: number;
+  current: {
+    sessions: number;
+    hours: number;
+    km: number;
+    tss: number;
+    gain_m: number;
+    avg_hr: number | null;
+  };
+  previous: {
+    sessions: number;
+    hours: number;
+    km: number;
+    tss: number;
+    gain_m: number;
+    avg_hr: number | null;
+  };
+  best_effort: { value: number; activity_id: string } | null;
+}
+
+export interface ZonesResponse {
+  sport: string;
+  days: number;
+  total_secs: number;
+  zones: { zone: number; secs: number; pct: number }[];
+}
+
+export interface PersonalRecord {
+  sport?: string;
+  label: string;
+  value: number;
+  unit: string;
+  display: string;
+  activity_id?: string;
+  achieved_at?: string;
+}
+
+export interface CalendarActivity {
+  id: string;
+  name: string;
+  type: string;
+  start: string;
+  duration_min: number;
+  tss: number | null;
+}
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  event_type: string;
+  start: string;
+  duration_min: number | null;
+  weekday: number | null;
+  is_immovable: boolean;
+  notes: string | null;
+}
+
+export interface CalendarDay {
+  date: string;
+  events: CalendarEvent[];
+  activities: CalendarActivity[];
+  readiness: { score: number | null; status: string | null } | null;
+}
+
+export interface CalendarResponse {
+  from: string;
+  to: string;
+  days: CalendarDay[];
+}
+
+// --- Paginación -------------------------------------------------------------
+
+export interface Paginated<T> {
+  total: number;
+  items: T[];
+}

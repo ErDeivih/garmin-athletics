@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0A0E13" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="description" content="Garmin Athletics: panel de disposición y entrenamiento de fuerza." />
+    <title>Garmin Athletics</title>
+    <script>
+      // Aplica el tema guardado antes de que cargue el bundle: sin destello.
+      try {
+        if (window.localStorage.getItem('garmin-athletics.theme') === 'light') {
+          document.documentElement.dataset.theme = 'light';
+        }
+      } catch (error) {
+        // sin almacenamiento: se queda el tema oscuro por defecto
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

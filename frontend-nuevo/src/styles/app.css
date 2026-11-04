@@ -1,0 +1,44 @@
+@import "tailwindcss";
+@import "./tokens.generated.css";
+
+/* Base: los tokens mandan. Ningún color ni tamaño literal en la app. */
+html {
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--ga-bg);
+  color: var(--ga-ink);
+  font-family: var(--ga-font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--ga-accent);
+  color: var(--ga-on-accent);
+}
+
+/* El foco es sagrado: siempre visible y con el anillo del sistema. */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ga-focus-ring);
+}
+
+/* La animación existe para explicar un cambio, nunca para decorar. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
