@@ -7,6 +7,7 @@ from app.api.v1.sync import router as sync_router
 from app.api.v1.metrics import router as metrics_router
 from app.api.v1.activities import router as activities_router
 from app.api.v1.strength import router as strength_router
+from app.api.v1.gym import router as gym_router
 from app.api.v1.social_auth import router as auth_router
 from app.api.v1.friends import router as friends_router
 from app.api.v1.social import router as social_router
@@ -52,6 +53,9 @@ app.include_router(sync_router, prefix=settings.API_V1_STR)
 app.include_router(metrics_router, prefix=settings.API_V1_STR)
 app.include_router(activities_router, prefix=settings.API_V1_STR)
 app.include_router(strength_router, prefix=settings.API_V1_STR)
+# El router del gimnasio v2 va DESPUÉS del viejo a propósito: así `/strength/exercises/prs`
+# (ruta exacta ya existente) gana a `/strength/exercises/{exercise_id}`.
+app.include_router(gym_router, prefix=settings.API_V1_STR)
 app.include_router(auth_router, prefix=settings.API_V1_STR)
 app.include_router(friends_router, prefix=settings.API_V1_STR)
 app.include_router(social_router, prefix=settings.API_V1_STR)
@@ -64,6 +68,16 @@ app.include_router(alerts_router, prefix=settings.API_V1_STR)
 @app.on_event("startup")
 async def on_startup():
     await init_db()
+    # Catálogo de ejercicios: idempotente, solo inserta los que falten (DECISIONES.md D-04).
+    from app.db.session import AsyncSessionLocal
+    from app.services.gym_seed import seed_exercise_catalog
+    try:
+        async with AsyncSessionLocal() as session:
+            added = await seed_exercise_catalog(session)
+            if added:
+                logging.getLogger("startup").info(f"Catálogo de ejercicios: +{added} ejercicios de semilla")
+    except Exception as exc:  # no impedir el arranque de la API por la semilla
+        logging.getLogger("startup").warning(f"No se pudo sembrar el catálogo de ejercicios: {exc}")
     from app.scheduler.scheduler import start_scheduler
     start_scheduler()
 

@@ -189,6 +189,96 @@ class PrivacyZone(Base):
     radius_m = Column(Integer, nullable=False, default=200)
     created_at = Column(DateTime, default=datetime.utcnow)
 
+class Exercise(Base):
+    """Catálogo de ejercicios (DECISIONES.md D-01/D-04).
+
+    `user_id` NULL = catálogo global del sistema (semilla, compartido por todos).
+    `user_id` con valor = ejercicio propio de ese atleta.
+    """
+    __tablename__ = "exercises"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String(36), nullable=True, index=True)
+    name = Column(String(150), nullable=False)
+    slug = Column(String(160), nullable=False, index=True)
+    # Nombre en minúsculas y sin tildes, para que buscar "biceps" encuentre "Curl de bíceps".
+    search_text = Column(String(200), nullable=True, index=True)
+    muscle_group = Column(String(40), nullable=False, default="cuerpo_completo")
+    secondary_muscles = Column(JSON, nullable=True)  # ["triceps", "hombro"]
+    equipment = Column(String(40), nullable=False, default="otro")
+    is_unilateral = Column(Boolean, default=False)   # se hace por lado
+    is_timed = Column(Boolean, default=False)        # se mide en segundos (plancha)
+    notes = Column(Text, nullable=True)              # notas técnicas
+    source = Column(String(20), nullable=False, default="custom")  # seed|custom
+    garmin_enum = Column(String(80), nullable=True)  # enum de Garmin si se conoce
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class WorkoutTemplate(Base):
+    """Plantilla de rutina reutilizable."""
+    __tablename__ = "workout_templates"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String(36), nullable=True, index=True)
+    name = Column(String(150), nullable=False)
+    weekday = Column(Integer, nullable=True)  # 0=lunes..6=domingo
+    focus = Column(String(50), nullable=True)  # Push|Pull|Legs|Full Body
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class TemplateExercise(Base):
+    """Ejercicio dentro de una plantilla, con su prescripción."""
+    __tablename__ = "template_exercises"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    template_id = Column(String(36), nullable=False, index=True)
+    exercise_id = Column(String(36), nullable=False, index=True)
+    position = Column(Integer, nullable=False, default=0)
+    sets = Column(Integer, nullable=False, default=3)
+    reps = Column(Integer, nullable=False, default=10)
+    weight_kg = Column(Float, nullable=False, default=0.0)
+    rest_seconds = Column(Integer, nullable=False, default=120)
+    notes = Column(Text, nullable=True)
+
+
+class WorkoutSession(Base):
+    """Una sesión de fuerza ya ejecutada. El borrador vive en el navegador (D-02)."""
+    __tablename__ = "workout_sessions"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String(36), nullable=True, index=True)
+    template_id = Column(String(36), nullable=True)
+    name = Column(String(150), nullable=False)
+    started_at = Column(DateTime, nullable=False)
+    finished_at = Column(DateTime, nullable=True)
+    status = Column(String(20), nullable=False, default="done")  # done
+    notes = Column(Text, nullable=True)
+    total_tonnage_kg = Column(Float, nullable=False, default=0.0)
+    computed_tss = Column(Float, nullable=False, default=0.0)
+    activity_id = Column(String(100), nullable=True)  # fila Activity espejo para la fatiga
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class SessionSet(Base):
+    """Una serie individual de una sesión (lo que permite corregir una serie sin tocar el resto)."""
+    __tablename__ = "session_sets"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    session_id = Column(String(36), nullable=False, index=True)
+    exercise_id = Column(String(36), nullable=False, index=True)
+    position = Column(Integer, nullable=False, default=0)   # orden del ejercicio en la sesión
+    set_number = Column(Integer, nullable=False, default=1)  # número de serie de ese ejercicio
+    weight_kg = Column(Float, nullable=False, default=0.0)
+    reps = Column(Integer, nullable=False, default=0)
+    rir = Column(Integer, nullable=True)
+    is_warmup = Column(Boolean, default=False)
+    set_type = Column(String(20), nullable=False, default="normal")  # normal|warmup|drop|failure
+    rest_seconds = Column(Integer, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+
+
 class DailyStat(Base):
     __tablename__ = "daily_stats"
 

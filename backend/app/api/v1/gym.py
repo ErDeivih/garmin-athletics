@@ -1,0 +1,916 @@
+"""Gimnasio v2: catálogo de ejercicios, plantillas y sesiones con series individuales.
+
+Amplía el router viejo (`api/v1/strength.py`) sin romperlo: `POST /strength/log` sigue
+existiendo y con el mismo contrato. Este módulo añade lo que la especificación pide y
+hoy no existía (ver `INVESTIGACION.md` §4.5, huecos H1-H7):
+
+- Catálogo propio (`exercises`) con búsqueda y filtros.
+- Plantillas reutilizables (`workout_templates` + `template_exercises`).
+- Sesiones con series individuales (`workout_sessions` + `session_sets`), que es lo que
+  permite marcar una serie y corregir su peso sin tocar las demás.
+
+Decisiones de diseño: `DECISIONES.md` D-01, D-02 y D-04.
+"""
+import re
+import unicodedata
+import uuid
+from datetime import date, datetime, time
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel, Field
+from sqlalchemy import delete as sa_delete
+from sqlalchemy import func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_current_user, require_current_user
+from app.db.models import (
+    Activity, Exercise, SessionSet, TemplateExercise, User,
+    WorkoutSession, WorkoutTemplate,
+)
+from app.db.session import get_db
+from app.services.fatigue_engine import FatigueEngine
+from app.services.gym_seed import (
+    EQUIPMENT, EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, MUSCLE_GROUPS, normalize_search,
+)
+
+router = APIRouter(prefix="/strength", tags=["Gym — catálogo y sesiones"])
+
+SET_TYPES = ("normal", "warmup", "drop", "failure")
+
+
+# ---------------------------------------------------------------------------
+# Esquemas de entrada
+# ---------------------------------------------------------------------------
+
+class ExerciseCreate(BaseModel):
+    name: str = Field(..., min_length=2, max_length=150, examples=["Press de banca inclinado"])
+    muscle_group: str = Field("pecho", examples=list(MUSCLE_GROUPS))
+    equipment: str = Field("otro", examples=list(EQUIPMENT))
+    secondary_muscles: List[str] = Field(default_factory=list)
+    is_unilateral: bool = False
+    is_timed: bool = False
+    notes: Optional[str] = None
+    garmin_enum: Optional[str] = None
+
+
+class ExerciseUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=2, max_length=150)
+    muscle_group: Optional[str] = None
+    equipment: Optional[str] = None
+    secondary_muscles: Optional[List[str]] = None
+    is_unilateral: Optional[bool] = None
+    is_timed: Optional[bool] = None
+    notes: Optional[str] = None
+    garmin_enum: Optional[str] = None
+
+
+class TemplateExerciseIn(BaseModel):
+    exercise_id: str
+    sets: int = Field(3, ge=1, le=20)
+    reps: int = Field(10, ge=0, le=500)
+    weight_kg: float = Field(0.0, ge=0, le=2000)
+    rest_seconds: int = Field(120, ge=0, le=1800)
+    notes: Optional[str] = None
+
+
+class TemplateIn(BaseModel):
+    name: str = Field(..., min_length=2, max_length=150)
+    weekday: Optional[int] = Field(None, ge=0, le=6, description="0=lunes .. 6=domingo")
+    focus: Optional[str] = Field(None, max_length=50)
+    notes: Optional[str] = None
+    exercises: List[TemplateExerciseIn] = Field(default_factory=list)
+
+
+class SetIn(BaseModel):
+    exercise_id: str
+    set_number: int = Field(1, ge=1, le=100)
+    weight_kg: float = Field(0.0, ge=0, le=2000)
+    reps: int = Field(0, ge=0, le=1000)
+    rir: Optional[int] = Field(None, ge=0, le=10)
+    is_warmup: bool = False
+    set_type: str = "normal"
+    rest_seconds: Optional[int] = Field(None, ge=0, le=3600)
+    completed_at: Optional[datetime] = None
+
+
+class SessionIn(BaseModel):
+    name: Optional[str] = Field(None, max_length=150)
+    template_id: Optional[str] = None
+    started_at: Optional[datetime] = None
+    finished_at: Optional[datetime] = None
+    notes: Optional[str] = None
+    sets: List[SetIn] = Field(..., min_length=1)
+
+
+# ---------------------------------------------------------------------------
+# Utilidades
+# ---------------------------------------------------------------------------
+
+def _slugify(text: str) -> str:
+    nfkd = unicodedata.normalize("NFKD", text.strip().lower())
+    plain = "".join(c for c in nfkd if not unicodedata.combining(c))
+    slug = re.sub(r"[^a-z0-9]+", "-", plain).strip("-")
+    return slug[:150] or "ejercicio"
+
+
+def _validate_enum(value: str, allowed, field: str) -> str:
+    v = (value or "").strip().lower()
+    if v not in allowed:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"{field} no válido: '{value}'. Permitidos: {', '.join(allowed)}.",
+        )
+    return v
+
+
+def _exercise_brief(ex: Optional[Exercise]) -> Optional[Dict[str, Any]]:
+    if ex is None:
+        return None
+    return {
+        "id": ex.id,
+        "name": ex.name,
+        "slug": ex.slug,
+        "muscle_group": ex.muscle_group,
+        "equipment": ex.equipment,
+        "is_timed": bool(ex.is_timed),
+        "is_unilateral": bool(ex.is_unilateral),
+    }
+
+
+def _exercise_out(ex: Exercise) -> Dict[str, Any]:
+    return {
+        **_exercise_brief(ex),
+        "secondary_muscles": ex.secondary_muscles or [],
+        "muscle_group_label": MUSCLE_GROUP_LABELS.get(ex.muscle_group, ex.muscle_group),
+        "equipment_label": EQUIPMENT_LABELS.get(ex.equipment, ex.equipment),
+        "notes": ex.notes,
+        "source": ex.source,
+        "garmin_enum": ex.garmin_enum,
+        "is_custom": ex.user_id is not None,
+    }
+
+
+def _visible_exercises(user: Optional[User]):
+    """Catálogo global (semilla) + los ejercicios propios del atleta."""
+    if user is not None:
+        return or_(Exercise.user_id.is_(None), Exercise.user_id == user.id)
+    return Exercise.user_id.is_(None)
+
+
+def _set_out(s: SessionSet) -> Dict[str, Any]:
+    return {
+        "id": s.id,
+        "exercise_id": s.exercise_id,
+        "set_number": s.set_number,
+        "weight_kg": s.weight_kg,
+        "reps": s.reps,
+        "rir": s.rir,
+        "is_warmup": bool(s.is_warmup),
+        "set_type": s.set_type,
+        "rest_seconds": s.rest_seconds,
+        "completed_at": s.completed_at.isoformat() if s.completed_at else None,
+    }
+
+
+def _tonnage(sets: List[SessionSet]) -> float:
+    """Volumen de trabajo: peso × reps. Las series de calentamiento no cuentan."""
+    return round(sum((s.weight_kg or 0) * (s.reps or 0) for s in sets if not s.is_warmup), 2)
+
+
+async def _load_accessible_exercises(db: AsyncSession, user: Optional[User],
+                                     ids: List[str]) -> Dict[str, Exercise]:
+    """Devuelve {id: Exercise} y falla con 404 nombrando los que no existen o no son visibles."""
+    wanted = list(dict.fromkeys(i for i in ids if i))
+    if not wanted:
+        return {}
+    res = await db.execute(
+        select(Exercise).where(Exercise.id.in_(wanted), _visible_exercises(user))
+    )
+    found = {e.id: e for e in res.scalars().all()}
+    missing = [i for i in wanted if i not in found]
+    if missing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Ejercicio(s) no encontrado(s): {', '.join(missing)}.",
+        )
+    return found
+
+
+async def _load_exercises_by_id(db: AsyncSession, ids: List[str]) -> Dict[str, Exercise]:
+    """Carga por id sin filtrar visibilidad (para pintar plantillas/sesiones ya validadas)."""
+    wanted = list(dict.fromkeys(i for i in ids if i))
+    if not wanted:
+        return {}
+    res = await db.execute(select(Exercise).where(Exercise.id.in_(wanted)))
+    return {e.id: e for e in res.scalars().all()}
+
+
+async def _template_out(db: AsyncSession, tpl: WorkoutTemplate) -> Dict[str, Any]:
+    res = await db.execute(
+        select(TemplateExercise)
+        .where(TemplateExercise.template_id == tpl.id)
+        .order_by(TemplateExercise.position, TemplateExercise.id)
+    )
+    rows = res.scalars().all()
+    ex_map = await _load_exercises_by_id(db, [r.exercise_id for r in rows])
+    items = []
+    total_sets = 0
+    tonnage = 0.0
+    for r in rows:
+        ex = ex_map.get(r.exercise_id)
+        total_sets += r.sets
+        tonnage += (r.weight_kg or 0) * (r.reps or 0) * (r.sets or 0)
+        items.append({
+            "id": r.id,
+            "position": r.position,
+            "exercise": _exercise_brief(ex),
+            "sets": r.sets,
+            "reps": r.reps,
+            "weight_kg": r.weight_kg,
+            "rest_seconds": r.rest_seconds,
+            "notes": r.notes,
+        })
+    return {
+        "id": tpl.id,
+        "name": tpl.name,
+        "weekday": tpl.weekday,
+        "weekday_label": ("Lunes", "Martes", "Miércoles", "Jueves", "Viernes",
+                          "Sábado", "Domingo")[tpl.weekday] if tpl.weekday is not None else None,
+        "focus": tpl.focus,
+        "notes": tpl.notes,
+        "exercises": items,
+        "total_sets": total_sets,
+        "estimated_tonnage_kg": round(tonnage, 2),
+        "created_at": tpl.created_at.isoformat() if tpl.created_at else None,
+        "updated_at": tpl.updated_at.isoformat() if tpl.updated_at else None,
+    }
+
+
+async def _session_out(db: AsyncSession, sess: WorkoutSession) -> Dict[str, Any]:
+    res = await db.execute(
+        select(SessionSet).where(SessionSet.session_id == sess.id)
+    )
+    sets = res.scalars().all()
+    ex_map = await _load_exercises_by_id(db, [s.exercise_id for s in sets])
+
+    grouped: Dict[str, List[SessionSet]] = {}
+    for s in sets:
+        grouped.setdefault(s.exercise_id, []).append(s)
+
+    exercises = []
+    for ex_id, ss in grouped.items():
+        ss.sort(key=lambda x: (x.set_number, x.id))
+        ordered = sorted(ss, key=lambda x: (x.position, x.set_number))
+        exercises.append({
+            "exercise": _exercise_brief(ex_map.get(ex_id)),
+            "position": min(x.position for x in ss),
+            "sets": [_set_out(x) for x in ordered],
+            "tonnage_kg": round(sum((x.weight_kg or 0) * (x.reps or 0)
+                                    for x in ss if not x.is_warmup), 2),
+        })
+    exercises.sort(key=lambda e: e["position"])
+
+    duration_min = None
+    if sess.started_at and sess.finished_at:
+        duration_min = round((sess.finished_at - sess.started_at).total_seconds() / 60.0, 1)
+    return {
+        "id": sess.id,
+        "name": sess.name,
+        "template_id": sess.template_id,
+        "started_at": sess.started_at.isoformat() if sess.started_at else None,
+        "finished_at": sess.finished_at.isoformat() if sess.finished_at else None,
+        "date": sess.started_at.date().isoformat() if sess.started_at else None,
+        "duration_min": duration_min,
+        "status": sess.status,
+        "notes": sess.notes,
+        "total_tonnage_kg": sess.total_tonnage_kg,
+        "computed_tss": sess.computed_tss,
+        "activity_id": sess.activity_id,
+        "sets_count": len(sets),
+        "exercises_count": len(exercises),
+        "exercises": exercises,
+    }
+
+
+def _session_summary(sess: WorkoutSession, sets_count: int, exercises_count: int) -> Dict[str, Any]:
+    return {
+        "id": sess.id,
+        "name": sess.name,
+        "template_id": sess.template_id,
+        "date": sess.started_at.date().isoformat() if sess.started_at else None,
+        "started_at": sess.started_at.isoformat() if sess.started_at else None,
+        "finished_at": sess.finished_at.isoformat() if sess.finished_at else None,
+        "duration_min": round((sess.finished_at - sess.started_at).total_seconds() / 60.0, 1)
+        if sess.started_at and sess.finished_at else None,
+        "total_tonnage_kg": sess.total_tonnage_kg,
+        "computed_tss": sess.computed_tss,
+        "sets_count": sets_count,
+        "exercises_count": exercises_count,
+        "notes": sess.notes,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Catálogo de ejercicios
+# ---------------------------------------------------------------------------
+
+@router.get("/exercises", summary="Catálogo de ejercicios (búsqueda + filtros)")
+async def list_exercises(
+    q: Optional[str] = Query(None, description="Texto libre en el nombre"),
+    muscle_group: Optional[str] = Query(None, description="pecho|espalda|hombro|..."),
+    equipment: Optional[str] = Query(None, description="barra|mancuerna|maquina|..."),
+    only_custom: bool = Query(False, description="Solo los ejercicios creados por mí"),
+    limit: int = Query(200, ge=1, le=300),
+    offset: int = Query(0, ge=0),
+    user: Optional[User] = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    conditions = [_visible_exercises(user)]
+    if only_custom:
+        if user is None:
+            return {"total": 0, "items": [], "muscle_groups": [], "equipment": []}
+        conditions.append(Exercise.user_id == user.id)
+    if muscle_group:
+        conditions.append(Exercise.muscle_group == _validate_enum(muscle_group, MUSCLE_GROUPS, "muscle_group"))
+    if equipment:
+        conditions.append(Exercise.equipment == _validate_enum(equipment, EQUIPMENT, "equipment"))
+    if q and q.strip():
+        needs = normalize_search(q)
+        if needs:
+            conditions.append(Exercise.search_text.ilike(f"%{needs}%"))
+
+    total = (await db.execute(select(func.count()).select_from(Exercise).where(*conditions))).scalar() or 0
+    res = await db.execute(
+        select(Exercise).where(*conditions)
+        .order_by(Exercise.muscle_group, Exercise.name)
+        .limit(limit).offset(offset)
+    )
+    return {
+        "total": total,
+        "items": [_exercise_out(e) for e in res.scalars().all()],
+        "muscle_groups": [{"value": g, "label": MUSCLE_GROUP_LABELS[g]} for g in MUSCLE_GROUPS],
+        "equipment": [{"value": e, "label": EQUIPMENT_LABELS[e]} for e in EQUIPMENT],
+    }
+
+
+@router.post("/exercises", status_code=status.HTTP_201_CREATED,
+             summary="Crear un ejercicio propio")
+async def create_exercise(
+    payload: ExerciseCreate,
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    group = _validate_enum(payload.muscle_group, MUSCLE_GROUPS, "muscle_group")
+    equip = _validate_enum(payload.equipment, EQUIPMENT, "equipment")
+    secondaries = [_validate_enum(m, MUSCLE_GROUPS, "secondary_muscles") for m in payload.secondary_muscles]
+    slug = _slugify(payload.name)
+
+    clash = await db.execute(
+        select(Exercise).where(Exercise.slug == slug, _visible_exercises(user))
+    )
+    if clash.scalar_one_or_none():
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                            detail=f"Ya existe un ejercicio con ese nombre ('{payload.name}').")
+
+    ex = Exercise(
+        id=str(uuid.uuid4()), user_id=user.id, name=payload.name.strip(), slug=slug,
+        search_text=normalize_search(payload.name),
+        muscle_group=group, equipment=equip, secondary_muscles=secondaries,
+        is_unilateral=payload.is_unilateral, is_timed=payload.is_timed,
+        notes=payload.notes, source="custom", garmin_enum=payload.garmin_enum,
+    )
+    db.add(ex)
+    await db.commit()
+    await db.refresh(ex)
+    return _exercise_out(ex)
+
+
+@router.get("/exercises/{exercise_id}", summary="Ficha de un ejercicio con su última marca y su PR")
+async def get_exercise(
+    exercise_id: str,
+    user: Optional[User] = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    res = await db.execute(
+        select(Exercise).where(Exercise.id == exercise_id, _visible_exercises(user)))
+    ex = res.scalar_one_or_none()
+    if not ex:
+        raise HTTPException(status_code=404, detail="Ejercicio no encontrado.")
+
+    last = None
+    pr = None
+    sessions_count = 0
+    if user is not None:
+        sets_res = await db.execute(
+            select(SessionSet, WorkoutSession.started_at)
+            .join(WorkoutSession, SessionSet.session_id == WorkoutSession.id)
+            .where(SessionSet.exercise_id == exercise_id,
+                   WorkoutSession.user_id == user.id)
+            .order_by(WorkoutSession.started_at.desc(), SessionSet.set_number)
+        )
+        rows = sets_res.all()
+        sessions_count = len({s.session_id for s, _ in rows})
+        working = [(s, d) for s, d in rows if not s.is_warmup]
+        if working:
+            s0, d0 = working[0]
+            last = {"date": d0.date().isoformat() if d0 else None,
+                    "weight_kg": s0.weight_kg, "reps": s0.reps, "set_number": s0.set_number}
+            best = max(working, key=lambda p: ((p[0].weight_kg or 0), (p[0].reps or 0)))
+            pr = {"date": best[1].date().isoformat() if best[1] else None,
+                  "weight_kg": best[0].weight_kg, "reps": best[0].reps}
+    return {"exercise": _exercise_out(ex), "last": last, "pr": pr,
+            "sessions_count": sessions_count}
+
+
+@router.put("/exercises/{exercise_id}", summary="Editar un ejercicio propio")
+async def update_exercise(
+    exercise_id: str,
+    payload: ExerciseUpdate,
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    res = await db.execute(select(Exercise).where(
+        Exercise.id == exercise_id, Exercise.user_id == user.id))
+    ex = res.scalar_one_or_none()
+    if not ex:
+        raise HTTPException(status_code=404,
+                            detail="Ejercicio no encontrado o no es tuyo (la semilla no se edita).")
+    data = payload.model_dump(exclude_unset=True)
+    if "muscle_group" in data and data["muscle_group"]:
+        data["muscle_group"] = _validate_enum(data["muscle_group"], MUSCLE_GROUPS, "muscle_group")
+    if "equipment" in data and data["equipment"]:
+        data["equipment"] = _validate_enum(data["equipment"], EQUIPMENT, "equipment")
+    if "secondary_muscles" in data and data["secondary_muscles"] is not None:
+        data["secondary_muscles"] = [
+            _validate_enum(m, MUSCLE_GROUPS, "secondary_muscles") for m in data["secondary_muscles"]]
+    if "name" in data and data["name"]:
+        data["name"] = data["name"].strip()
+        data["slug"] = _slugify(data["name"])
+        data["search_text"] = normalize_search(data["name"])
+    for k, v in data.items():
+        setattr(ex, k, v)
+    await db.commit()
+    await db.refresh(ex)
+    return _exercise_out(ex)
+
+
+@router.delete("/exercises/{exercise_id}", summary="Borrar un ejercicio propio")
+async def delete_exercise(
+    exercise_id: str,
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    res = await db.execute(select(Exercise).where(
+        Exercise.id == exercise_id, Exercise.user_id == user.id))
+    ex = res.scalar_one_or_none()
+    if not ex:
+        raise HTTPException(status_code=404,
+                            detail="Ejercicio no encontrado o no es tuyo (la semilla no se borra).")
+    in_tpl = (await db.execute(select(func.count()).select_from(TemplateExercise).where(
+        TemplateExercise.exercise_id == exercise_id))).scalar() or 0
+    in_sets = (await db.execute(select(func.count()).select_from(SessionSet).where(
+        SessionSet.exercise_id == exercise_id))).scalar() or 0
+    if in_tpl or in_sets:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"No se puede borrar: {in_tpl} uso(s) en plantillas y {in_sets} serie(s) "
+                   "registradas. El historial no debe quedar con huecos.",
+        )
+    await db.delete(ex)
+    await db.commit()
+    return {"status": "removed", "id": exercise_id}
+
+
+@router.get("/exercises/{exercise_id}/history",
+            summary="Historial de un ejercicio: últimas sesiones, PR y evolución")
+async def exercise_history(
+    exercise_id: str,
+    limit: int = Query(10, ge=1, le=100),
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    res = await db.execute(
+        select(Exercise).where(Exercise.id == exercise_id, _visible_exercises(user)))
+    ex = res.scalar_one_or_none()
+    if not ex:
+        raise HTTPException(status_code=404, detail="Ejercicio no encontrado.")
+
+    rows = (await db.execute(
+        select(SessionSet, WorkoutSession)
+        .join(WorkoutSession, SessionSet.session_id == WorkoutSession.id)
+        .where(SessionSet.exercise_id == exercise_id, WorkoutSession.user_id == user.id)
+        .order_by(WorkoutSession.started_at.desc(), SessionSet.set_number)
+    )).all()
+
+    by_session: Dict[str, List[SessionSet]] = {}
+    sess_map: Dict[str, WorkoutSession] = {}
+    for s, sess in rows:
+        by_session.setdefault(sess.id, []).append(s)
+        sess_map[sess.id] = sess
+
+    sessions = []
+    series = []
+    pr = None
+    for sid, ss in list(by_session.items())[:limit]:
+        sess = sess_map[sid]
+        working = [x for x in ss if not x.is_warmup] or ss
+        best = max(working, key=lambda x: ((x.weight_kg or 0), (x.reps or 0)))
+        tonnage = round(sum((x.weight_kg or 0) * (x.reps or 0) for x in working), 2)
+        sessions.append({
+            "session_id": sid,
+            "session_name": sess.name,
+            "date": sess.started_at.date().isoformat() if sess.started_at else None,
+            "sets": [_set_out(x) for x in sorted(ss, key=lambda y: (y.set_number, y.id))],
+            "best_set": {"weight_kg": best.weight_kg, "reps": best.reps},
+            "tonnage_kg": tonnage,
+        })
+        series.append({
+            "date": sess.started_at.date().isoformat() if sess.started_at else None,
+            "max_weight_kg": max((x.weight_kg or 0) for x in working),
+            "best_reps": max((x.reps or 0) for x in working),
+            "tonnage_kg": tonnage,
+        })
+        if pr is None or ((best.weight_kg or 0), (best.reps or 0)) > (
+                (pr["weight_kg"] or 0), (pr["reps"] or 0)):
+            pr = {"weight_kg": best.weight_kg, "reps": best.reps,
+                  "date": sess.started_at.date().isoformat() if sess.started_at else None}
+
+    series.reverse()   # cronológico para el gráfico
+    return {"exercise": _exercise_out(ex), "pr": pr,
+            "sessions": sessions, "series": series}
+
+
+@router.get("/last-marks", summary="Última marca de cada ejercicio (para precargar la sesión)")
+async def last_marks(
+    exercise_ids: str = Query(..., description="Ids separados por coma"),
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    ids = [i.strip() for i in exercise_ids.split(",") if i.strip()]
+    if not ids:
+        return {"marks": {}}
+    rows = (await db.execute(
+        select(SessionSet, WorkoutSession.started_at)
+        .join(WorkoutSession, SessionSet.session_id == WorkoutSession.id)
+        .where(SessionSet.exercise_id.in_(ids),
+               WorkoutSession.user_id == user.id,
+               SessionSet.is_warmup.is_(False))
+        .order_by(WorkoutSession.started_at.desc(), SessionSet.set_number)
+    )).all()
+    marks: Dict[str, Any] = {}
+    for s, started in rows:
+        if s.exercise_id in marks:
+            continue
+        marks[s.exercise_id] = {
+            "date": started.date().isoformat() if started else None,
+            "weight_kg": s.weight_kg,
+            "reps": s.reps,
+            "set_number": s.set_number,
+            "rest_seconds": s.rest_seconds,
+        }
+    return {"marks": marks}
+
+
+# ---------------------------------------------------------------------------
+# Plantillas
+# ---------------------------------------------------------------------------
+
+async def _validate_template_exercises(db: AsyncSession, user: User,
+                                       items: List[TemplateExerciseIn]) -> None:
+    await _load_accessible_exercises(db, user, [i.exercise_id for i in items])
+
+
+async def _write_template_exercises(db: AsyncSession, template_id: str,
+                                    items: List[TemplateExerciseIn]) -> None:
+    for pos, item in enumerate(items):
+        db.add(TemplateExercise(
+            id=str(uuid.uuid4()), template_id=template_id, exercise_id=item.exercise_id,
+            position=pos, sets=item.sets, reps=item.reps, weight_kg=item.weight_kg,
+            rest_seconds=item.rest_seconds, notes=item.notes,
+        ))
+
+
+@router.get("/templates", summary="Mis plantillas de rutina")
+async def list_templates(
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    res = await db.execute(
+        select(WorkoutTemplate).where(WorkoutTemplate.user_id == user.id)
+        .order_by(WorkoutTemplate.weekday.is_(None), WorkoutTemplate.weekday, WorkoutTemplate.name)
+    )
+    items = [await _template_out(db, t) for t in res.scalars().all()]
+    return {"total": len(items), "items": items}
+
+
+@router.post("/templates", status_code=status.HTTP_201_CREATED,
+             summary="Crear una plantilla de rutina")
+async def create_template(
+    payload: TemplateIn,
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    await _validate_template_exercises(db, user, payload.exercises)
+    tpl = WorkoutTemplate(
+        id=str(uuid.uuid4()), user_id=user.id, name=payload.name.strip(),
+        weekday=payload.weekday, focus=payload.focus, notes=payload.notes,
+    )
+    db.add(tpl)
+    await _write_template_exercises(db, tpl.id, payload.exercises)
+    await db.commit()
+    await db.refresh(tpl)
+    return await _template_out(db, tpl)
+
+
+@router.get("/templates/{template_id}", summary="Detalle de una plantilla")
+async def get_template(
+    template_id: str,
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    res = await db.execute(select(WorkoutTemplate).where(
+        WorkoutTemplate.id == template_id, WorkoutTemplate.user_id == user.id))
+    tpl = res.scalar_one_or_none()
+    if not tpl:
+        raise HTTPException(status_code=404, detail="Plantilla no encontrada.")
+    return await _template_out(db, tpl)
+
+
+@router.put("/templates/{template_id}", summary="Editar una plantilla (reemplaza sus ejercicios)")
+async def update_template(
+    template_id: str,
+    payload: TemplateIn,
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    res = await db.execute(select(WorkoutTemplate).where(
+        WorkoutTemplate.id == template_id, WorkoutTemplate.user_id == user.id))
+    tpl = res.scalar_one_or_none()
+    if not tpl:
+        raise HTTPException(status_code=404, detail="Plantilla no encontrada.")
+    await _validate_template_exercises(db, user, payload.exercises)
+    tpl.name = payload.name.strip()
+    tpl.weekday = payload.weekday
+    tpl.focus = payload.focus
+    tpl.notes = payload.notes
+    await db.execute(sa_delete(TemplateExercise).where(
+        TemplateExercise.template_id == template_id))
+    await _write_template_exercises(db, template_id, payload.exercises)
+    await db.commit()
+    await db.refresh(tpl)
+    return await _template_out(db, tpl)
+
+
+@router.delete("/templates/{template_id}", summary="Borrar una plantilla")
+async def delete_template(
+    template_id: str,
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    res = await db.execute(select(WorkoutTemplate).where(
+        WorkoutTemplate.id == template_id, WorkoutTemplate.user_id == user.id))
+    tpl = res.scalar_one_or_none()
+    if not tpl:
+        raise HTTPException(status_code=404, detail="Plantilla no encontrada.")
+    await db.execute(sa_delete(TemplateExercise).where(
+        TemplateExercise.template_id == template_id))
+    # Las sesiones ya hechas conservan su nombre; solo pierden la referencia.
+    sess_res = await db.execute(select(WorkoutSession).where(
+        WorkoutSession.template_id == template_id))
+    for s in sess_res.scalars().all():
+        s.template_id = None
+    await db.delete(tpl)
+    await db.commit()
+    return {"status": "removed", "id": template_id}
+
+
+# ---------------------------------------------------------------------------
+# Sesiones
+# ---------------------------------------------------------------------------
+
+async def _recompute_and_store(db: AsyncSession, sess: WorkoutSession,
+                               sets: List[SessionSet], focus: Optional[str]) -> float:
+    tonnage = _tonnage(sets)
+    tss = FatigueEngine.calculate_strength_tss(tonnage, focus or "full")
+    sess.total_tonnage_kg = tonnage
+    sess.computed_tss = tss
+    return tss
+
+
+async def _mirror_activity(db: AsyncSession, sess: WorkoutSession, user_id: str) -> None:
+    """Crea/actualiza la fila Activity que alimenta el modelo de fatiga."""
+    started = sess.started_at or datetime.utcnow()
+    finished = sess.finished_at or started
+    duration = max(60, int((finished - started).total_seconds()))
+    if sess.activity_id:
+        res = await db.execute(select(Activity).where(Activity.id == sess.activity_id))
+        act = res.scalar_one_or_none()
+    else:
+        act = None
+    if act is None:
+        act = Activity(
+            id=str(uuid.uuid4()), user_id=user_id, source="manual",
+            activity_type="strength", activity_name=sess.name,
+            start_time=started, duration_seconds=duration, training_load_tss=0.0,
+        )
+        db.add(act)
+        sess.activity_id = act.id
+    act.activity_name = sess.name
+    act.start_time = started
+    act.duration_seconds = duration
+    act.training_load_tss = sess.computed_tss
+
+
+@router.post("/sessions", status_code=status.HTTP_201_CREATED,
+             summary="Guardar una sesión terminada (con series individuales)")
+async def create_session(
+    payload: SessionIn,
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """El borrador de la sesión vive en el navegador (DECISIONES.md D-02); aquí llega terminada."""
+    focus = None
+    template_name = None
+    if payload.template_id:
+        res = await db.execute(select(WorkoutTemplate).where(
+            WorkoutTemplate.id == payload.template_id,
+            WorkoutTemplate.user_id == user.id))
+        tpl = res.scalar_one_or_none()
+        if tpl:
+            focus = tpl.focus
+            template_name = tpl.name
+
+    await _load_accessible_exercises(db, user, [s.exercise_id for s in payload.sets])
+
+    started = payload.started_at or datetime.utcnow()
+    finished = payload.finished_at or datetime.utcnow()
+    if finished < started:
+        raise HTTPException(status_code=422,
+                            detail="finished_at no puede ser anterior a started_at.")
+
+    name = (payload.name or template_name
+            or f"Sesión de fuerza {started.date().isoformat()}").strip()[:150]
+    sess = WorkoutSession(
+        id=str(uuid.uuid4()), user_id=user.id, template_id=payload.template_id,
+        name=name, started_at=started, finished_at=finished, status="done",
+        notes=payload.notes, total_tonnage_kg=0.0, computed_tss=0.0,
+    )
+    db.add(sess)
+
+    # posición del ejercicio = orden de primera aparición en la sesión
+    positions: Dict[str, int] = {}
+    counters: Dict[str, int] = {}
+    sets: List[SessionSet] = []
+    for item in payload.sets:
+        if item.exercise_id not in positions:
+            positions[item.exercise_id] = len(positions)
+        counters[item.exercise_id] = counters.get(item.exercise_id, 0) + 1
+        stype = item.set_type if item.set_type in SET_TYPES else "normal"
+        row = SessionSet(
+            id=str(uuid.uuid4()), session_id=sess.id, exercise_id=item.exercise_id,
+            position=positions[item.exercise_id],
+            set_number=item.set_number or counters[item.exercise_id],
+            weight_kg=item.weight_kg, reps=item.reps, rir=item.rir,
+            is_warmup=(item.is_warmup or stype == "warmup"), set_type=stype,
+            rest_seconds=item.rest_seconds, completed_at=item.completed_at,
+        )
+        sets.append(row)
+        db.add(row)
+
+    await _recompute_and_store(db, sess, sets, focus)
+    await _mirror_activity(db, sess, user.id)
+    await db.commit()
+    await db.refresh(sess)
+    return await _session_out(db, sess)
+
+
+@router.get("/sessions", summary="Historial de sesiones de fuerza (paginado)")
+async def list_sessions(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    exercise_id: Optional[str] = Query(None, description="Solo sesiones con este ejercicio"),
+    from_date: Optional[date] = Query(None, alias="from"),
+    to_date: Optional[date] = Query(None, alias="to"),
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    base = select(WorkoutSession).where(WorkoutSession.user_id == user.id)
+    if from_date:
+        base = base.where(WorkoutSession.started_at >= datetime.combine(from_date, time.min))
+    if to_date:
+        base = base.where(WorkoutSession.started_at < datetime.combine(
+            to_date, time.max))
+    if exercise_id:
+        base = base.where(WorkoutSession.id.in_(
+            select(SessionSet.session_id).where(SessionSet.exercise_id == exercise_id)
+        ))
+    total = (await db.execute(
+        select(func.count()).select_from(base.subquery()))).scalar() or 0
+    res = await db.execute(
+        base.order_by(WorkoutSession.started_at.desc()).limit(limit).offset(offset))
+    sessions = res.scalars().all()
+
+    stats = {}
+    if sessions:
+        ids = [s.id for s in sessions]
+        sres = await db.execute(
+            select(SessionSet.session_id, func.count(),
+                   func.count(func.distinct(SessionSet.exercise_id)))
+            .where(SessionSet.session_id.in_(ids))
+            .group_by(SessionSet.session_id))
+        stats = {sid: (n, nex) for sid, n, nex in sres.all()}
+    items = [_session_summary(s, *stats.get(s.id, (0, 0))) for s in sessions]
+    return {"total": total, "limit": limit, "offset": offset, "items": items}
+
+
+@router.get("/sessions/{session_id}", summary="Detalle de una sesión con todas sus series")
+async def get_session(
+    session_id: str,
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    res = await db.execute(select(WorkoutSession).where(
+        WorkoutSession.id == session_id, WorkoutSession.user_id == user.id))
+    sess = res.scalar_one_or_none()
+    if not sess:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada.")
+    return await _session_out(db, sess)
+
+
+@router.put("/sessions/{session_id}", summary="Corregir una sesión guardada (reemplaza sus series)")
+async def update_session(
+    session_id: str,
+    payload: SessionIn,
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    res = await db.execute(select(WorkoutSession).where(
+        WorkoutSession.id == session_id, WorkoutSession.user_id == user.id))
+    sess = res.scalar_one_or_none()
+    if not sess:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada.")
+    await _load_accessible_exercises(db, user, [s.exercise_id for s in payload.sets])
+
+    focus = None
+    if sess.template_id:
+        tres = await db.execute(select(WorkoutTemplate).where(
+            WorkoutTemplate.id == sess.template_id))
+        tpl = tres.scalar_one_or_none()
+        focus = tpl.focus if tpl else None
+
+    if payload.name:
+        sess.name = payload.name.strip()[:150]
+    if payload.notes is not None:
+        sess.notes = payload.notes
+    if payload.started_at:
+        sess.started_at = payload.started_at
+    if payload.finished_at:
+        sess.finished_at = payload.finished_at
+    if sess.started_at and sess.finished_at and sess.finished_at < sess.started_at:
+        raise HTTPException(status_code=422,
+                            detail="finished_at no puede ser anterior a started_at.")
+
+    await db.execute(sa_delete(SessionSet).where(SessionSet.session_id == session_id))
+    positions: Dict[str, int] = {}
+    counters: Dict[str, int] = {}
+    new_sets: List[SessionSet] = []
+    for item in payload.sets:
+        if item.exercise_id not in positions:
+            positions[item.exercise_id] = len(positions)
+        counters[item.exercise_id] = counters.get(item.exercise_id, 0) + 1
+        stype = item.set_type if item.set_type in SET_TYPES else "normal"
+        row = SessionSet(
+            id=str(uuid.uuid4()), session_id=session_id, exercise_id=item.exercise_id,
+            position=positions[item.exercise_id],
+            set_number=item.set_number or counters[item.exercise_id],
+            weight_kg=item.weight_kg, reps=item.reps, rir=item.rir,
+            is_warmup=(item.is_warmup or stype == "warmup"), set_type=stype,
+            rest_seconds=item.rest_seconds, completed_at=item.completed_at,
+        )
+        new_sets.append(row)
+        db.add(row)
+    await _recompute_and_store(db, sess, new_sets, focus)
+    await _mirror_activity(db, sess, user.id)
+    await db.commit()
+    await db.refresh(sess)
+    return await _session_out(db, sess)
+
+
+@router.delete("/sessions/{session_id}", summary="Borrar una sesión y su actividad espejo")
+async def delete_session(
+    session_id: str,
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    res = await db.execute(select(WorkoutSession).where(
+        WorkoutSession.id == session_id, WorkoutSession.user_id == user.id))
+    sess = res.scalar_one_or_none()
+    if not sess:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada.")
+    await db.execute(sa_delete(SessionSet).where(SessionSet.session_id == session_id))
+    if sess.activity_id:
+        await db.execute(sa_delete(Activity).where(Activity.id == sess.activity_id))
+    await db.delete(sess)
+    await db.commit()
+    return {"status": "removed", "id": session_id}
