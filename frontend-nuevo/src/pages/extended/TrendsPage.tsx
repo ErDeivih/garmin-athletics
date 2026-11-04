@@ -9,9 +9,11 @@ const METRICS = [
   { value: 'sleep_score', label: 'Sueño (score)' },
   { value: 'resting_hr', label: 'FC en reposo' },
   { value: 'body_battery', label: 'Body Battery' },
-  { value: 'readiness', label: 'Disposición' },
   { value: 'stress', label: 'Estrés' },
 ];
+// La disposición no está aquí a propósito: si falta biometría, el backend
+// rellena sueño/HRV con valores por defecto y la serie parecería real.
+// La disposición se lee en Hoy, donde se sabe si hay datos (biometrics_available).
 
 function Sparkline({ points }: { points: number[] }) {
   if (points.length < 2) return null;

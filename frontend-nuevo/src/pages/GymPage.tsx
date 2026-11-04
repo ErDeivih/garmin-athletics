@@ -51,7 +51,7 @@ export function GymPage() {
                 {todaysTemplate.exercises.length} ejercicios · {todaysTemplate.total_sets} series ·{' '}
                 {formatNumber(todaysTemplate.estimated_tonnage_kg, 'kg')} estimados
               </p>
-              <Badge tone="info">La sesión guiada llega en la tarea T-04</Badge>
+              <Badge tone="info">La sesión guiada todavía no está en esta versión</Badge>
             </div>
           ) : (
             <p className="text-body text-ink-muted">
@@ -93,7 +93,7 @@ export function GymPage() {
         {templates.data.items.length === 0 ? (
           <EmptyState
             title="Todavía no hay plantillas"
-            description="Una plantilla es la rutina que repites: ejercicios, series, peso y descanso. El editor llega en la tarea T-05."
+            description="Una plantilla es la rutina que repites: ejercicios, series, peso y descanso. La API ya las guarda; el editor todavía no está en esta versión."
           />
         ) : (
           <ul className="flex flex-col gap-3">

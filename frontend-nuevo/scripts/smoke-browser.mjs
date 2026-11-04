@@ -82,7 +82,9 @@ try {
   await page.getByRole('heading', { name: 'Actividades', exact: true }).waitFor();
   await shot('04-actividades');
 
-  // Escritorio: la barra lateral y el panel completo.
+  // Escritorio con la configuración por defecto: la bandera se apaga para que
+  // la captura enseñe las tres pestañas visibles reales (Hoy, Gimnasio, Ajustes).
+  await page.evaluate(() => localStorage.removeItem('garmin-athletics.extended'));
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(`${APP}/`, { waitUntil: 'domcontentloaded' });
   await page.getByRole('heading', { name: 'Hoy', exact: true }).waitFor();

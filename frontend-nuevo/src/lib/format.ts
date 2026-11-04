@@ -13,30 +13,44 @@ const longDateFormatter = new Intl.DateTimeFormat('es-ES', {
 const timeFormatter = new Intl.DateTimeFormat('es-ES', { hour: '2-digit', minute: '2-digit' });
 const numberFormatter = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 });
 
+/**
+ * El backend guarda y devuelve fechas UTC sin sufijo (`datetime.utcnow().isoformat()`).
+ * Interpretarlas como locales desplaza la frescura una o dos horas. Las fechas
+ * sin hora (YYYY-MM-DD) son de calendario y se tratan como locales.
+ */
+function parseTimestamp(iso: string): Date {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+    const [year, month, day] = iso.split('-').map(Number);
+    return new Date(year ?? 1970, (month ?? 1) - 1, day ?? 1);
+  }
+  const hasZone = /(?:Z|[+-]\d{2}:?\d{2})$/.test(iso);
+  return new Date(hasZone ? iso : `${iso}Z`);
+}
+
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return 'sin fecha';
-  const date = new Date(iso);
+  const date = parseTimestamp(iso);
   if (Number.isNaN(date.getTime())) return 'sin fecha';
   return dateFormatter.format(date);
 }
 
 export function formatLongDate(iso: string | null | undefined): string {
   if (!iso) return 'hoy';
-  const date = new Date(iso);
+  const date = parseTimestamp(iso);
   if (Number.isNaN(date.getTime())) return 'hoy';
   return longDateFormatter.format(date);
 }
 
 export function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return 'nunca';
-  const date = new Date(iso);
+  const date = parseTimestamp(iso);
   if (Number.isNaN(date.getTime())) return 'nunca';
   return dateTimeFormatter.format(date);
 }
 
 export function formatTime(iso: string | null | undefined): string {
   if (!iso) return '';
-  const date = new Date(iso);
+  const date = parseTimestamp(iso);
   if (Number.isNaN(date.getTime())) return '';
   return timeFormatter.format(date);
 }
@@ -57,7 +71,7 @@ export function formatMinutes(minutes: number | null | undefined): string {
 
 export function formatRelative(iso: string | null | undefined): string {
   if (!iso) return 'nunca sincronizado';
-  const date = new Date(iso);
+  const date = parseTimestamp(iso);
   if (Number.isNaN(date.getTime())) return 'nunca sincronizado';
   const diffMs = Date.now() - date.getTime();
   const minutes = Math.round(diffMs / 60000);

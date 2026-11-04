@@ -56,11 +56,15 @@ navegación, tema oscuro, cliente HTTP con Bearer obligatorio y `src/api/types.t
 entre secciones; `tsc --noEmit` limpio; `frontend/` y `frontend_mvp/` intactos.
 
 **Resultado (2026-11-04).** Sistema de diseño en `designs/garmin-athletics-design-system/`
-(escala de 4 px, AA calculado: 52 pares, 2 temas) y app con login real, navegación por registro,
-Hoy, Gimnasio y Ajustes, más seis secciones de bandera (Actividades, Calendario, Tendencias,
-Rendimiento, Rutas, Social). Pruebas: 11 flujos en verde (Vitest + Testing Library), contrato
-verificado contra el backend real sobre una copia de la BD (61 comprobaciones), humo en navegador
-real con 5 capturas y cero errores de consola, y `tsc --noEmit` + build limpios.
+(escala de 4 px, AA calculado: 52 pares, 2 temas) y app con login real, navegación generada desde el
+registro de pantallas, Hoy, Gimnasio y Ajustes, más seis secciones de bandera (Actividades,
+Calendario, Tendencias, Rendimiento, Rutas, Social). Pruebas: 17 flujos en verde (Vitest + Testing
+Library), contrato verificado contra el backend real sobre una copia de la BD (102 comprobaciones,
+incluye crear plantilla y sesión y validar sus series), humo en navegador real con 5 capturas y cero
+errores de consola, y `tsc --noEmit` + build limpios. La revisión adversarial posterior a la primera
+entrega encontró y se corrigieron dos bloqueantes: un 401 de Garmin ya no cierra la sesión de la app,
+y la caché se vacía al cambiar de usuario; además la disposición ya no se pinta en Tendencias/Social
+cuando puede venir de valores por defecto del backend (T-21). Quedan en backlog T-21 a T-25.
 
 ---
 
@@ -275,6 +279,72 @@ mano y en un gimnasio; la app se adapta al atleta.
 **Criterio de aceptación**: cambiar kg/lb cambia lo que se muestra en todas las pantallas y no
 altera el dato guardado; el descanso por defecto se aplica al empezar una serie; el aviso de
 descanso se puede activar o desactivar y la preferencia sobrevive a recargar.
+
+---
+
+### T-21 · Readiness honesto cuando falta biometría (backend + UI)
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: revisión adversarial de T-02 (2026-11-04)
+
+`calculate_readiness_score` rellena sueño=70 y HRV=75 cuando faltan datos, así que
+`/metrics/trends?metric=readiness` y `/social/leaderboard` publican un 73/AMARILLO que parece medido.
+Hoy y Tendencias ya no lo pintan, pero el backend sigue devolviéndolo.
+
+**Criterio de aceptación**: readiness es `null` (o `biometrics_available:false`) cuando no hay sueño
+ni HRV; Tendencias excluye esa métrica y Social no muestra badges de readiness sin dato; prueba con
+la BD parada y con la sembrada. Reversible: es un cambio de respuesta, no de esquema.
+
+---
+
+### T-22 · Borrado de cuenta completo (backend + Ajustes)
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: revisión adversarial de T-02 (2026-11-04)
+
+La especificación pone "borrar cuenta" en Ajustes. `DELETE /auth/account` existe, pero **no borra**
+las cinco tablas del gimnasio (`workout_templates`, `template_exercises`, `workout_sessions`,
+`session_sets`, `exercises` propias): dejaría sesiones, series y ejercicios en la base después de
+prometer un borrado. No se enseña el botón hasta que el borrado sea verdad.
+
+**Criterio de aceptación**: el endpoint borra también el gimnasio (respetando el orden de claves);
+Ajustes pide confirmación fuerte (escribir una palabra), limpia token y caché y vuelve a la entrada;
+una prueba cuenta filas antes y después en una copia de la BD. **Nivel 3 antes de ejecutarla** por
+ser un borrado de datos: David confirma el texto de la confirmación.
+
+---
+
+### T-23 · Camino de producción y móvil real del frontend nuevo
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: revisión adversarial de T-02 (2026-11-04)
+
+El backend sirve `frontend/dist` (el viejo), no `frontend-nuevo/dist`; CORS solo admite 8000 y 5173,
+así que `vite preview` (4173) y un móvil en la LAN fallan. El cliente ya usa rutas relativas `/api/v1`
+y el proxy de desarrollo, pero falta el camino real.
+
+**Criterio de aceptación**: `frontend-nuevo/dist` se sirve desde el backend (o un reverso documentado);
+CORS configurable por entorno; probado en `vite preview` y desde un móvil en la LAN; README con la
+URL correcta. No cambia datos.
+
+---
+
+### T-24 · Subnavegación de Gimnasio (Entrenar · Rutinas · Catálogo · Historial)
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: revisión adversarial de T-02 (2026-11-04)
+
+La especificación da cinco pantallas a Gimnasio, pero hoy es una sola página. El registro de
+navegación genera las rutas de primer nivel; falta el árbol anidado de Gimnasio y que añadir una
+pantalla no obligue a tocar el layout.
+
+**Criterio de aceptación**: `/gimnasio/entrenar`, `/gimnasio/rutinas`, `/gimnasio/catalogo` y
+`/gimnasio/historial` existen con su subnavegación y sus estados; las entradas viven en el registro;
+las pruebas de flujo entran por cada una. Depende de T-04, T-05, T-06 y T-08.
+
+---
+
+### T-25 · Estado "sin permiso" y errores de red en todas las pantallas
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: revisión adversarial de T-02 (2026-11-04)
+
+Las pantallas cubren vacío, carga y error; no hay estado de "sin permiso" (403) y un fallo de red se
+enseña con el texto del navegador. El cliente ya normaliza los timeout y los fallos de conexión a
+español, pero falta el 403 y probarlo en cada sección.
+
+**Criterio de aceptación**: un 403 pinta "sin permiso" con qué credencial falta; los errores de red
+dicen qué hacer; pruebas de los cuatro estados en Hoy, Gimnasio, Ajustes y una sección de bandera.
 
 ---
 

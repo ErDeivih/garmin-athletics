@@ -1,5 +1,5 @@
 import { useLeaderboard } from '../../api/queries';
-import { Badge, Card, EmptyState, ErrorState, LoadingBlock, PageHeader } from '../../components/ui';
+import { Card, EmptyState, ErrorState, LoadingBlock, PageHeader } from '../../components/ui';
 import { formatNumber } from '../../lib/format';
 
 export function SocialPage() {
@@ -34,11 +34,6 @@ export function SocialPage() {
                   </span>
                 </span>
                 <span className="flex items-center gap-3">
-                  {entry.readiness_status ? (
-                    <Badge tone={entry.readiness_status === 'VERDE' ? 'go' : entry.readiness_status === 'ROJO' ? 'stop' : 'warn'}>
-                      {entry.readiness_status}
-                    </Badge>
-                  ) : null}
                   <span className="tnum font-display text-title text-ink">{formatNumber(entry.weekly_tss)}</span>
                 </span>
               </li>

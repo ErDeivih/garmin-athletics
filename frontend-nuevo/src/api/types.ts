@@ -228,6 +228,91 @@ export interface SessionList {
   items: SessionSummary[];
 }
 
+/** Las series tal y como las devuelve una sesión guardada. */
+export interface SessionSet {
+  id: string;
+  exercise_id: string;
+  set_number: number;
+  weight_kg: number;
+  reps: number;
+  rir: number | null;
+  is_warmup: boolean;
+  set_type: 'normal' | 'warmup' | 'drop' | 'failure';
+  rest_seconds: number | null;
+  completed_at: string | null;
+}
+
+export interface SessionExercise {
+  exercise: ExerciseBrief | null;
+  position: number;
+  sets: SessionSet[];
+  tonnage_kg: number;
+}
+
+export interface SessionDetail extends Omit<SessionSummary, 'duration_min' | 'sets_count' | 'exercises_count'> {
+  duration_min: number | null;
+  status: string;
+  activity_id: string | null;
+  sets_count: number;
+  exercises_count: number;
+  exercises: SessionExercise[];
+}
+
+/** Cuerpo de POST/PUT /strength/sessions (el que usará T-04 al terminar). */
+export interface SessionSetInput {
+  exercise_id: string;
+  set_number?: number;
+  weight_kg: number;
+  reps: number;
+  rir?: number | null;
+  is_warmup?: boolean;
+  set_type?: 'normal' | 'warmup' | 'drop' | 'failure';
+  rest_seconds?: number | null;
+  completed_at?: string | null;
+}
+
+export interface SessionInput {
+  name?: string;
+  template_id?: string | null;
+  started_at?: string | null;
+  finished_at?: string | null;
+  notes?: string | null;
+  sets: SessionSetInput[];
+}
+
+export interface LastMark {
+  date: string | null;
+  weight_kg: number;
+  reps: number;
+  set_number: number;
+  rest_seconds: number | null;
+}
+
+export interface LastMarksResponse {
+  marks: Record<string, LastMark>;
+}
+
+export interface ExerciseDetailResponse {
+  exercise: Exercise;
+  last: { date: string | null; weight_kg: number; reps: number; set_number: number } | null;
+  pr: { date: string | null; weight_kg: number; reps: number } | null;
+  sessions_count: number;
+}
+
+export interface ExerciseHistoryResponse {
+  exercise: Exercise;
+  pr: { weight_kg: number; reps: number; date: string | null } | null;
+  sessions: {
+    session_id: string;
+    session_name: string;
+    date: string | null;
+    sets: SessionSet[];
+    best_set: { weight_kg: number; reps: number };
+    tonnage_kg: number;
+  }[];
+  series: { date: string | null; max_weight_kg: number; best_reps: number; tonnage_kg: number }[];
+}
+
 // --- Actividades, rutas, social, rendimiento, calendario --------------------
 
 export interface ActivitySummary {

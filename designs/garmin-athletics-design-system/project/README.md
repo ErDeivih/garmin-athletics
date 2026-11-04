@@ -22,7 +22,7 @@ Dos temas, mismo contrato: el tema oscuro es el primario y el claro hereda la mi
 
 ## Tipografía
 
-Dos familias, cuatro tamaños efectivos. Todo lo que es número usa `hero` o `title` de la familia display con cifras tabulares: el dígito no debe bailar.
+Dos familias, cinco pasos tipográficos. Todo lo que es número usa `hero` o `title` de la familia display con cifras tabulares: el dígito no debe bailar.
 
 - `hero` (Barlow Condensed 700, 48/48): una sola cifra por pantalla, la que importa. Readiness, tonelaje, series de la sesión.
 - `title` (Barlow Condensed 700, 28/32): el título de la pantalla. Nunca dos títulos de este tamaño en la misma vista.

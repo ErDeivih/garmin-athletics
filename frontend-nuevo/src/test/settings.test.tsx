@@ -45,6 +45,29 @@ describe('ajustes y sincronización', () => {
     expect(screen.queryByRole('button', { name: /sincronizar ahora/i })).toBeNull();
   });
 
+  it('una contraseña de Garmin incorrecta muestra el error sin cerrar la sesión', async () => {
+    localStorage.setItem(TOKEN_KEY, 'test-token');
+    installFakeApi({
+      'GET /api/v1/auth/me': json(f.me),
+      'GET /api/v1/metrics/daily': json(f.daily),
+      'GET /api/v1/alerts': json(f.alerts),
+      'GET /api/v1/sync/status': json(f.syncStatusUnlinked),
+      'PUT /api/v1/auth/garmin-credentials': json({ detail: 'Garmin rechazó las credenciales.' }, 401),
+    });
+    const user = userEvent.setup();
+    renderApp('/ajustes');
+
+    await user.click(await screen.findByRole('button', { name: /vincular garmin/i }));
+    await user.type(screen.getByLabelText(/correo de garmin/i), 'atleta@example.com');
+    await user.type(screen.getByLabelText(/contraseña de garmin/i), 'mal');
+    await user.click(screen.getByRole('button', { name: /vincular cuenta/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/garmin rechazó las credenciales/i);
+    // Sigue dentro: el 401 era de Garmin, no de la sesión de la app.
+    expect(screen.getByRole('heading', { name: 'Ajustes' })).toBeInTheDocument();
+    expect(localStorage.getItem(TOKEN_KEY)).toBe('test-token');
+  });
+
   it('el tema claro se aplica y sobrevive a recargar la app', async () => {
     localStorage.setItem(TOKEN_KEY, 'test-token');
     installFakeApi({

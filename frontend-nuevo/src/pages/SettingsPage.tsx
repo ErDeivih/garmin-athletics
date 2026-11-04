@@ -34,6 +34,9 @@ function GarminLinkForm() {
       const result = await apiFetch<GarminLinkResult>('/api/v1/auth/garmin-credentials', {
         method: 'PUT',
         body: { garmin_email: email.trim().toLowerCase(), garmin_password: password },
+        // Un 401 aquí es una contraseña de Garmin incorrecta, no una sesión
+        // caducada: la app no debe expulsar al atleta de su sesión.
+        session: 'external',
       });
       if (result.status === 'need_mfa') {
         setTicket(result.ticket ?? {});
@@ -62,6 +65,7 @@ function GarminLinkForm() {
           ticket: ticket ?? {},
           code: code.trim(),
         },
+        session: 'external',
       });
       setPassword('');
       setCode('');

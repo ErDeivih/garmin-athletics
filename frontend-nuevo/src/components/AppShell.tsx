@@ -62,7 +62,7 @@ export function AppShell() {
   return (
     <div className="min-h-dvh bg-bg text-ink">
       {isDesktop ? (
-        <aside className="fixed inset-y-0 left-0 flex w-60 flex-col gap-6 border-r border-line bg-surface px-3 py-6">
+        <aside className="fixed inset-y-0 left-0 flex w-[var(--ga-space-sidebar)] flex-col gap-6 border-r border-line bg-surface px-3 py-6">
           <div className="px-2">
             <Brand />
           </div>
@@ -89,7 +89,7 @@ export function AppShell() {
         </aside>
       ) : null}
 
-      <div className={isDesktop ? 'pl-60' : ''}>
+      <div className={isDesktop ? 'pl-[var(--ga-space-sidebar)]' : ''}>
         {!isDesktop ? (
           <header className="sticky top-0 z-20 border-b border-line bg-bg/95 px-4 py-3 backdrop-blur">
             <Brand />
@@ -108,7 +108,7 @@ export function AppShell() {
                   key={item.id}
                   to={item.path}
                   className={({ isActive }) =>
-                    `focus-ring flex shrink-0 items-center gap-1 rounded-full border px-3 py-1 text-caption ${
+                    `focus-ring flex min-h-11 shrink-0 items-center gap-1 rounded-full border px-3 py-1 text-caption ${
                       isActive
                         ? 'border-accent bg-accent-soft text-accent'
                         : 'border-line-strong text-ink-muted hover:text-ink'
@@ -123,7 +123,7 @@ export function AppShell() {
           </nav>
         ) : null}
 
-        <main className="mx-auto w-full max-w-[960px] px-4 py-6 pb-24 lg:px-8 lg:py-8 lg:pb-8">
+        <main className="mx-auto w-full max-w-[var(--ga-space-content)] px-4 py-6 pb-[var(--ga-space-bottom-nav)] lg:px-8 lg:py-8 lg:pb-8">
           <Outlet />
         </main>
       </div>

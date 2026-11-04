@@ -114,9 +114,115 @@ if (hasKeys(sessions.body, ['total', 'limit', 'offset', 'items'], 'GET /strength
   check('sessions.items es un array', Array.isArray(sessions.body.items));
 }
 
+// --- El gimnasio de verdad: crear ejercicio, plantilla y sesión, y validar items ---
+const exerciseCreated = await request('/api/v1/strength/exercises', {
+  method: 'POST',
+  token,
+  body: JSON.stringify({ name: `Verificación ${email}`, muscle_group: 'pecho', equipment: 'barra', notes: 'temporal' }),
+});
+check('POST /strength/exercises responde 201', exerciseCreated.status === 201, `estado ${exerciseCreated.status}: ${JSON.stringify(exerciseCreated.body)}`);
+const exerciseId = exerciseCreated.body?.id;
+check('ejercicio creado devuelve id', typeof exerciseId === 'string' && exerciseId.length > 0);
+
+const templateCreated = await request('/api/v1/strength/templates', {
+  method: 'POST',
+  token,
+  body: JSON.stringify({
+    name: 'Plantilla de verificación',
+    weekday: 2,
+    focus: 'push',
+    exercises: [{ exercise_id: exerciseId, sets: 3, reps: 8, weight_kg: 60, rest_seconds: 120, notes: 'temporal' }],
+  }),
+});
+check('POST /strength/templates responde 201', templateCreated.status === 201, `estado ${templateCreated.status}: ${JSON.stringify(templateCreated.body)}`);
+const templateId = templateCreated.body?.id;
+if (hasKeys(templateCreated.body, ['id', 'name', 'weekday', 'weekday_label', 'focus', 'notes', 'exercises', 'total_sets', 'estimated_tonnage_kg'], 'plantilla creada')) {
+  check('plantilla.total_sets es number', typeof templateCreated.body.total_sets === 'number');
+  check('plantilla tiene 3 series', templateCreated.body.total_sets === 3, `total ${templateCreated.body.total_sets}`);
+  const templateExercise = templateCreated.body.exercises?.[0];
+  if (hasKeys(templateExercise, ['id', 'position', 'exercise', 'sets', 'reps', 'weight_kg', 'rest_seconds', 'notes'], 'plantilla.exercises[0]')) {
+    check('plantilla.exercises[0].exercise trae el nombre', typeof templateExercise.exercise?.name === 'string');
+  }
+}
+
+const startedAt = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+const finishedAt = new Date().toISOString();
+const sessionCreated = await request('/api/v1/strength/sessions', {
+  method: 'POST',
+  token,
+  body: JSON.stringify({
+    name: 'Sesión de verificación',
+    template_id: templateId,
+    started_at: startedAt,
+    finished_at: finishedAt,
+    notes: 'temporal',
+    sets: [
+      { exercise_id: exerciseId, set_number: 1, weight_kg: 60, reps: 8, rest_seconds: 120 },
+      { exercise_id: exerciseId, set_number: 2, weight_kg: 62.5, reps: 6, rest_seconds: 150 },
+    ],
+  }),
+});
+check('POST /strength/sessions responde 201', sessionCreated.status === 201, `estado ${sessionCreated.status}: ${JSON.stringify(sessionCreated.body)}`);
+const sessionId = sessionCreated.body?.id;
+if (hasKeys(sessionCreated.body, ['id', 'name', 'template_id', 'started_at', 'finished_at', 'date', 'duration_min', 'status', 'notes', 'total_tonnage_kg', 'computed_tss', 'activity_id', 'sets_count', 'exercises_count', 'exercises'], 'sesión creada')) {
+  check('sesión.status es done', sessionCreated.body.status === 'done');
+  check('sesión.sets_count es 2', sessionCreated.body.sets_count === 2, `sets ${sessionCreated.body.sets_count}`);
+  check('sesión.total_tonnage_kg = 855', sessionCreated.body.total_tonnage_kg === 855, `tonelaje ${sessionCreated.body.total_tonnage_kg}`);
+  check('sesión.activity_id es string', typeof sessionCreated.body.activity_id === 'string');
+  const sessionExercise = sessionCreated.body.exercises?.[0];
+  if (hasKeys(sessionExercise, ['exercise', 'position', 'sets', 'tonnage_kg'], 'sesión.exercises[0]')) {
+    const firstSet = sessionExercise.sets?.[0];
+    hasKeys(firstSet, ['id', 'exercise_id', 'set_number', 'weight_kg', 'reps', 'rir', 'is_warmup', 'set_type', 'rest_seconds', 'completed_at'], 'sesión.exercises[0].sets[0]');
+  }
+}
+
+if (sessionId) {
+  const sessionDetail = await request(`/api/v1/strength/sessions/${sessionId}`, { token });
+  check('GET /strength/sessions/{id} devuelve la sesión', sessionDetail.status === 200 && sessionDetail.body?.id === sessionId);
+}
+
+const lastMarks = await request(`/api/v1/strength/last-marks?exercise_ids=${exerciseId}`, { token });
+if (hasKeys(lastMarks.body, ['marks'], 'GET /strength/last-marks')) {
+  const mark = lastMarks.body.marks?.[exerciseId];
+  hasKeys(mark, ['date', 'weight_kg', 'reps', 'set_number', 'rest_seconds'], 'last-marks.marks[ejercicio]');
+  check('last-marks guarda el peso de la primera serie (60)', mark?.weight_kg === 60, `peso ${mark?.weight_kg}`);
+}
+
+if (exerciseId) {
+  const exerciseDetail = await request(`/api/v1/strength/exercises/${exerciseId}`, { token });
+  hasKeys(exerciseDetail.body, ['exercise', 'last', 'pr', 'sessions_count'], 'GET /strength/exercises/{id}');
+  check('ficha: sessions_count = 1', exerciseDetail.body?.sessions_count === 1, `cuenta ${exerciseDetail.body?.sessions_count}`);
+  check('ficha: PR a 62,5 kg', exerciseDetail.body?.pr?.weight_kg === 62.5, `PR ${exerciseDetail.body?.pr?.weight_kg}`);
+
+  const history = await request(`/api/v1/strength/exercises/${exerciseId}/history`, { token });
+  if (hasKeys(history.body, ['exercise', 'pr', 'sessions', 'series'], 'GET /strength/exercises/{id}/history')) {
+    check('historial trae 1 sesión', history.body.sessions.length === 1, `sesiones ${history.body.sessions.length}`);
+    check('historial trae serie cronológica', Array.isArray(history.body.series) && history.body.series.length === 1);
+  }
+}
+
 const activities = await request('/api/v1/activities/?limit=5', { token });
 check('GET /activities/ es un array', Array.isArray(activities.body), typeof activities.body);
 check('actividades respeta limit', Array.isArray(activities.body) && activities.body.length <= 5);
+if (Array.isArray(activities.body) && activities.body.length > 0) {
+  const activity = activities.body[0];
+  hasKeys(activity, ['id', 'source', 'type', 'name', 'start_time', 'duration_min', 'distance_m', 'avg_hr', 'max_hr', 'gain_m', 'has_track', 'tss', 'rpe'], 'actividad de la lista');
+  check('la actividad espejo es de fuerza', activity.type === 'strength', `tipo ${activity.type}`);
+}
+
+// Limpieza de lo creado en la copia (nunca en la BD real).
+if (sessionId) {
+  const removed = await request(`/api/v1/strength/sessions/${sessionId}`, { method: 'DELETE', token });
+  check('DELETE /strength/sessions/{id}', removed.status === 200, `estado ${removed.status}`);
+}
+if (templateId) {
+  const removed = await request(`/api/v1/strength/templates/${templateId}`, { method: 'DELETE', token });
+  check('DELETE /strength/templates/{id}', removed.status === 200, `estado ${removed.status}`);
+}
+if (exerciseId) {
+  const removed = await request(`/api/v1/strength/exercises/${exerciseId}`, { method: 'DELETE', token });
+  check('DELETE /strength/exercises/{id}', removed.status === 200, `estado ${removed.status}`);
+}
 
 const routes = await request('/api/v1/routes/', { token });
 check('GET /routes/ es un array', Array.isArray(routes.body), typeof routes.body);

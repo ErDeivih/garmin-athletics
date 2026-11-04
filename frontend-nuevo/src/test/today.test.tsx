@@ -37,4 +37,20 @@ describe('panel de hoy', () => {
     expect(screen.getAllByText(/tsb/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/hrv ha bajado/i)).toBeInTheDocument();
   });
+
+  it('si el backend no está, lo dice en español y deja reintentar', async () => {
+    localStorage.setItem(TOKEN_KEY, 'test-token');
+    installFakeApi({
+      'GET /api/v1/auth/me': json(f.me),
+      'GET /api/v1/metrics/daily': () => {
+        throw new TypeError('Failed to fetch');
+      },
+      'GET /api/v1/alerts': json(f.alerts),
+      'GET /api/v1/sync/status': json(f.syncStatus),
+    });
+    renderApp('/');
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/no se pudo conectar con el servidor/i);
+    expect(screen.getByRole('button', { name: /reintentar/i })).toBeInTheDocument();
+  });
 });

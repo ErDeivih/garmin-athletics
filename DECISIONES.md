@@ -43,8 +43,9 @@ navegador?" y pide que la sesión sobreviva a recargar la página.
 
 **Decisión.** El **estado en curso** (qué serie toca, qué peso se ha escrito pero no confirmado)
 vive en el navegador (`localStorage`), con escritura en cada cambio. Al **terminar** la sesión se
-manda al servidor una sola vez con todas las series (`POST /strength/sessions/finish`).
-El servidor guarda sesiones **terminadas**, no borradores.
+manda al servidor una sola vez con todas las series (`POST /strength/sessions`). El servidor guarda
+sesiones **terminadas**, no borradores. La última marca por ejercicio se lee de
+`GET /strength/last-marks` para precargar peso y repeticiones.
 
 **Motivo.** (a) Sobrevive a recargar sin un endpoint de latido ni permisos; (b) no deja basura en
 la base de datos si el usuario cierra el navegador; (c) el gimnasio se usa a una mano y con mala
@@ -138,7 +139,8 @@ colores y tamaños, corregirlo después cuesta más que hacerlo bien una vez.
 
 - tokens de color, tipografía, espaciado y radios **en un solo fichero**;
 - **contraste AA calculado**, no estimado;
-- escala de espaciado **4/8/12/16/24/32/48** y **4 tamaños tipográficos**;
+- escala de espaciado **4/8/12/16/24/32/48** (la app usa la escala de Tailwind que coincide, y un
+  check falla si una pantalla sale de ella) y **cinco pasos tipográficos**;
 - animación de **120–220 ms** con propósito y respeto a `prefers-reduced-motion`.
 
 El frontend nuevo **consume los tokens generados** por el sistema de diseño: una sola fuente, sin
@@ -195,3 +197,31 @@ no se implementan en esta tanda (`INVESTIGACION.md` §8.2).
 
 **Cómo se revierte.** Las tareas T-13 a T-20 se retiran del backlog y las pantallas de la bandera
 no se encienden. Lo ya construido se queda sin usar, sin migración que deshacer.
+
+---
+
+## 2026-11-04 — D-10 · Un 401 de Garmin no es una sesión caducada, y la caché no cruza cuentas
+
+**Contexto.** La revisión adversarial de T-02 encontró dos fallos de flujo. (a) El cliente trataba
+cualquier 401 como sesión caducada; pero `PUT /auth/garmin-credentials` y `POST /auth/garmin-mfa`
+responden 401 cuando la contraseña o el código de Garmin son incorrectos, así que un dedazo en la
+vinculación expulsaba al atleta de su propia sesión. (b) La caché de React Query es un singleton y
+no se vaciaba al cambiar de cuenta: en un navegador compartido, las métricas y el correo de Garmin
+de la cuenta anterior podían pintarse para la siguiente.
+
+**Decisión.**
+- El 401 solo cierra la sesión cuando lo produce la sesión de la app (`session: 'app'`, el valor por
+  defecto). Las llamadas a la vinculación de Garmin pasan `session: 'external'`: el error se enseña
+  en el formulario y la sesión sigue intacta.
+- La caché de consultas se vacía en el logout, en el 401 de sesión y en cada login, antes de montar
+  las pantallas de la cuenta nueva.
+- Cuando la sesión caduca a mitad de uso, la entrada lo dice («La sesión ha caducado») en vez de
+  dejar al atleta sin explicación.
+
+**Motivo.** Datos de salud y credenciales de terceros no pueden sobrevivir a un cambio de usuario;
+y un error de credencial de Garmin no es motivo para cerrar la sesión. Ambas cosas tienen prueba de
+flujo (`login.test.tsx`, `settings.test.tsx`).
+
+**Cómo se revierte.** Es lógica de cliente: se quita `session: 'external'` de las llamadas de
+vinculación y las llamadas a `queryClient.clear()`. No toca datos.
+

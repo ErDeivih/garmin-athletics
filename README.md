@@ -37,7 +37,10 @@ El frontend nuevo se prueba con `npm run check` y habla con la API real. Ver
 pruebas de contrato. El sistema de diseño vive en
 [`designs/garmin-athletics-design-system/`](designs/garmin-athletics-design-system/).
 
-Abre **`http://localhost:8000`** (usa incógnito tras actualizar, por la caché del bundle).
+Abre **`http://localhost:8000`** para el frontend viejo (usa incógnito tras actualizar, por la caché
+del bundle). El frontend nuevo se levanta aparte en `http://127.0.0.1:5173`: el backend todavía sirve
+`frontend/dist`, no `frontend-nuevo/dist`; unificar el camino de producción es la tarea T-23 del
+backlog.
 
 ## 🖥️ Qué incluye la web
 

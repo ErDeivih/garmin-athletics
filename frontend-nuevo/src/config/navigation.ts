@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react';
 import {
   Activity,
   CalendarDays,
@@ -10,6 +11,15 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react';
+import { ActivitiesPage } from '../pages/extended/ActivitiesPage';
+import { CalendarPage } from '../pages/extended/CalendarPage';
+import { PerformancePage } from '../pages/extended/PerformancePage';
+import { RoutesPage } from '../pages/extended/RoutesPage';
+import { SocialPage } from '../pages/extended/SocialPage';
+import { TrendsPage } from '../pages/extended/TrendsPage';
+import { GymPage } from '../pages/GymPage';
+import { SettingsPage } from '../pages/SettingsPage';
+import { TodayPage } from '../pages/TodayPage';
 
 export interface NavItem {
   id: string;
@@ -18,24 +28,25 @@ export interface NavItem {
   icon: LucideIcon;
   /** `extended`: solo aparece con la bandera encendida. `null`: siempre. */
   flag: 'extended' | null;
-  /** Texto de la pantalla de inicio de la sección. */
-  description: string;
+  /** La pantalla. El router se genera desde este registro: no hay rutas a mano. */
+  element: ComponentType;
 }
 
 /**
- * Registro único de secciones: añadir una pantalla es añadir una entrada y su
- * ruta, no tocar el layout (DECISIONES.md D-08).
+ * Registro único de pantallas (DECISIONES.md D-08): añadir una pantalla es
+ * añadir esta entrada. El router (`App.tsx`) y la navegación (`AppShell`) se
+ * generan de aquí, y la bandera decide si la entrada está encendida.
  */
 export const NAV_ITEMS: NavItem[] = [
-  { id: 'today', label: 'Hoy', path: '/', icon: Sun, flag: null, description: 'Tu disposición de hoy.' },
-  { id: 'gym', label: 'Gimnasio', path: '/gimnasio', icon: Dumbbell, flag: null, description: 'Entrenamiento de fuerza.' },
-  { id: 'settings', label: 'Ajustes', path: '/ajustes', icon: Settings, flag: null, description: 'Cuenta, Garmin y preferencias.' },
-  { id: 'activities', label: 'Actividades', path: '/actividades', icon: Activity, flag: 'extended', description: 'Lo que has hecho, con sus datos.' },
-  { id: 'calendar', label: 'Calendario', path: '/calendario', icon: CalendarDays, flag: 'extended', description: 'La semana de entrenamiento.' },
-  { id: 'trends', label: 'Tendencias', path: '/tendencias', icon: TrendingUp, flag: 'extended', description: 'Cómo evolucionan tus métricas.' },
-  { id: 'performance', label: 'Rendimiento', path: '/rendimiento', icon: Gauge, flag: 'extended', description: 'Zonas, marcas y comparativas.' },
-  { id: 'routes', label: 'Rutas', path: '/rutas', icon: MapIcon, flag: 'extended', description: 'Rutas planificadas y GPX.' },
-  { id: 'social', label: 'Social', path: '/social', icon: Users, flag: 'extended', description: 'Amigos y esfuerzo compartido.' },
+  { id: 'today', label: 'Hoy', path: '/', icon: Sun, flag: null, element: TodayPage },
+  { id: 'gym', label: 'Gimnasio', path: '/gimnasio', icon: Dumbbell, flag: null, element: GymPage },
+  { id: 'settings', label: 'Ajustes', path: '/ajustes', icon: Settings, flag: null, element: SettingsPage },
+  { id: 'activities', label: 'Actividades', path: '/actividades', icon: Activity, flag: 'extended', element: ActivitiesPage },
+  { id: 'calendar', label: 'Calendario', path: '/calendario', icon: CalendarDays, flag: 'extended', element: CalendarPage },
+  { id: 'trends', label: 'Tendencias', path: '/tendencias', icon: TrendingUp, flag: 'extended', element: TrendsPage },
+  { id: 'performance', label: 'Rendimiento', path: '/rendimiento', icon: Gauge, flag: 'extended', element: PerformancePage },
+  { id: 'routes', label: 'Rutas', path: '/rutas', icon: MapIcon, flag: 'extended', element: RoutesPage },
+  { id: 'social', label: 'Social', path: '/social', icon: Users, flag: 'extended', element: SocialPage },
 ];
 
 export const PRIMARY_NAV = NAV_ITEMS.filter((item) => item.flag === null);

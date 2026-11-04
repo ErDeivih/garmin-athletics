@@ -7,7 +7,9 @@ import { AppRoutes } from '../App';
 export function renderApp(initialEntry = '/') {
   const queryClient = new QueryClient({
     defaultOptions: {
-      queries: { retry: false, gcTime: 0, staleTime: 0 },
+      // Mismos valores que la app: staleTime 30 s hace visible un fallo de
+      // aislamiento de caché entre usuarios (si no se limpia, no hay refetch).
+      queries: { retry: false, gcTime: 0, staleTime: 30_000 },
       mutations: { retry: false },
     },
   });

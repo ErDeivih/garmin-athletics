@@ -5,13 +5,18 @@ import type {
   AlertsResponse,
   CalendarResponse,
   DailyMetrics,
+  ExerciseDetailResponse,
+  ExerciseHistoryResponse,
   ExerciseList,
   GarminLinkResult,
   GarminStatus,
+  LastMarksResponse,
   LeaderboardResponse,
   PerformanceSummary,
   PersonalRecord,
   PlannedRoute,
+  SessionDetail,
+  SessionInput,
   SessionList,
   SyncResult,
   SyncStatus,
@@ -33,6 +38,9 @@ export const queryKeys = {
   garmin: ['garmin', 'status'] as const,
   templates: ['gym', 'templates'] as const,
   sessions: ['gym', 'sessions'] as const,
+  session: (id: string) => ['gym', 'session', id] as const,
+  lastMarks: (ids: string) => ['gym', 'last-marks', ids] as const,
+  exerciseHistory: (id: string) => ['gym', 'exercise-history', id] as const,
   exercises: (search: string, muscle: string, equipment: string) =>
     ['gym', 'exercises', search, muscle, equipment] as const,
   activities: ['activities'] as const,
@@ -99,7 +107,12 @@ export function useLinkGarmin() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: { garmin_email: string; garmin_password: string }) =>
-      apiFetch<GarminLinkResult>('/api/v1/auth/garmin-credentials', { method: 'PUT', body: payload }),
+      apiFetch<GarminLinkResult>('/api/v1/auth/garmin-credentials', {
+        method: 'PUT',
+        body: payload,
+        // Ver AuthContext/client: un 401 de Garmin no es una sesión caducada.
+        session: 'external',
+      }),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.sync }),
@@ -120,6 +133,58 @@ export function useSessions(limit = 5) {
   return useQuery({
     queryKey: [...queryKeys.sessions, limit],
     queryFn: () => apiFetch<SessionList>(`/api/v1/strength/sessions?limit=${limit}`),
+  });
+}
+
+/** Detalle de una sesión guardada: series individuales incluidas (T-04/T-08). */
+export function useSession(sessionId: string | null) {
+  return useQuery({
+    queryKey: queryKeys.session(sessionId ?? ''),
+    queryFn: () => apiFetch<SessionDetail>(`/api/v1/strength/sessions/${sessionId}`),
+    enabled: sessionId !== null,
+  });
+}
+
+/** Última marca por ejercicio: lo que T-04 precarga en la sesión. */
+export function useLastMarks(exerciseIds: string[]) {
+  const ids = [...new Set(exerciseIds)].filter(Boolean);
+  return useQuery({
+    queryKey: queryKeys.lastMarks(ids.join(',')),
+    queryFn: () => apiFetch<LastMarksResponse>(`/api/v1/strength/last-marks?exercise_ids=${ids.join(',')}`),
+    enabled: ids.length > 0,
+  });
+}
+
+export function useExerciseHistory(exerciseId: string | null) {
+  return useQuery({
+    queryKey: queryKeys.exerciseHistory(exerciseId ?? ''),
+    queryFn: () => apiFetch<ExerciseHistoryResponse>(`/api/v1/strength/exercises/${exerciseId}/history`),
+    enabled: exerciseId !== null,
+  });
+}
+
+export function useExerciseDetail(exerciseId: string | null) {
+  return useQuery({
+    queryKey: [...queryKeys.exerciseHistory(exerciseId ?? ''), 'detail'],
+    queryFn: () => apiFetch<ExerciseDetailResponse>(`/api/v1/strength/exercises/${exerciseId}`),
+    enabled: exerciseId !== null,
+  });
+}
+
+/** Terminar la sesión: el borrador vive en el navegador y se manda una vez (D-02). */
+export function useCreateSession() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: SessionInput) =>
+      apiFetch<SessionDetail>('/api/v1/strength/sessions', { method: 'POST', body: payload }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.sessions }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.daily }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.alerts }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.activities }),
+      ]);
+    },
   });
 }
 

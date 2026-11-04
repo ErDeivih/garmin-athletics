@@ -23,10 +23,13 @@ export function PerformancePage() {
         />
       ) : (
         <>
-          <section aria-label="Resumen" className="grid gap-4 sm:grid-cols-3">
-            <StatCard label="Sesiones (30 d)" value={summary.data.current.sessions} foot={`Antes: ${summary.data.previous.sessions}`} />
-            <StatCard label="Horas" value={formatNumber(summary.data.current.hours)} unit="h" foot={`Antes: ${formatNumber(summary.data.previous.hours, 'h')}`} />
-            <StatCard label="TSS" value={formatNumber(summary.data.current.tss)} foot={`Antes: ${formatNumber(summary.data.previous.tss)}`} />
+          <section aria-label="Resumen">
+            <SectionTitle hint="últimos 30 días">Resumen de running</SectionTitle>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <StatCard label="Sesiones" value={summary.data.current.sessions} foot={`Antes: ${summary.data.previous.sessions}`} />
+              <StatCard label="Horas" value={formatNumber(summary.data.current.hours)} unit="h" foot={`Antes: ${formatNumber(summary.data.previous.hours, 'h')}`} />
+              <StatCard label="TSS" value={formatNumber(summary.data.current.tss)} foot={`Antes: ${formatNumber(summary.data.previous.tss)}`} />
+            </div>
           </section>
 
           <Card className="mt-6">
@@ -49,11 +52,11 @@ export function PerformancePage() {
           </Card>
 
           <Card className="mt-6">
-            <SectionTitle hint="Garmin + gimnasio">Marcas personales</SectionTitle>
+            <SectionTitle hint="Garmin">Marcas de Garmin</SectionTitle>
             {prs.data.length === 0 ? (
               <EmptyState
                 title="Sin marcas todavía"
-                description="Las marcas salen de las actividades sincronizadas y de las sesiones de fuerza registradas. Aquí no se calcula ninguna a ojo."
+                description="Estas marcas las calcula Garmin al sincronizar actividades. Las marcas de gimnasio (peso máximo por ejercicio) tendrán su propia pantalla, Marcas."
               />
             ) : (
               <ul className="flex flex-col gap-2">

@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { Button, Field } from '../components/ui';
 
 /** La única puerta de entrada. No hay registro en la app: la cuenta se crea en la API. */
 export function LoginPage() {
-  const { login } = useAuth();
+  const { login, sessionExpired } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -16,6 +18,7 @@ export function LoginPage() {
     setPending(true);
     try {
       await login(email.trim(), password);
+      navigate('/', { replace: true });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'No se pudo entrar.');
     } finally {
@@ -34,6 +37,11 @@ export function LoginPage() {
         <p className="mb-6 text-body text-ink-muted">
           El panel de disposición y el registro de fuerza, en un solo sitio.
         </p>
+        {sessionExpired ? (
+          <p role="status" className="mb-4 rounded-md border border-warn bg-warn-soft px-3 py-2 text-body text-warn">
+            La sesión ha caducado. Vuelve a entrar para seguir donde estabas.
+          </p>
+        ) : null}
 
         <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
           <Field

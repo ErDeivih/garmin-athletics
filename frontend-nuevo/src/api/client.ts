@@ -1,11 +1,12 @@
 import { clearToken, readToken } from './token';
 
 /**
- * En desarrollo, `VITE_API_URL` apunta al backend real (por defecto 8000).
- * Nunca se usa una URL relativa sin comprobar: el backend nuevo es el único
- * origen de datos y el Bearer es obligatorio (INVESTIGACION.md §4.1).
+ * Por defecto la API es del mismo origen (`/api/v1`): en desarrollo lo resuelve
+ * el proxy de Vite y en producción el reverso que sirva el frontend. `VITE_API_URL`
+ * solo se usa cuando la API vive en otro origen (por ejemplo, una prueba local).
  */
-export const API_BASE = (import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
+const configuredBase = import.meta.env.VITE_API_URL?.trim();
+export const API_BASE = (configuredBase ?? '').replace(/\/$/, '');
 
 export class ApiError extends Error {
   readonly status: number;
@@ -23,7 +24,15 @@ export interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   body?: unknown;
   signal?: AbortSignal;
+  /**
+   * `external`: un 401 lo produce un servicio de terceros (la contraseña de
+   * Garmin), no la sesión de la app. No se cierra la sesión ni se borra el
+   * token; el error se enseña en el formulario.
+   */
+  session?: 'app' | 'external';
 }
+
+const REQUEST_TIMEOUT_MS = 15_000;
 
 async function readDetail(response: Response): Promise<string> {
   try {
@@ -53,15 +62,35 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   if (options.body !== undefined) headers['Content-Type'] = 'application/json';
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const response = await fetch(`${API_BASE}${path}`, {
-    method: options.method ?? 'GET',
-    headers,
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
-    signal: options.signal,
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const abortFromCaller = () => controller.abort();
+  options.signal?.addEventListener('abort', abortFromCaller, { once: true });
+
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      method: options.method ?? 'GET',
+      headers,
+      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      signal: controller.signal,
+    });
+  } catch (cause) {
+    if (options.signal?.aborted) {
+      throw new ApiError(0, 'La petición se canceló.');
+    }
+    if (cause instanceof DOMException && cause.name === 'AbortError') {
+      throw new ApiError(0, 'La API ha tardado demasiado en responder. Comprueba que el backend está encendido.');
+    }
+    throw new ApiError(0, 'No se pudo conectar con el servidor. Comprueba que la API está encendida.');
+  } finally {
+    clearTimeout(timer);
+    options.signal?.removeEventListener('abort', abortFromCaller);
+  }
 
   if (!response.ok) {
-    if (response.status === 401 && token) {
+    const isSessionExpiry = response.status === 401 && token !== null && options.session !== 'external';
+    if (isSessionExpiry) {
       clearToken();
       window.dispatchEvent(new Event('ga:unauthorized'));
     }
