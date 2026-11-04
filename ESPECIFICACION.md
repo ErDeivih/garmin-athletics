@@ -82,3 +82,11 @@ David no tiene claro qué hay vivo hoy en el frontend y **va a rehacerlo**. Cons
 - El diseño del frontend nuevo se decide con `RECETAS-UI.md`, familia **A (panel de datos)** para las ocho pestañas y **G (editor)** para el entrenamiento de gimnasio.
 
 Queda pendiente una pregunta que solo David puede responder: **si el frontend nuevo mantiene las ocho pestañas o se recorta**. Un panel con ocho secciones y un editor es mucho para una primera versión.
+
+## Decisión de David (2026-11-04): las pestañas
+
+- El frontend nuevo **no** arranca con las 8 pestañas: empieza con **Hoy, Gimnasio y Ajustes**, y el resto detrás de una bandera.
+- **La bandera no es excusa para no hacerlas.** Hay que **investigar qué tienen otras apps** y **añadir las pantallas y funcionalidades que merezcan la pena**, con la misma calidad. El agente decide cuáles entran, con la investigación delante (ya está en INVESTIGACION.md).
+- Criterio para que una pestaña entre: resuelve una pregunta que el usuario se hace de verdad. Si no, no entra.
+- David quiere **más**, no menos: si la competencia tiene algo que aquí falta y aporta, se propone y se añade.
+
