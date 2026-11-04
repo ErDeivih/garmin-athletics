@@ -11,6 +11,7 @@ Qué hay en este documento:
 5. Qué le falta al backend para soportar el frontend nuevo.
 6. Propuesta: pantallas y funcionalidades ordenadas por valor.
 7. Qué se propone ejecutar y con qué nivel de autonomía.
+8. La ampliación del 2026-11-04: pantallas y funciones que entran, mapa de pestañas y lo que se queda fuera.
 
 ---
 
@@ -623,3 +624,74 @@ Entregado:
 5. **Base de datos en SQLite y migraciones idempotentes** `ALTER TABLE` al arrancar. Añadir tablas
    es seguro (`create_all`), pero hay que comprobar el arranque en limpio y sobre la BD existente.
 6. **No se ha probado el flujo 2FA de Garmin** (requiere la cuenta y el móvil de David).
+
+---
+
+## 8. Ampliación (2026-11-04): pantallas y funciones que entran
+
+**Por qué hay sección nueva.** David decidió en `ESPECIFICACION.md` (2026-11-04) que el frontend nuevo arranca con **Hoy · Gimnasio · Ajustes** y el resto detrás de una bandera, y añadió una condición: **la bandera no es excusa para no hacerlas**. Con la investigación de §2 delante, el criterio de entrada es uno: **resuelve una pregunta que el usuario se hace de verdad**. Se adopta lo que la competencia demuestra valioso —sin copiar sus defectos (§2.9 y el cierre de §5.3)— y lo que no cumple el criterio se queda fuera y se dice por qué.
+
+Las ocho entradas de §8.1 nacen en `BACKLOG.md` como tareas **Nivel 2** (T-13 a T-20) y **no se implementan en T-02**: T-02 solo deja la navegación preparada para que añadirlas después cueste poco (`DECISIONES.md` D-08).
+
+Con esto queda resuelta la tensión de §5.1 (E-01): David elige arrancar con tres pestañas y encender el resto con la bandera, no renunciar a ellas. Y se actualiza §5.2: la **calculadora de discos**, que allí figura como Nivel 3 (fila 15, E-03), pasa a Nivel 2 como **T-19**.
+
+### 8.1 Tabla de adopción
+
+Coste: **S** = una acción o una pantalla pequeña; **M** = una pantalla con lógica y datos; **L** = varias pantallas o cambio de modelo.
+
+| # | Nombre | Qué hace | De quién se copia | Por qué vale | Encaja en | Coste |
+|---|---|---|---|---|---|---|
+| 1 | **Entrenar sin plantilla** (sesión libre) | Empezar una sesión vacía y añadir ejercicios sobre la marcha | Hevy, Strong | Cubre los días sin rutina; evita el flujo rígido del builder de Garmin (F3) | Pantalla Entrenar | M |
+| 2 | **Resumen al terminar la sesión** | Tonelaje, series por grupo muscular, PRs y comparación con la última sesión del mismo día o rutina | Hevy, Strong, Strava | Cierra el bucle y demuestra el progreso: es la pregunta que Garmin no responde (F7) | Pantalla de fin de sesión | S |
+| 3 | **Progreso de fuerza** | Volumen semanal, series por grupo muscular, frecuencia y racha; detecta músculos desatendidos | Fitbod (músculos), Hevy (volumen), Apple Fitness (tendencias) | Convierte el historial en decisiones: qué falta y qué sobra | Pantalla nueva **Progreso** | M |
+| 4 | **Marcas personales (PRs)** | Lista de récords por ejercicio con fecha y mejor serie; aviso de PR al terminar | Hevy, Apple Fitness (premios) | Recompensa barata y motivadora; el historial deja de ser un archivo | Pestaña **Marcas** | S |
+| 5 | **Guardar sesión como plantilla** | Desde el detalle de una sesión: "guardar como rutina" | Strong, Hevy | La rutina nace del entreno real, no de un builder vacío | Acción en Historial y detalle de sesión | S |
+| 6 | **Calendario semanal de entrenamiento** | Asignar plantillas a días de la semana y verlas junto a la disposición (readiness) | Garmin (calendario), Apple Fitness (resumen) | El plan deja de estar enterrado en "Más" (F9) y se ve junto al cuerpo del día | Pantalla **Calendario** | M |
+| 7 | **Calculadora de discos y de calentamiento** | Qué discos poner por lado para un peso y qué series de aproximación hacer | Strong | El cálculo mental es fricción real en el gimnasio; estaba aparcada como E-03 | Herramienta dentro de la sesión | S |
+| 8 | **Preferencias de unidades y descanso** | kg/lb, duración de descanso por defecto, aviso de descanso | Garmin (descanso), Hevy | Se usa a una mano y en un gimnasio; adapta la app al atleta | Ajustes | S |
+
+Lo que las ocho tienen en común: **ninguna toca el modelo de datos ni migra nada**. Son pantallas y acciones sobre lo que el backend ya devuelve (sesiones con series, marcas, historial y calendario), por eso son reversibles.
+
+### 8.2 Lo que se deja fuera y por qué
+
+- **Supersets (E-02).** Cambian el modelo de sesión: dos ejercicios en un mismo bloque, con su descanso propio. No es una pantalla nueva, es otro modelo; se queda fuera hasta que David lo decida.
+- **RPE/RIR por serie (E-06).** La especificación pide peso y repeticiones; añadir esfuerzo percibido obliga a decidir qué hacer con el dato cuando falta. Hevy o Fitbod lo tienen, aquí todavía no está pedido.
+- **PWA offline con service worker (E-04).** Añade caché y versiones que no se validan bien sin despliegue; D-02 y D-03 ya cubren "no perder la sesión" y "el descanso sigue contando".
+- **Envío real al reloj (E-05).** `push-to-garmin` solo se ha probado en `dry_run`. Enviar una rutina sin haberlo validado con un reloj real sería declarar que funciona sin haberlo hecho.
+- **El feed social como pantalla principal.** Obliga a moderar contenido y no es la misión. El social ya existe en el backend y se enciende con la bandera; no se convierte en la pestaña de entrada.
+- **1RM estimado (E-07).** Se muestra solo si David lo pide: una estimación a partir de una serie es precisión inventada si se enseña como dato. Las marcas personales de §8.1-4 se miden, no se estiman.
+
+### 8.3 Mapa de pestañas resultante
+
+**Visibles desde el primer día** (`DECISIONES.md` D-08):
+
+| Pestaña | Qué contiene |
+|---|---|
+| **Hoy** | Panel del día: readiness y sus tres componentes, sueño, HRV, Body Battery, FC en reposo, estrés, carga ATL/CTL/TSB, avisos y estado de sync. |
+| **Gimnasio** | Sección con cinco pantallas dentro: **Entrenar** (sesión en curso y sesión libre, T-13), **Rutinas** (lista y editor de plantilla), **Catálogo** (búsqueda y ficha), **Historial** (sesiones y detalle, de donde sale "guardar como plantilla", T-17) y la **calculadora de discos** como herramienta dentro de la sesión (T-19). |
+| **Ajustes** | Vincular Garmin con 2FA, estado de sync, preferencias de unidades y descanso (T-20), interruptor para ver las pantallas de bandera y borrar cuenta. |
+
+**Detrás de `VITE_FEATURE_EXTENDED`** (con interruptor en Ajustes):
+
+| Pantalla | Qué resuelve | Nace en |
+|---|---|---|
+| **Actividades** | Lista y detalle con mapa, streams y parciales | §5.1-7 (ya propuesta) |
+| **Calendario** | Eventos, recurrentes y plantillas asignadas a días de la semana | T-18 |
+| **Tendencias** | Evolución de las 8 métricas con sparklines | §5.1-9 (ya propuesta) |
+| **Rendimiento** | Resumen por deporte, zonas y PRs | §5.1-10 (ya propuesta) |
+| **Rutas** | Planificador y exportación GPX | §5.1-11 (ya propuesta) |
+| **Social** | Leaderboard, amigos e invitaciones | §5.1-12 (ya propuesta) |
+| **Marcas** | Récords por ejercicio con fecha y mejor serie | T-16 |
+| **Progreso** | Volumen, series por grupo muscular, frecuencia y racha | T-15 |
+
+**Nota de coherencia.** La fila F9 de §3.3 hablaba de una navegación plana "Hoy · Entrenar · Gimnasio · Ajustes". Con la decisión de David, **Entrenar deja de ser pestaña y pasa a ser pantalla dentro de Gimnasio**: manda este mapa. Las pantallas marcadas con tarea nueva nacen en el backlog como **Nivel 2** y **no se implementan en T-02**; las que ya estaban en §5.1 se encienden con la bandera cuando su tarea del backlog esté hecha.
+
+### 8.4 Fuentes
+
+Enlaces ya citados en §2 (no se añaden URLs nuevas):
+
+- **Garmin Connect**: [blog del panel "Mi día"](https://www.garmin.com/en-US/blog/fitness/unlocking-the-potential-of-garmin-connect/), [soporte: crear entrenamiento](https://support.garmin.com/en-US/?faq=wZ52AaLbLG2GC1Lxu2l4k7), [manual FR965](https://www8.garmin.com/manuals/webhelp/GUID-0221611A-992D-495E-8DED-1DD448F7A066/EN-AU/GUID-CF2D7922-A1AC-4510-9480-E7CE8119EAF2.html) y los hilos de foro [441181](https://forums.garmin.com/apps-software/mobile-apps-web/f/garmin-connect-web/441181/how-do-you-track-progressive-overload-in-connect-weights-reps-don-t-carry-forward-between-strength-sessions), [430276](https://forums.garmin.com/apps-software/mobile-apps-web/f/garmin-connect-mobile-ios/430276/strength-section-bugs-and-annoyance), [435363](https://forums.garmin.com/apps-software/mobile-apps-web/f/garmin-connect-web/435363/can-t-edit-multiple-exercises-in-strength-activities), [434866](https://forums.garmin.com/apps-software/mobile-apps-web/f/garmin-connect-web/434866/edit-workout-not-working) y [334287](https://forums.garmin.com/apps-software/mobile-apps-web/f/garmin-connect-mobile-ios/334287/garmin-connect-my-day-display-issues-since-may-25th-2023).
+- **Strava**: [fuerza](https://support.strava.com/en-us/articles/15401547-strength-training), [orden del feed](https://support.strava.com/en-us/articles/15402105-how-does-strava-order-my-activity-feed) y [nota de prensa 2026](https://press.strava.com/articles/strava-continues-to-evolve-strength-experience-with-new-coach-designed-strength-series-via-native-recording).
+- **Fitbit/Google Health**: [ayuda de Google Health](https://support.google.com/googlehealth/answer/17068213?hl=en), [registro manual](https://support.google.com/googlehealth/answer/14236402?hl=en) y [Wikipedia](https://en.wikipedia.org/wiki/Fitbit).
+- El foro de Garmin **191647** (fallo F7) se cita en §3.1 sin URL; no se inventa una.
+- **Hevy, Strong, Fitbod y Apple Fitness** están descritos en §2.3-2.6 sin enlace directo en este documento; la ampliación no añade fuentes nuevas para ellas.

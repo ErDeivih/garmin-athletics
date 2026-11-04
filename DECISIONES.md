@@ -123,3 +123,75 @@ contrastados contra la sonda de `INVESTIGACION.md` §4.2. Nada de `any` en las r
 **Alternativa descartada.** Añadir `response_model` a 46 endpoints antes de empezar: es trabajo
 útil pero no desbloquea ninguna pantalla y retrasa todo. Se puede hacer después, endpoint a
 endpoint, a medida que el frontend los consuma.
+
+---
+
+## 2026-11-04 — D-07 · El sistema de diseño se construye antes que la primera pantalla
+
+**Contexto.** La `DOCTRINA-CALIDAD.md` §2 lo exige: tokens de color, tipografía, espaciado y radios
+en un solo sitio, contraste AA calculado, escala corta y animación de 120–220 ms con propósito. La
+primera pantalla del frontend nuevo (T-03) está a punto de empezar y, si cada pantalla inventa sus
+colores y tamaños, corregirlo después cuesta más que hacerlo bien una vez.
+
+**Decisión.** Antes de T-03 se construye el sistema de diseño **dark-first** con la skill
+`claude-design-system`, en `designs/garmin-athletics-design-system/`:
+
+- tokens de color, tipografía, espaciado y radios **en un solo fichero**;
+- **contraste AA calculado**, no estimado;
+- escala de espaciado **4/8/12/16/24/32/48** y **4 tamaños tipográficos**;
+- animación de **120–220 ms** con propósito y respeto a `prefers-reduced-motion`.
+
+El frontend nuevo **consume los tokens generados** por el sistema de diseño: una sola fuente, sin
+copiarlos a mano pantalla a pantalla.
+
+**Motivo.** DOCTRINA §2, y es más barato cambiar un token que veinte pantallas. El sistema es local
+al repositorio (no es un servicio externo), así que no añade dependencia operativa.
+
+**Cómo se revierte.** Los tokens se regeneran desde el sistema de diseño; como ninguna pantalla
+guarda valores propios, revertir la fuente o cambiar la escala es un cambio de un fichero.
+
+---
+
+## 2026-11-04 — D-08 · Navegación por registro con banderas
+
+**Contexto.** David decidió que el frontend nuevo arranca con **Hoy · Gimnasio · Ajustes** y el
+resto detrás de una bandera (E-01, `ESPECIFICACION.md`). T-02 construye la navegación ahora y
+añadir una pantalla después no debe obligar a tocar el layout.
+
+**Decisión.** La navegación es un **registro de pantallas con su bandera**. Visibles por defecto:
+**Hoy, Gimnasio y Ajustes**. El resto vive detrás de `VITE_FEATURE_EXTENDED`, con un **interruptor
+en Ajustes** para verlas sin reconstruir. **Añadir una pantalla es una entrada en el registro**, no
+tocar el layout.
+
+**Motivo.** ESPECIFICACION (decisión de David) + E-01. Así ampliar después es barato y la
+ampliación de `INVESTIGACION.md` §8 no rehace la navegación. El registro es además el sitio donde
+se ve de un vistazo qué está encendido y qué no.
+
+**Cómo se revierte.** Quitar la bandera del registro: la pantalla desaparece de la navegación sin
+tocar su código. Si se decide que todo sea visible, se dejan todas las banderas encendidas.
+
+---
+
+## 2026-11-04 — D-09 · Se adopta la ampliación de la competencia como alcance de la tanda
+
+**Contexto.** La `ESPECIFICACION.md` delega en el agente qué pantallas y funciones entran, con la
+investigación delante: la bandera no es excusa para no hacerlas y el criterio es que la pantalla
+resuelva una pregunta que el usuario se hace de verdad. `INVESTIGACION.md` §8 propone ocho.
+
+**Decisión.** Entran las **ocho adopciones de `INVESTIGACION.md` §8** como alcance de la tanda, con
+la **calculadora de discos y de calentamiento** que estaba aparcada como E-03. Cada una nace como
+tarea Nivel 2 en `BACKLOG.md` (T-13 a T-20). Las que son pantalla nueva (Progreso, Marcas,
+Calendario) nacen detrás de la bandera de D-08; las que son acción dentro de una pantalla visible
+(sesión libre, resumen de fin de sesión, guardar como plantilla, calculadora) **no necesitan
+bandera**: viven dentro de Entrenar, que es visible.
+
+**Motivo.** Las ocho resuelven preguntas reales (la tabla de §8.1 lo dice una a una), son baratas
+comparadas con su valor y **son reversibles**: pantallas y acciones nuevas, sin tocar datos ni
+migrar nada.
+
+**Nota de alcance.** **No se adelanta ninguna decisión Nivel 3**: supersets (E-02), PWA offline
+(E-04), envío real al reloj (E-05), RPE por serie (E-06) y 1RM estimado (E-07) siguen esperando y
+no se implementan en esta tanda (`INVESTIGACION.md` §8.2).
+
+**Cómo se revierte.** Las tareas T-13 a T-20 se retiran del backlog y las pantallas de la bandera
+no se encienden. Lo ya construido se queda sin usar, sin migración que deshacer.

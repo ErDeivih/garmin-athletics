@@ -32,6 +32,8 @@ Dos familias, cuatro tamaños efectivos. Todo lo que es número usa `hero` o `ti
 
 No hay tamaños intermedios: si algo no encaja, se elige el más cercano o se quita.
 
+Las dos familias (Barlow y Barlow Condensed) se distribuyen con **SIL Open Font License 1.1** y llegan al proyecto vía `@fontsource`; los ficheros `woff2` están en `fonts/`.
+
 ## Espaciado, radios y sombras
 
 - Escala `4 / 8 / 12 / 16 / 24 / 32 / 48`. El `16` es el padding de tarjeta y el margen lateral de la pantalla a 400 px.

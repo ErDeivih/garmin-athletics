@@ -23,6 +23,10 @@ __pycache__/
 node_modules/
 frontend/dist/
 frontend_mvp/dist/
+frontend-nuevo/dist/
+frontend-nuevo/.vite/
+designs/**/history/
+designs/**/.artifact-server.*
 
 # Registros y temporales
 *.log

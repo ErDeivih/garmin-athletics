@@ -90,3 +90,36 @@ Queda pendiente una pregunta que solo David puede responder: **si el frontend nu
 - Criterio para que una pestaña entre: resuelve una pregunta que el usuario se hace de verdad. Si no, no entra.
 - David quiere **más**, no menos: si la competencia tiene algo que aquí falta y aporta, se propone y se añade.
 
+## Ampliación de la tanda (2026-11-04): pantallas que entran
+
+David ha decidido que el frontend nuevo arranca con **Hoy, Gimnasio y Ajustes** y deja el resto detrás de una bandera. **La bandera no es excusa para no hacerlas**: esta sección fija qué pantallas y funciones entran en la tanda, con la investigación de `INVESTIGACION.md` §2 y §8 delante. Las ocho adopciones de §8 entran como tareas en `BACKLOG.md` (T-13 a T-20).
+
+### Visibles desde el primer día
+
+| Pantalla | Qué resuelve |
+|---|---|
+| **Hoy** | Si hoy toca entrenar o descansar y cómo está el cuerpo: readiness con sus tres componentes, sueño, HRV, Body Battery, FC en reposo, estrés, carga y avisos de la app. |
+| **Gimnasio** | Hacer el entrenamiento entero sin salir de la sección: **Entrenar** (sesión en curso y sesión libre), **Rutinas** (lista y editor de plantilla), **Catálogo** (búsqueda y ficha), **Historial** (sesiones y detalle) y la **calculadora de discos** como herramienta dentro de la sesión. |
+| **Ajustes** | Vincular Garmin con 2FA, estado de sync, preferencias de unidades y descanso, interruptor de la bandera y borrar cuenta. |
+
+### Detrás de la bandera `VITE_FEATURE_EXTENDED`
+
+| Pantalla | Qué resuelve |
+|---|---|
+| **Actividades** | Qué actividad fue y con qué detalle (mapa, streams, parciales). |
+| **Calendario** | Qué toca cada día de la semana y cómo encaja con las plantillas. |
+| **Tendencias** | Cómo evoluciona una métrica en el tiempo. |
+| **Rendimiento** | En qué deporte se mejora y dónde se pierde el tiempo (zonas, PRs). |
+| **Rutas** | Planificar una salida y exportarla. |
+| **Social** | Cómo va el grupo (leaderboard, amigos, invitaciones). |
+| **Marcas** | Qué récords personales hay por ejercicio y cuándo se consiguieron. |
+| **Progreso** | Cuánto volumen se mueve, qué músculos se atienden y cuáles no, y la racha. |
+
+**Nota sobre la lista de "Fuera de alcance".** La sección `Fuera de alcance (a propósito)` de más arriba sigue valiendo: **la ingesta de Garmin y el backend de rutas, social, calendario, tendencias y rendimiento no se modifican** en esta tanda. Lo que cambia es el **frontend**: esas pantallas pasan a tener tarea en el backlog y se encienden con la bandera cuando se implementen. Si alguna necesita un ajuste de backend, se hace como tarea propia, reversible y anotada en `DECISIONES.md`.
+
+### Reglas de la ampliación
+
+1. **La bandera no es excusa para no hacerlas.** Una pantalla de bandera no es un prototipo a medias: se implementa con la misma calidad que una visible.
+2. **Criterio de entrada.** Solo entra lo que **resuelve una pregunta que el usuario se hace de verdad**. Lo que no cumple el criterio se queda fuera y se justifica en `INVESTIGACION.md` §8.2.
+3. **Misma calidad y los cuatro estados.** Vacío, cargando, error y sin permiso en todas, visibles y de bandera, igual que exige esta especificación.
+4. **Sin decisiones adelantadas.** Lo que sigue siendo Nivel 3 (supersets, offline, envío al reloj, RPE por serie y 1RM) no se implementa ni se da por decidido.

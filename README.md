@@ -19,9 +19,24 @@ copy .env.example .env   # y rellena GARMIN_EMAIL, GARMIN_PASSWORD, SECRET_KEY
 ```
 
 ### 3. Frontend
+
+Hay dos: el viejo (`frontend/`, sigue sirviendo el backend) y el nuevo (`frontend-nuevo/`).
+
 ```powershell
+# Frontend nuevo (T-02): Vite + React + TypeScript + Tailwind
+cd frontend-nuevo
+npm install
+npm run dev          # http://127.0.0.1:5173
+
+# Frontend viejo (solo referencia, no se toca)
 cd frontend; npm install; npm run build   # dist/ lo sirve el backend
 ```
+
+El frontend nuevo se prueba con `npm run check` y habla con la API real. Ver
+[`frontend-nuevo/README.md`](frontend-nuevo/README.md) para el detalle de pantallas, banderas y
+pruebas de contrato. El sistema de diseño vive en
+[`designs/garmin-athletics-design-system/`](designs/garmin-athletics-design-system/).
+
 Abre **`http://localhost:8000`** (usa incógnito tras actualizar, por la caché del bundle).
 
 ## 🖥️ Qué incluye la web
@@ -55,11 +70,16 @@ GET    /api/v1/sync/status
 ## 🧪 Pruebas
 
 ```powershell
+# Backend (8 scripts en verde, ~36 s)
 .\venv\Scripts\python.exe tests\test_fatigue_engine.py
 .\venv\Scripts\python.exe tests\test_security.py
 .\venv\Scripts\python.exe tests\test_social_e2e.py   # incluye invites, push dry_run, rutas CRUD
 .\venv\Scripts\python.exe tests\test_tracks.py
-cd frontend; npx tsc --noEmit
+
+# Frontend nuevo: tokens + contraste AA + typecheck + flujos
+cd frontend-nuevo; npm run check
+npm run verify:api    # contrato contra un backend real sobre una copia de la BD
+npm run smoke         # flujo completo en un navegador real + capturas
 ```
 
 ## 📑 Especificaciones (fuente de verdad, revisadas 2026-09-10)

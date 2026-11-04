@@ -46,7 +46,7 @@ Verificado sobre copia de la BD real con `tests/verify_migration_real_db.py`.
 ---
 
 ### T-02 · Frontend nuevo: esqueleto, navegación y capa de API tipada
-**Nivel 1** · **Estado**: `pendiente` · **Origen**: `ESPECIFICACION.md` (frontend rehecho)
+**Nivel 1** · **Estado**: `hecha` (2026-11-04) · **Origen**: `ESPECIFICACION.md` (frontend rehecho)
 
 Proyecto `frontend-nuevo/` con Vite + React 19 + TypeScript + Tailwind v4 + React Query. Layout,
 navegación, tema oscuro, cliente HTTP con Bearer obligatorio y `src/api/types.ts` con los tipos de
@@ -54,6 +54,13 @@ navegación, tema oscuro, cliente HTTP con Bearer obligatorio y `src/api/types.t
 
 **Criterio de aceptación**: arranca con `npm run dev`; login real contra el backend; navegación
 entre secciones; `tsc --noEmit` limpio; `frontend/` y `frontend_mvp/` intactos.
+
+**Resultado (2026-11-04).** Sistema de diseño en `designs/garmin-athletics-design-system/`
+(escala de 4 px, AA calculado: 52 pares, 2 temas) y app con login real, navegación por registro,
+Hoy, Gimnasio y Ajustes, más seis secciones de bandera (Actividades, Calendario, Tendencias,
+Rendimiento, Rutas, Social). Pruebas: 11 flujos en verde (Vitest + Testing Library), contrato
+verificado contra el backend real sobre una copia de la BD (61 comprobaciones), humo en navegador
+real con 5 capturas y cero errores de consola, y `tsc --noEmit` + build limpios.
 
 ---
 
@@ -165,18 +172,125 @@ que el OpenAPI deje de estar vacío y T-11 se pueda generar.
 
 ---
 
+**Ampliación del 2026-11-04 — T-13 a T-20.** Nacen de `INVESTIGACION.md` §8 y de la decisión D-09. La
+mayoría de las pantallas nuevas vive detrás de `VITE_FEATURE_EXTENDED` (D-08); lo que cae dentro de
+pantallas visibles (T-13, T-14, T-17, T-19) y en Ajustes (T-20) se ve desde el primer día.
+
+### T-13 · Entrenar sin plantilla (sesión libre)
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: `INVESTIGACION.md` §8 (adopción 1)
+
+Empezar una sesión vacía y añadir ejercicios sobre la marcha, sin crear una rutina antes. Cubre los
+días sin plan y evita el flujo rígido del builder de Garmin (F3). Va **dentro de Entrenar**, que es
+visible: no depende de la bandera.
+
+**Criterio de aceptación**: desde "Entrenar" se abre una sesión sin plantilla; los ejercicios que se
+añaden se marcan y corrigen igual que los de una plantilla; al terminar, la sesión aparece en el
+historial y suma en la carga.
+
+---
+
+### T-14 · Resumen al terminar la sesión
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: `INVESTIGACION.md` §8 (adopción 2)
+
+Cierra el bucle de T-04: tonelaje, series por grupo muscular, PRs y comparación con la última
+sesión del mismo día o rutina. Es la pregunta que Garmin no responde (F7). Va dentro de Entrenar,
+visible.
+
+**Criterio de aceptación**: al terminar, el resumen muestra tonelaje total, series por grupo
+muscular y PRs de la sesión; si hay una sesión anterior comparable, muestra la diferencia; cuando no
+hay datos suficientes, lo dice en vez de enseñar un cero o un número inventado.
+
+---
+
+### T-15 · Progreso de fuerza
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: `INVESTIGACION.md` §8 (adopción 3)
+
+Pantalla nueva **Progreso**, **detrás de la bandera** (D-08): volumen semanal, series por grupo
+muscular, frecuencia y racha, y detección de músculos desatendidos. Convierte el historial en
+decisiones.
+
+**Criterio de aceptación**: muestra el volumen semanal y las series por grupo muscular de las
+sesiones de fuerza; señala los grupos que no han recibido series en el periodo; con poco historial,
+enseña un estado vacío honesto que explica qué falta.
+
+---
+
+### T-16 · Marcas personales (PRs)
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: `INVESTIGACION.md` §8 (adopción 4)
+
+Pestaña **Marcas**, **detrás de la bandera**: lista de récords por ejercicio con fecha y mejor
+serie. El aviso de PR al terminar una sesión se muestra en el resumen de T-14, que sí es visible.
+
+**Criterio de aceptación**: la pestaña lista los récords por ejercicio con fecha y mejor serie; el
+aviso de PR solo aparece cuando la sesión supera la marca anterior; cada marca enlaza a la sesión
+donde se consiguió.
+
+---
+
+### T-17 · Guardar sesión como plantilla
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: `INVESTIGACION.md` §8 (adopción 5)
+
+Desde el detalle de una sesión del **Historial** (visible), "guardar como rutina". La rutina nace
+del entreno real, no de un builder vacío.
+
+**Criterio de aceptación**: desde el detalle de una sesión se guarda como plantilla con nombre; la
+plantilla aparece en Rutinas con los ejercicios, series, repeticiones y pesos de esa sesión; se
+puede arrancar una sesión nueva desde ella.
+
+---
+
+### T-18 · Calendario semanal de entrenamiento
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: `INVESTIGACION.md` §8 (adopción 6)
+
+Pantalla **Calendario**, **detrás de la bandera**: asignar plantillas a días de la semana y verlas
+junto a la disposición (readiness). El plan deja de estar enterrado en "Más" (F9). El backend de
+`/calendar` ya devuelve eventos y readiness por día (§4.4); el vínculo plantilla → día es lo que hay
+que resolver al implementarla.
+
+**Criterio de aceptación**: se asigna una plantilla a un día de la semana y se ve en el calendario;
+cada día muestra sus eventos y la readiness que devuelve el backend; desde el calendario se arranca
+la sesión de ese día.
+
+---
+
+### T-19 · Calculadora de discos y calentamiento
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: `INVESTIGACION.md` §8 (adopción 7) — adopta la
+que estaba como E-03
+
+Herramienta **dentro de la sesión** (visible): qué discos poner por lado para un peso y qué series
+de aproximación hacer. El cálculo mental es fricción real en el gimnasio.
+
+**Criterio de aceptación**: dado un peso total y el material disponible, muestra los discos por
+lado; para un peso que no se puede montar exactamente, lo dice y propone la combinación más cercana;
+las series de aproximación usan el peso de trabajo real y se pueden empezar sin salir de la sesión.
+
+---
+
+### T-20 · Preferencias: unidades, descanso y avisos
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: `INVESTIGACION.md` §8 (adopción 8)
+
+En **Ajustes** (visible): kg/lb, duración de descanso por defecto y aviso de descanso. Se usa a una
+mano y en un gimnasio; la app se adapta al atleta.
+
+**Criterio de aceptación**: cambiar kg/lb cambia lo que se muestra en todas las pantallas y no
+altera el dato guardado; el descanso por defecto se aplica al empezar una serie; el aviso de
+descanso se puede activar o desactivar y la preferencia sobrevive a recargar.
+
+---
+
 ## Esperando decisión (Nivel 3) — no bloquean la sesión
 
 | # | Pregunta exacta | Por qué es Nivel 3 |
 |---|---|---|
 | E-01 | **¿El frontend nuevo mantiene las 8 pestañas (Panel, Actividades, Rutas, Gimnasio, Tendencias, Rendimiento, Calendario, Social) o se recorta?** | Es alcance de producto y la `ESPECIFICACION.md` lo deja explícitamente para David. Mientras no se responda, T-02 construye la navegación con **Hoy + Gimnasio + Ajustes** y deja las demás detrás de una bandera. |
 | E-02 | ¿Se adoptan **supersets** (dos ejercicios por bloque)? | Añade alcance: cambia el modelo de sesión. Propuesto en `INVESTIGACION.md` §5. |
-| E-03 | ¿Se añade **calculadora de discos** y de calentamiento? | Funcionalidad nueva no pedida en la especificación. Barata y muy valorada en Hevy/Strong. |
+| E-03 | ¿Se añade **calculadora de discos** y de calentamiento? | **adoptada como T-19 (2026-11-04); ya no espera decisión.** Entra como Nivel 2 dentro de la ampliación (`INVESTIGACION.md` §8, `DECISIONES.md` D-09). |
 | E-04 | ¿**PWA offline** con service worker? | Añade una capa de caché y versiones; no se puede validar bien sin despliegue. |
 | E-05 | ¿Se envía de verdad la rutina al **reloj Garmin** (`push-to-garmin` con `dry_run=false`)? | Nunca se ha validado con un reloj real; puede rechazar el entreno. |
 | E-06 | ¿**RPE/RIR por serie**? | La especificación no lo pide; Hevy/Strong lo tienen. |
 | E-07 | ¿**1RM estimado** y progresión calculada? | Extra sobre "marca personal y evolución". |
 | E-08 | ¿Peso corporal, medidas, SpO2, nutrición? | Fuera del alcance declarado de esta tanda (`ESPECIFICACION.md` "fuera de alcance"). |
+| E-09 | **¿El frontend nuevo sustituye al viejo en producción o convive con él?** | Es despliegue y producto: decide qué se sirve y cuándo se apaga el viejo. **No bloquea**: el frontend nuevo vive en su carpeta y el viejo se sigue sirviendo hasta que David decida. |
 
 ---
 
@@ -200,3 +314,4 @@ que el OpenAPI deje de estar vacío y T-11 se pueda generar.
 |---|---|---|---|
 | — | Investigación de competencia + inventario del backend | 2026-11-04 | `INVESTIGACION.md` (competencia + 58 endpoints + 10 huecos + propuesta) |
 | T-01 | Backend del gimnasio (catálogo, plantillas, sesiones con series) | 2026-11-04 | 17 endpoints, 5 tablas, 52 ejercicios, pruebas 8/8 en verde |
+| T-02 | Frontend nuevo: sistema de diseño, login, navegación y API tipada | 2026-11-04 | `frontend-nuevo/` + `designs/…`; 11 flujos, 61 comprobaciones de contrato y humo en navegador |
