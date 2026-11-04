@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext';
 import { useCreateSession, useLastMarks, useTemplate } from '../api/queries';
 import type { SessionDetail, SessionSetInput } from '../api/types';
 import { Badge, Button, Card, EmptyState, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../components/ui';
+import { ExerciseIllustration } from '../components/ExerciseIllustration';
 import { formatNumber } from '../lib/format';
 
 interface DraftSet {
@@ -489,6 +490,9 @@ export function SessionPage() {
                 Objetivo {exercise.targetSets}×{exercise.targetReps} · descanso {exercise.restSeconds}s
                 {exercise.previous ? ` · ${exercise.previous}` : ' · sin marca anterior'}
               </p>
+              <div className="mb-3">
+                <ExerciseIllustration name={exercise.name} muscleGroup={exercise.muscleGroup} compact />
+              </div>
               <div className="grid grid-cols-[2.5rem_1fr_1fr_3.4rem_2.75rem] items-end gap-2 text-caption text-ink-muted">
                 <span>Serie</span>
                 <span>Peso (kg)</span>

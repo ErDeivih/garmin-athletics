@@ -87,6 +87,20 @@ try {
   await page.getByRole('heading', { name: 'Gimnasio', exact: true }).waitFor();
   await shot('03-gimnasio');
 
+  // T-28: catálogo con dibujos inicio/fin.
+  await page.getByRole('link', { name: /catálogo de ejercicios/i }).click();
+  await page.getByRole('heading', { name: 'Catálogo', exact: true }).waitFor();
+  await page.getByRole('img', { name: /dibujo de press de banca/i }).waitFor({ timeout: 15000 });
+  // Filtra para que la captura enseñe los dibujos a tamaño legible.
+  await page.getByLabel(/buscar/i).fill('press');
+  await page.waitForTimeout(300);
+  await page.setViewportSize({ width: 390, height: 1600 });
+  await shot('10-catalogo');
+  await page.getByLabel(/buscar/i).fill('');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('link', { name: /volver a gimnasio/i }).click();
+  await page.getByRole('heading', { name: 'Gimnasio', exact: true }).waitFor();
+
   // T-04: empezar la plantilla del día, marcar una serie y terminar la sesión
   // contra el backend real (copia). Esto crea una sesión de verdad.
   await page.getByRole('link', { name: /empezar sesión/i }).click();

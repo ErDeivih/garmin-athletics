@@ -149,6 +149,11 @@ David ha decidido que el frontend nuevo arranca con **Hoy, Gimnasio y Ajustes** 
 - **Reloj**: compatibilidad verificada de la PoC Connect IQ en fr255 (el de David), fr255m, fr265,
   fr965, fenix7, venu3, fr245, fenix6 y venu2; `minSdkVersion 3.3`; fr235 fuera. El envío real sigue
   pendiente de la prueba en su reloj (Nivel 3).
+- **T-28 hecha**: 17 patrones de dibujo propio (inicio/fin), catálogo consultable y aviso honesto
+  cuando un ejercicio no tiene patrón; la sesión ya los muestra.
+- **T-30/T-31 implementadas**: builder tipado de Garmin (sportType 5, repeat groups, 1.527
+  ejercicios, sin envíos parciales) e importación de series deduplicada por `activity_id`; falta la
+  prueba real en el reloj y el botón de envío en la app.
 
 ## Ampliación completa del producto (2026-11-04)
 

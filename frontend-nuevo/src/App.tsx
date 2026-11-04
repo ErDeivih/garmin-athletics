@@ -8,6 +8,7 @@ import { AppShell } from './components/AppShell';
 import { ErrorState, LoadingBlock, PageHeader } from './components/ui';
 import { LoginPage } from './pages/LoginPage';
 import { SessionPage } from './pages/SessionPage';
+import { CatalogPage } from './pages/extended/CatalogPage';
 import { UnavailablePage } from './pages/extended/UnavailablePage';
 
 const queryClient = new QueryClient({
@@ -89,6 +90,7 @@ function AuthGate() {
           );
         })}
         <Route path="gimnasio/entrenar" element={<SessionPage />} />
+        <Route path="gimnasio/catalogo" element={<CatalogPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

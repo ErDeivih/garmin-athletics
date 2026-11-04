@@ -422,7 +422,7 @@ captura móvil con datos reales de la copia. La comparativa avisa «sin periodo 
 cuando no hay ventana previa.
 
 ### T-28 · Ejercicios con dibujo (inicio y fin del movimiento)
-**Nivel 2** · **Estado**: `pendiente` · **Origen**: `ALCANCE-COMPLETO.md` §2
+**Nivel 2** · **Estado**: `hecha` (2026-11-04) · **Origen**: `ALCANCE-COMPLETO.md` §2
 
 Dos posiciones del movimiento por ejercicio, dibujadas como assets propios y servidas por el
 catálogo; mapeo al catálogo de Garmin (categoría + ejercicio) para el envío al reloj.
@@ -430,6 +430,15 @@ catálogo; mapeo al catálogo de Garmin (categoría + ejercicio) para el envío 
 **Criterio de aceptación**: cada ejercicio del catálogo tiene su par de dibujos o un aviso honesto de
 que no lo tiene; el editor y la sesión los muestran; el mapeo Garmin cubre lo que se envía y avisa de
 lo que no.
+
+**Resultado (2026-11-04).** `ExerciseIllustration` dibuja **17 patrones** (press, flexión, press
+vertical, elevación lateral, remo, tracción vertical, curl, tríceps, sentadilla, bisagra, zancada,
+prensa, curl femoral, puente de glúteo, gemelo, core y cuerpo completo) en SVG propio, sin copiar
+assets de Garmin; cada patrón tiene posición **inicio** y **fin**. El catálogo nuevo
+(`/gimnasio/catalogo`) busca/filtra y enseña el par; la sesión (`Entrenar`) lo muestra en cada
+ejercicio. Un ejercicio sin patrón fiable (p. ej. encogimientos) declara «sin dibujo» en vez de
+inventarlo. El mapeo Garmin del builder tipado (T-31) usa **1.527 ejercicios** con categoría +
+variante y lista los no mapeados. Falta que el **editor** (T-05) use la misma pieza; hoy no existe.
 
 ### T-29 · Registro de sesión (T-04) con RPE y corrección
 **Nivel 2** · **Estado**: `hecha` (2026-11-04) · **Origen**: `ALCANCE-COMPLETO.md` §3 (ya era T-04)
@@ -446,22 +455,34 @@ el detalle de sesión. **Tempo no existe aún** en el modelo (P3 de `INVESTIGACI
 se pinta una fila de tempo vacía hasta que el editor lo capture.
 
 ### T-30 · Importar las series de fuerza de Garmin
-**Nivel 2** · **Estado**: `pendiente` · **Origen**: `INVESTIGACION-AMPLIACION.md` §3.3-3.4
+**Nivel 2** · **Estado**: `en curso` · **Origen**: `INVESTIGACION-AMPLIACION.md` §3.3-3.4
 
 Al sincronizar una actividad de fuerza, leer `get_activity_exercise_sets` y guardar las series
 reales, enlazadas a la actividad y a la sesión propia; deduplicar por actividad para no contar dos
 veces.
 
-**Criterio de aceptación**: una actividad de fuerza de Garmin aparece con sus series (ejercicio,
-peso, reps); dos sincronizaciones no duplican; una serie corregida en Garmin se refleja tras el
-siguiente sync. **Requiere probar con la cuenta real de David (Nivel 3).**
+**Resultado parcial (2026-11-04).** Endpoint `POST /strength/import-garmin/{activity_id}`: autentica,
+llama a `get_activity_exercise_sets`, interpreta peso en gramos, ignora descansos, mapea por
+`garmin_enum` y guarda sesión + series con el `activity_id` de Garmin. **Deduplica** (409 si ya está),
+no crea una segunda `Activity` y deja TSS 0 para no contar dos veces. Si ningún ejercicio mapea, no
+guarda nada y devuelve `unmapped`. `tests/test_garmin_import.py` cubre parser, mapeo, dedupe y no
+mapeado con un doble de la API. **Pendiente de validar contra la cuenta real y de engancharlo al
+sync automático** (hoy es una llamada explícita).
 
 ### T-31 · Envío real de entrenamientos al reloj
-**Nivel 2** · **Estado**: `pendiente` · **Origen**: `INVESTIGACION-AMPLIACION.md` §3.3
+**Nivel 2** · **Estado**: `en curso` · **Origen**: `INVESTIGACION-AMPLIACION.md` §3.3
 
 Corregir el builder actual con los modelos tipados de `garminconnect` (sportType 5, repeat groups,
 unidades de peso, descansos, catálogo de 1.527 ejercicios) y probar **un** entrenamiento real en el
 reloj de David antes de activar el envío en la app.
+
+**Resultado parcial (2026-11-04).** Builder sustituido por `app/services/garmin_workout.py`, que usa
+`StrengthWorkout` + `create_strength_set` de la librería: **sportType 5**, un `RepeatGroupDTO` por
+ejercicio con serie + descanso, peso en gramos (unidad 8), catálogo de **1.527** ejercicios y mapa
+explícito para los 11 enums que Garmin nombra distinto. Los ejercicios sin mapeo **no se envían** y se
+devuelven en `unmapped`; el envío real los rechaza con 400. `POST /strength/push-to-garmin` con
+`dry_run=true` devuelve el JSON tipado (verificado por contrato, 132 comprobaciones). **Pendiente**:
+botón en la app y la prueba real en el fr255 (Nivel 3).
 
 **Compatibilidad ya verificada (2026-11-04)**: la PoC Connect IQ de `watch/connectiq-poc/` compila
 para **fr255** (reloj de David, API 5.2), fr255m, fr265, fr965, fenix7, venu3, fr245 (API 3.3),
@@ -546,4 +567,5 @@ la captura móvil es la referencia y el escritorio no es un móvil estirado.
 | T-22 | Borrado de cuenta completo (gimnasio incluido) y confirmación en Ajustes | 2026-11-04 | `tests/test_account_deletion.py` + flujo con frase literal y capturas |
 | T-26 | Métricas derivadas y agregados de gimnasio/carga | 2026-11-04 | `/strength/stats` y `/metrics/load-summary`; `tests/test_metrics_stats.py`, 124 comprobaciones de contrato |
 | T-27 | Tendencias: línea, barras, calor, dispersión, sueño y comparativa | 2026-11-04 | `sleep-phases` + `sets_sample`/`previous`; 25 pruebas de frontend y captura real |
+| T-28 | Ejercicios con dibujo inicio/fin + catálogo consultable | 2026-11-04 | 17 patrones SVG propios, aviso honesto sin dibujo; 27 pruebas de frontend y captura del catálogo |
 | Reloj (base T-31) | Compatibilidad de la PoC Connect IQ con fr255 y 8 perfiles más | 2026-11-04 | `watch/connectiq-poc/` + matriz en `INVESTIGACION-AMPLIACION.md` §3.1; no probado en reloj real |

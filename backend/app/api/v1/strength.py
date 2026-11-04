@@ -11,6 +11,7 @@ from app.api.deps import get_current_user
 from app.db.models import User
 from app.services.gym_advisor import GymAdvisorService, GymRoutineResponse
 from app.services.fatigue_engine import FatigueEngine
+from app.services.garmin_workout import GARMIN_CATALOG_SIZE, build_strength_workout
 
 router = APIRouter(prefix="/strength", tags=["Strength & Gym Assistant"])
 
@@ -20,6 +21,7 @@ class ExerciseLogItem(BaseModel):
     reps: int = Field(..., ge=1, example=10)
     weight_kg: float = Field(..., ge=0.0, example=80.0)
     rir: Optional[int] = Field(2, ge=0, le=5)
+    rest_seconds: int = Field(120, ge=0, le=1800)
 
 class SaveStrengthLogRequest(BaseModel):
     workout_date: date = Field(default_factory=date.today)
@@ -71,63 +73,11 @@ GARMIN_EXERCISE_MAP = {
 }
 
 
-def _norm_exercise(name: str) -> str:
-    import unicodedata
-    nfkd = unicodedata.normalize("NFKD", name.strip().lower())
-    return "".join(c for c in nfkd if not unicodedata.combining(c))
-
-
-def build_garmin_strength_workout(routine_name: str, exercises: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Convierte rutina propia a JSON de workout de Garmin Connect (experimental).
-
-    Retorna {"workout": {...}, "unmapped": [nombres sin enum]}.
-    """
-    import uuid as _uuid
-    sport = {"sportTypeId": 4, "sportTypeKey": "strength_training"}
-    steps = []
-    unmapped = []
-    order = 0
-    for ex in exercises:
-        name = str(ex.get("name", "Ejercicio"))
-        enum = GARMIN_EXERCISE_MAP.get(_norm_exercise(name))
-        if not enum:
-            unmapped.append(name)
-            enum = "CALISTHENICS_GENERIC"  # fallback genérico; revisar 'unmapped' en dry_run
-        for s in range(int(ex.get("sets", 3))):
-            order += 1
-            steps.append({
-                "type": "ExecutableStepDTO",
-                "stepId": None,
-                "stepOrder": order,
-                "stepType": {"stepTypeId": 3, "stepTypeKey": "interval"},
-                "exerciseName": enum,
-                "exerciseCategory": {"exerciseCategoryId": 1, "exerciseCategoryKey": "strength"},
-                "numberOfIterations": 1,
-                "weightValue": float(ex.get("weight_kg", 0) or 0),
-                "weightUnit": {"unitId": 1, "unitKey": "kilogram"},
-                "endCondition": {"conditionId": 7, "conditionKey": "reps"},
-                "endConditionValue": float(ex.get("reps", 10)),
-                "description": f"{name} {s + 1}/{ex.get('sets', 3)}",
-                "workoutStepId": str(_uuid.uuid4()),
-            })
-    workout = {
-        "workoutName": routine_name[:60],
-        "sportType": sport,
-        "workoutSegments": [{
-            "segmentOrder": 1,
-            "sportType": sport,
-            "workoutSteps": steps,
-        }],
-        "estimatedDurationUnit": {"unitKey": "minute"},
-        "estimatedDurationValue": 45,
-    }
-    return {"workout": workout, "unmapped": unmapped}
-
-
 class PushWorkoutRequest(BaseModel):
     routine_name: str = Field(..., example="Rutina Empuje A")
     exercises: List[ExerciseLogItem] = Field(..., min_length=1)
     dry_run: bool = Field(True, description="True = solo devuelve el JSON sin enviar nada a Garmin")
+    push_to_device: bool = Field(True, description="Si el envío real debe empujar el entreno al reloj")
 
 
 @router.post("/push-to-garmin", summary="[Experimental] Enviar rutina de fuerza al reloj Garmin")
@@ -136,14 +86,30 @@ async def push_workout_to_garmin(
     user: Optional[User] = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
-    """Convierte la rutina a formato Garmin. Con dry_run=true no toca tu cuenta."""
-    built = build_garmin_strength_workout(
-        payload.routine_name, [e.model_dump() for e in payload.exercises]
+    """Construye un workout tipado de Garmin. Con dry_run=true no toca la cuenta.
+
+    El envío real es experimental: requiere la cuenta vinculada y se debe probar
+    en el reloj del atleta antes de considerarlo validado (T-31, Nivel 3).
+    """
+    built = build_strength_workout(
+        payload.routine_name,
+        [exercise.model_dump() for exercise in payload.exercises],
+        GARMIN_EXERCISE_MAP,
     )
     if payload.dry_run:
-        return {"status": "dry_run", "unmapped_exercises": built["unmapped"],
-                "workout_json": built["workout"],
-                "note": "Revisa 'unmapped_exercises'. Pon dry_run=false para enviarlo de verdad."}
+        return {
+            "status": "dry_run",
+            "unmapped_exercises": built.unmapped,
+            "workout_json": built.workout.to_dict(),
+            "builder": "garminconnect.workout.StrengthWorkout",
+            "garmin_catalog_exercises": GARMIN_CATALOG_SIZE,
+            "blocks": built.blocks,
+            "estimated_seconds": built.estimated_seconds,
+            "push_to_device": payload.push_to_device,
+            "mapping": built.mapping,
+            "note": "Estructura tipada (sportType 5 y repeat groups). Revisa "
+                    "'unmapped_exercises'; no se envía nada con dry_run.",
+        }
     if user is None:
         raise HTTPException(status_code=401, detail="Autenticación requerida.")
     from app.core.config import settings as _settings
@@ -153,14 +119,34 @@ async def push_workout_to_garmin(
     cred = cred_res.scalar_one_or_none()
     if not cred:
         raise HTTPException(status_code=400, detail="Vincula tu Garmin primero.")
+    if built.has_unmapped:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Ejercicios sin mapeo Garmin: {', '.join(built.unmapped)}. "
+                   "Corrige el catálogo antes de enviar.",
+        )
     svc = _GSvc(email=cred.garmin_email, password=None,
                 token_dir=f"{_settings.GARMIN_TOKENS_DIR}_{user.id}", use_env_fallback=False)
     try:
         svc.authenticate()
-        sent = svc.client.upload_strength_workout(built["workout"])
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Garmin rechazó el entreno: {e}")
-    return {"status": "sent", "unmapped_exercises": built["unmapped"], "garmin_response": sent}
+        sent = svc.client.upload_strength_workout(built.workout)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Garmin rechazó el entreno: {exc}")
+
+    workout_id = sent.get("workoutId") if isinstance(sent, dict) else None
+    pushed = None
+    if payload.push_to_device and workout_id is not None:
+        try:
+            pushed = svc.client.push_workout_to_device(workout_id=workout_id)
+        except Exception as exc:  # el workout ya está subido; el push se puede reintentar
+            pushed = {"error": str(exc)}
+    return {
+        "status": "sent",
+        "unmapped_exercises": built.unmapped,
+        "garmin_response": sent,
+        "pushed_to_device": pushed,
+        "note": "Enviado. Falta validarlo en el reloj real antes de darlo por bueno.",
+    }
 
 @router.get("/suggest", summary="Obtener sugerencia adaptativa de rutina de gimnasio por IA")
 async def suggest_gym_routine(

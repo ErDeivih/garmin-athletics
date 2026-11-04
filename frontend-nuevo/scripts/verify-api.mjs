@@ -266,6 +266,27 @@ if (hasKeys(sleepPhases.body, ['days', 'series', 'note'], 'GET /metrics/sleep-ph
   check('sleep-phases.series es array', Array.isArray(sleepPhases.body.series));
 }
 
+// --- Envío al reloj en seco (T-31): estructura tipada, sin tocar Garmin ---
+const pushDry = await request('/api/v1/strength/push-to-garmin', {
+  method: 'POST',
+  token,
+  body: JSON.stringify({
+    routine_name: 'Verificación empuje',
+    dry_run: true,
+    exercises: [{ name: 'Press de banca con barra', sets: 3, reps: 8, weight_kg: 80, rest_seconds: 150 }],
+  }),
+});
+if (hasKeys(pushDry.body, ['status', 'unmapped_exercises', 'workout_json', 'builder', 'blocks'], 'POST /strength/push-to-garmin')) {
+  check('push dry_run devuelve status dry_run', pushDry.body.status === 'dry_run');
+  check('push usa el builder tipado', pushDry.body.builder === 'garminconnect.workout.StrengthWorkout');
+  const workout = pushDry.body.workout_json;
+  check('workout sportTypeId = 5', workout?.sportType?.sportTypeId === 5, JSON.stringify(workout?.sportType));
+  const block = workout?.workoutSegments?.[0]?.workoutSteps?.[0];
+  check('workout usa RepeatGroupDTO', block?.type === 'RepeatGroupDTO', block?.type);
+  check('workout tiene 3 repeticiones en el bloque', block?.numberOfIterations === 3);
+  check('push no tiene ejercicios sin mapear', Array.isArray(pushDry.body.unmapped_exercises) && pushDry.body.unmapped_exercises.length === 0, JSON.stringify(pushDry.body.unmapped_exercises));
+}
+
 const loadSummary = await request('/api/v1/metrics/load-summary?days=28', { token });
 if (hasKeys(loadSummary.body, ['days', 'end_date', 'series', 'weeks', 'latest', 'method'], 'GET /metrics/load-summary')) {
   hasKeys(loadSummary.body.latest, ['date', 'atl', 'ctl', 'tsb', 'acwr'], 'metrics/load-summary.latest');

@@ -219,8 +219,21 @@ def test_push_workout_dry_run():
     body = res.json()
     assert body["status"] == "dry_run"
     assert "Ejercicio Raro Inexistente" in body["unmapped_exercises"]
-    assert body["workout_json"]["workoutName"] == "Rutina Empuje A"
-    assert len(body["workout_json"]["workoutSegments"][0]["workoutSteps"]) == 6  # 4+2 sets
+    workout = body["workout_json"]
+    assert workout["workoutName"] == "Rutina Empuje A"
+    # Estructura tipada: Garmin sportType 5 y un bloque RepeatGroup por ejercicio
+    # mapeado (el no mapeado no se envía).
+    assert workout["sportType"]["sportTypeId"] == 5
+    assert body["builder"] == "garminconnect.workout.StrengthWorkout"
+    assert body["garmin_catalog_exercises"] >= 1000
+    steps = workout["workoutSegments"][0]["workoutSteps"]
+    assert len(steps) == 1, steps
+    block = steps[0]
+    assert block["type"] == "RepeatGroupDTO" and block["numberOfIterations"] == 4
+    exercise_step, rest_step = block["workoutSteps"]
+    assert exercise_step["endConditionValue"] == 8.0
+    assert exercise_step["weightValue"] == 80000.0  # gramos, como espera Garmin
+    assert rest_step["endConditionValue"] == 120.0
 
 
 def test_routes_crud():

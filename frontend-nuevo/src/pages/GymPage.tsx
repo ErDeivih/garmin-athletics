@@ -45,7 +45,15 @@ export function GymPage() {
 
   return (
     <>
-      <PageHeader title="Gimnasio" description="Entrenamiento de fuerza: la sesión de hoy y tu historial." />
+      <PageHeader
+        title="Gimnasio"
+        description="Entrenamiento de fuerza: la sesión de hoy y tu historial."
+        actions={
+          <Link className={secondaryLink} to="/gimnasio/catalogo">
+            Catálogo de ejercicios
+          </Link>
+        }
+      />
 
       <section aria-label="Hoy toca" className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">

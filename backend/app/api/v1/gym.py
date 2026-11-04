@@ -25,11 +25,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, require_current_user
 from app.db.models import (
-    Activity, Exercise, SessionSet, TemplateExercise, User,
+    Activity, Exercise, GarminCredential, SessionSet, TemplateExercise, User,
     WorkoutSession, WorkoutTemplate,
 )
 from app.db.session import get_db
 from app.services.fatigue_engine import FatigueEngine
+from app.services.garmin_import import import_exercise_sets
 from app.services.gym_seed import (
     EQUIPMENT, EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, MUSCLE_GROUPS, normalize_search,
 )
@@ -748,6 +749,81 @@ async def gym_stats(
                     "espalda/bíceps); piernas y core no entran en el ratio.",
         },
         "e1rm_note": "1RM estimado con Epley sobre series de 1 a 12 repeticiones; no es una medición.",
+    }
+
+
+@router.post("/import-garmin/{activity_id}", summary="Importar las series de una actividad de fuerza de Garmin")
+async def import_garmin_strength(
+    activity_id: str,
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """Trae las series reales de una actividad de Garmin (T-30).
+
+    Requiere la cuenta de Garmin vinculada. No crea una segunda `Activity`: el
+    TSS de la sesión queda en 0 porque la actividad ya cuenta en la carga. Si un
+    ejercicio no está en nuestro catálogo con su `garmin_enum`, se devuelve en
+    `unmapped` y no se guarda a medias.
+    """
+    existing = (await db.execute(
+        select(WorkoutSession).where(
+            WorkoutSession.user_id == user.id,
+            WorkoutSession.activity_id == str(activity_id),
+        )
+    )).scalar_one_or_none()
+    if existing is not None:
+        raise HTTPException(
+            status_code=409,
+            detail={"status": "already_imported", "session_id": existing.id,
+                    "message": "Esa actividad ya se importó; no se duplica."},
+        )
+
+    cred = (await db.execute(
+        select(GarminCredential).where(GarminCredential.user_id == user.id)
+    )).scalar_one_or_none()
+    if cred is None:
+        raise HTTPException(status_code=400, detail="Vincula tu Garmin primero.")
+
+    from app.core.config import settings as _settings
+    from app.services.garmin_service import GarminService as _GSvc
+    svc = _GSvc(email=cred.garmin_email, password=None,
+                token_dir=f"{_settings.GARMIN_TOKENS_DIR}_{user.id}", use_env_fallback=False)
+    try:
+        svc.authenticate()
+        payload = svc.client.get_activity_exercise_sets(activity_id)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Garmin no devolvió las series: {exc}")
+
+    activity = (await db.execute(
+        select(Activity).where(Activity.id == str(activity_id), Activity.user_id == user.id)
+    )).scalar_one_or_none()
+    started_at = activity.start_time if activity else None
+    finished_at = None
+    if activity and activity.start_time and activity.duration_seconds:
+        finished_at = activity.start_time + timedelta(seconds=activity.duration_seconds)
+
+    result = await import_exercise_sets(
+        db, user, str(activity_id), payload,
+        activity_name=activity.activity_name if activity else None,
+        started_at=started_at, finished_at=finished_at,
+    )
+    if result.status == "no_sets":
+        raise HTTPException(status_code=422, detail="La actividad no tiene series de fuerza que importar.")
+    if result.status == "no_mapped_exercises":
+        raise HTTPException(status_code=422, detail={
+            "status": "no_mapped_exercises",
+            "unmapped": result.unmapped,
+            "message": "Ningún ejercicio de la actividad está en el catálogo con garmin_enum; "
+                       "no se guarda nada. Añade el mapeo y reintenta.",
+        })
+    return {
+        "status": result.status,
+        "session_id": result.session_id,
+        "sets_imported": result.sets_imported,
+        "exercises": result.exercises,
+        "unmapped": result.unmapped,
+        "weight_unit": result.weight_unit,
+        "note": "Importado y deduplicado por activity_id; pendiente de validar con la cuenta real.",
     }
 
 

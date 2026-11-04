@@ -325,6 +325,13 @@ enviar nada de verdad**:
 probar **un** entrenamiento en la cuenta de David con su permiso y su reloj. Antes de eso, el envío
 real sigue apagado y la UI lo dice. No se promete hasta verlo en el reloj.
 
+**Corregido el 2026-11-04 (T-31, ver `BACKLOG.md` y D-16).** El backend ya no fabrica el JSON a
+mano: usa `garminconnect.workout.StrengthWorkout` + `create_strength_set`, con sportType 5, un
+`RepeatGroupDTO` por ejercicio (serie + descanso), peso en gramos y el catálogo de 1.527 ejercicios.
+Los 11 enums con nombre distinto tienen alias explícito; los ejercicios sin mapear **no se envían** y
+el dry-run los lista. El contrato verifica 132 comprobaciones, incluida la estructura tipada. Sigue
+pendiente la prueba real en el fr255.
+
 ### 3.4 Los dos caminos reales para "tener la sesión en el reloj"
 
 **Camino A — entrenamiento nativo de Garmin (recomendado para empezar).**

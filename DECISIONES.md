@@ -337,3 +337,27 @@ de la watch-app.
 
 **Cómo se revierte.** Cambiar `minSdkVersion` o quitar productos del manifest; no toca datos.
 
+---
+
+## 2026-11-04 — D-16 · Workouts de Garmin: modelos tipados y nunca enviar ejercicios sin mapear
+
+**Contexto.** El builder anterior fabricaba JSON a mano: sportType 4 (el servidor espera 5), pasos
+planos sin descansos, pesos en kg donde la API usa gramos y, para un ejercicio desconocido, enviaba
+un `CALISTHENICS_GENERIC` que el atleta no había pedido. Además, `upload_strength_workout` de la
+librería exige un `StrengthWorkout`, no un diccionario, así que el envío real fallaba.
+
+**Decisión.**
+- Construir con `garminconnect.workout.StrengthWorkout` + `create_strength_set`: un
+  `RepeatGroupDTO` por ejercicio con serie y descanso, sportType 5 y peso en gramos.
+- Resolver el ejercicio contra el catálogo de **1.527** ejercicios por categoría + variante, con
+  alias explícitos para los enums que Garmin nombra distinto.
+- **No enviar nada** si algún ejercicio queda sin mapear: el dry-run lo lista y el envío real
+  devuelve 400. Nada de sustituciones silenciosas.
+- La importación (T-30) es idempotente por `activity_id`, no crea una segunda `Activity` y deja TSS 0
+  para no contar dos veces; si no mapea ningún ejercicio, no guarda nada.
+
+**Motivo.** Un workout mal formado puede rechazarse en Garmin o, peor, llegar al reloj con otro
+ejercicio. Es preferible negarse y explicar qué falta.
+
+**Cómo se revierte.** Volver al builder anterior o permitir un fallback; no toca datos.
+
