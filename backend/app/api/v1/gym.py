@@ -14,7 +14,7 @@ Decisiones de diseño: `DECISIONES.md` D-01, D-02 y D-04.
 import re
 import unicodedata
 import uuid
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -37,6 +37,12 @@ from app.services.gym_seed import (
 router = APIRouter(prefix="/strength", tags=["Gym — catálogo y sesiones"])
 
 SET_TYPES = ("normal", "warmup", "drop", "failure")
+
+# Clasificación documentada para el ratio empuje/tirón de T-26: se atribuye por
+# el grupo muscular PRINCIPAL del ejercicio. Es una estimación del reparto de
+# trabajo, no una medida anatómica: las piernas y el core quedan fuera del ratio.
+PUSH_MUSCLES = frozenset({"pecho", "hombro", "triceps"})
+PULL_MUSCLES = frozenset({"espalda", "biceps"})
 
 
 # ---------------------------------------------------------------------------
@@ -539,6 +545,165 @@ async def exercise_history(
     series.reverse()   # cronológico para el gráfico
     return {"exercise": _exercise_out(ex), "pr": pr,
             "sessions": sessions, "series": series}
+
+
+def _week_start(day: date) -> date:
+    """Lunes de la semana de `day` (las semanas del panel empiezan en lunes)."""
+    return day - timedelta(days=day.weekday())
+
+
+@router.get("/stats", summary="Estadísticas agregadas del gimnasio: volumen, series, 1RM y empuje/tirón")
+async def gym_stats(
+    from_date: Optional[date] = Query(None, alias="from", description="Fecha inicial (YYYY-MM-DD)."),
+    to_date: Optional[date] = Query(None, alias="to", description="Fecha final (YYYY-MM-DD)."),
+    days: int = Query(90, ge=7, le=365, description="Días hacia atrás si no se pasan from/to."),
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """Agrega las series guardadas por músculo, semana y ejercicio.
+
+    Reglas de honestidad: el tonelaje y las series de trabajo excluyen los
+    calentamientos; el 1RM es una **estimación de Epley** y solo se calcula con
+    series de 1 a 12 repeticiones; el reparto empuje/tirón se estima por el
+    grupo muscular principal y se dice cuánto queda sin clasificar.
+    """
+    end = to_date or date.today()
+    start = from_date or (end - timedelta(days=days - 1))
+    if start > end:
+        raise HTTPException(status_code=422, detail="'from' no puede ser posterior a 'to'.")
+
+    start_dt = datetime.combine(start, time.min)
+    end_dt = datetime.combine(end + timedelta(days=1), time.min)
+
+    rows = (await db.execute(
+        select(SessionSet, WorkoutSession, Exercise)
+        .join(WorkoutSession, SessionSet.session_id == WorkoutSession.id)
+        .outerjoin(Exercise, SessionSet.exercise_id == Exercise.id)
+        .where(WorkoutSession.user_id == user.id,
+               WorkoutSession.started_at >= start_dt,
+               WorkoutSession.started_at < end_dt)
+    )).all()
+
+    sessions = (await db.execute(
+        select(WorkoutSession).where(
+            WorkoutSession.user_id == user.id,
+            WorkoutSession.started_at >= start_dt,
+            WorkoutSession.started_at < end_dt,
+        )
+    )).scalars().all()
+
+    total_sets = 0
+    working_sets = 0
+    total_tonnage = 0.0
+    total_reps = 0
+    muscle_stats: Dict[str, Dict[str, Any]] = {}
+    exercise_stats: Dict[str, Dict[str, Any]] = {}
+    week_stats: Dict[date, Dict[str, Any]] = {}
+
+    for item, session, exercise in rows:
+        day = session.started_at.date() if session.started_at else start
+        week = _week_start(day)
+        group = exercise.muscle_group if exercise else "sin_clasificar"
+        weight = float(item.weight_kg or 0)
+        reps = int(item.reps or 0)
+        is_working = (not item.is_warmup) and weight > 0 and reps > 0
+        tonnage = round(weight * reps, 2) if is_working else 0.0
+
+        total_sets += 1
+        total_reps += reps
+        if is_working:
+            working_sets += 1
+            total_tonnage += tonnage
+
+        m = muscle_stats.setdefault(group, {
+            "muscle_group": group,
+            "label": MUSCLE_GROUP_LABELS.get(group, "Sin clasificar"),
+            "sets": 0, "working_sets": 0, "tonnage_kg": 0.0, "exercises": set(),
+        })
+        m["sets"] += 1
+        if is_working:
+            m["working_sets"] += 1
+            m["tonnage_kg"] = round(m["tonnage_kg"] + tonnage, 2)
+        if exercise is not None:
+            m["exercises"].add(exercise.id)
+
+        ex_id = item.exercise_id
+        e = exercise_stats.setdefault(ex_id, {
+            "exercise_id": ex_id,
+            "name": exercise.name if exercise else "Ejercicio ya borrado",
+            "muscle_group": group,
+            "sets": 0, "working_sets": 0, "tonnage_kg": 0.0,
+            "max_weight_kg": 0.0, "estimated_1rm_kg": None,
+        })
+        e["sets"] += 1
+        if is_working:
+            e["working_sets"] += 1
+            e["tonnage_kg"] = round(e["tonnage_kg"] + tonnage, 2)
+            e["max_weight_kg"] = max(e["max_weight_kg"], weight)
+            if 1 <= reps <= 12:
+                # Epley: estimación, no medición. Se etiqueta en la respuesta y en la UI.
+                epley = round(weight * (1 + reps / 30.0), 1)
+                e["estimated_1rm_kg"] = max(e["estimated_1rm_kg"] or 0.0, epley)
+
+        w = week_stats.setdefault(week, {
+            "week_start": week.isoformat(),
+            "sessions": set(), "sets": 0, "working_sets": 0, "tonnage_kg": 0.0,
+        })
+        w["sessions"].add(session.id)
+        w["sets"] += 1
+        if is_working:
+            w["working_sets"] += 1
+            w["tonnage_kg"] = round(w["tonnage_kg"] + tonnage, 2)
+
+    duration_min = round(sum(
+        (s.finished_at - s.started_at).total_seconds() / 60.0
+        for s in sessions if s.started_at and s.finished_at
+    ), 1)
+
+    by_muscle = []
+    for value in muscle_stats.values():
+        value["exercises"] = len(value["exercises"])
+        by_muscle.append(value)
+    by_muscle.sort(key=lambda row: (-row["tonnage_kg"], row["label"]))
+
+    by_exercise = list(exercise_stats.values())
+    by_exercise.sort(key=lambda row: (-row["tonnage_kg"], row["name"]))
+
+    by_week = []
+    for value in sorted(week_stats.values(), key=lambda row: row["week_start"]):
+        value["sessions"] = len(value["sessions"])
+        by_week.append(value)
+
+    push = round(sum(row["tonnage_kg"] for row in by_muscle if row["muscle_group"] in PUSH_MUSCLES), 2)
+    pull = round(sum(row["tonnage_kg"] for row in by_muscle if row["muscle_group"] in PULL_MUSCLES), 2)
+    unclassified = round(total_tonnage - push - pull, 2)
+
+    return {
+        "from": start.isoformat(),
+        "to": end.isoformat(),
+        "days": (end - start).days + 1,
+        "totals": {
+            "sessions": len(sessions),
+            "sets": total_sets,
+            "working_sets": working_sets,
+            "tonnage_kg": round(total_tonnage, 2),
+            "reps": total_reps,
+            "duration_min": duration_min,
+        },
+        "by_muscle": by_muscle,
+        "by_week": by_week,
+        "by_exercise": by_exercise,
+        "push_pull": {
+            "push_tonnage_kg": push,
+            "pull_tonnage_kg": pull,
+            "ratio": round(push / pull, 2) if pull > 0 else None,
+            "classified_tonnage_kg": round(push + pull, 2),
+            "unclassified_tonnage_kg": unclassified,
+            "note": "Estimado por grupo muscular principal (pecho/hombro/tríceps frente a "
+                    "espalda/bíceps); piernas y core no entran en el ratio.",
+        },
+        "e1rm_note": "1RM estimado con Epley sobre series de 1 a 12 repeticiones; no es una medición.",
+    }
 
 
 @router.get("/last-marks", summary="Última marca de cada ejercicio (para precargar la sesión)")

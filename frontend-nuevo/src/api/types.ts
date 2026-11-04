@@ -162,6 +162,86 @@ export interface LoadResponse {
   series: LoadPoint[];
 }
 
+export interface LoadWeek {
+  week_start: string;
+  week_end: string;
+  tss: number;
+  days_with_load: number;
+  complete: boolean;
+  monotony: number | null;
+  strain: number | null;
+  note: string | null;
+}
+
+export interface LoadSummaryResponse {
+  days: number;
+  end_date: string;
+  series: LoadPoint[];
+  weeks: LoadWeek[];
+  latest: {
+    date: string | null;
+    atl: number | null;
+    ctl: number | null;
+    tsb: number | null;
+    acwr: number | null;
+  };
+  method: string;
+}
+
+export interface GymStatsMuscle {
+  muscle_group: string;
+  label: string;
+  sets: number;
+  working_sets: number;
+  tonnage_kg: number;
+  exercises: number;
+}
+
+export interface GymStatsWeek {
+  week_start: string;
+  sessions: number;
+  sets: number;
+  working_sets: number;
+  tonnage_kg: number;
+}
+
+export interface GymStatsExercise {
+  exercise_id: string;
+  name: string;
+  muscle_group: string;
+  sets: number;
+  working_sets: number;
+  tonnage_kg: number;
+  max_weight_kg: number;
+  estimated_1rm_kg: number | null;
+}
+
+export interface GymStatsResponse {
+  from: string;
+  to: string;
+  days: number;
+  totals: {
+    sessions: number;
+    sets: number;
+    working_sets: number;
+    tonnage_kg: number;
+    reps: number;
+    duration_min: number;
+  };
+  by_muscle: GymStatsMuscle[];
+  by_week: GymStatsWeek[];
+  by_exercise: GymStatsExercise[];
+  push_pull: {
+    push_tonnage_kg: number;
+    pull_tonnage_kg: number;
+    ratio: number | null;
+    classified_tonnage_kg: number;
+    unclassified_tonnage_kg: number;
+    note: string;
+  };
+  e1rm_note: string;
+}
+
 // --- Gimnasio ---------------------------------------------------------------
 
 export interface ExerciseBrief {

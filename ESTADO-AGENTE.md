@@ -1,8 +1,8 @@
 titulo: Garmin Athletics — panel de entrenamiento y editor de gimnasio
 estado: en-curso
-tarea: T-03 (panel Hoy con gráficas de carga y Body Battery) y T-22 (borrado de cuenta real) hechas
+tarea: T-26 (métricas derivadas y agregados) hecha; T-27 (catálogo de gráficas en Tendencias) en curso con línea, barras, calor, monotonía y volumen muscular
 nivel: 2
-siguiente: T-04 (registrador de sesión: series individuales, descanso y última marca) y después T-21 en el backend
-bloqueado: 
+siguiente: cerrar T-27 (dispersión, fases de sueño, comparativa de periodos) y seguir con T-29 (registro de sesión, el T-04)
+bloqueado: la prueba real del envío al reloj (T-31) necesita la cuenta y el reloj de David (Nivel 3)
 fecha: 2026-11-04
-resumen: Panel propio que sustituye al de Garmin para saber cómo estás hoy (readiness, sueño, carga y Body Battery) y para guardar tus entrenos de fuerza; ahora con gráficas y borrado de cuenta de verdad.
+resumen: App propia de entrenamiento: crea rutinas, las lleva al reloj, registra las series y analiza la carga con gráficas y métricas; ahora con agregados reales de gimnasio y Tendencias ampliadas.

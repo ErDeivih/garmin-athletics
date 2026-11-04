@@ -10,9 +10,11 @@ import type {
   ExerciseList,
   GarminLinkResult,
   GarminStatus,
+  GymStatsResponse,
   LastMarksResponse,
   LeaderboardResponse,
   LoadResponse,
+  LoadSummaryResponse,
   PerformanceSummary,
   PersonalRecord,
   PlannedRoute,
@@ -35,6 +37,8 @@ export const queryKeys = {
   me: ['me'] as const,
   daily: ['metrics', 'daily'] as const,
   load: (days: number) => ['metrics', 'load', days] as const,
+  loadSummary: (days: number) => ['metrics', 'load-summary', days] as const,
+  gymStats: (days: number) => ['gym', 'stats', days] as const,
   alerts: ['alerts'] as const,
   sync: ['sync', 'status'] as const,
   garmin: ['garmin', 'status'] as const,
@@ -81,6 +85,22 @@ export function useLoad(days = 30) {
   return useQuery({
     queryKey: queryKeys.load(days),
     queryFn: () => apiFetch<LoadResponse>(`/api/v1/metrics/load?days=${days}`),
+  });
+}
+
+/** Semanas, monotonía/tensión (Foster) y ACWR: agregados de carga del servidor (T-26). */
+export function useLoadSummary(days = 30) {
+  return useQuery({
+    queryKey: queryKeys.loadSummary(days),
+    queryFn: () => apiFetch<LoadSummaryResponse>(`/api/v1/metrics/load-summary?days=${days}`),
+  });
+}
+
+/** Volumen, series por músculo, empuje/tirón y 1RM estimado (T-26). */
+export function useGymStats(days = 90) {
+  return useQuery({
+    queryKey: queryKeys.gymStats(days),
+    queryFn: () => apiFetch<GymStatsResponse>(`/api/v1/strength/stats?days=${days}`),
   });
 }
 

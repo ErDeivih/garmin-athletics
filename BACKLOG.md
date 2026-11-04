@@ -364,6 +364,125 @@ dicen qué hacer; pruebas de los cuatro estados en Hoy, Gimnasio, Ajustes y una 
 
 ---
 
+## Ampliación completa (2026-11-04) — de panel a app de entrenamiento
+
+`ALCANCE-COMPLETO.md` amplía el producto: no es un panel de lectura, es una app completa que crea,
+lleva al reloj, ejecuta y analiza entrenamientos. La investigación está en
+`INVESTIGACION-AMPLIACION.md`. Orden de valor: **datos y gráficas → registro → creación → reloj →
+detección por movimiento**.
+
+### T-26 · Motor de métricas derivadas (backend)
+**Nivel 2** · **Estado**: `hecha` (2026-11-04) · **Origen**: `INVESTIGACION-AMPLIACION.md` §1.3 y §1.5
+
+Endpoints de agregación que hoy no existen: volumen y series por grupo muscular y por semana,
+progresión por ejercicio, 1RM estimado (Epley), monotonía/tensión (Foster) y empuje/tirón con el
+mapeo documentado. Periodos largos (hasta 365 días) e índices de las consultas.
+
+**Criterio de aceptación**: con una copia con datos, los totales cuadran con la suma de las series
+guardadas; una sesión de prueba aparece en su grupo y semana; sin datos devuelve series vacías y
+totales a cero, no inventa; pruebas de contrato y de flujo.
+
+**Resultado (2026-11-04).** `GET /strength/stats` (totales, por músculo, por semana, por ejercicio,
+empuje/tirón, 1RM estimado) y `GET /metrics/load-summary` (semanas, monotonía/tensión Foster, ACWR).
+Los calentamientos no cuentan como volumen; el 1RM es Epley y se etiqueta; el reparto empuje/tirón se
+estima por grupo principal y dice cuánto queda sin clasificar. Índices aditivos al arrancar.
+`tests/test_metrics_stats.py`: 2 sesiones con 5 series, totales exactos (2.455 kg), volumen por
+músculo, e1RM 101,3 kg, ventanas vacías, aislamiento entre usuarios, 401 sin token y monotonía solo en
+semanas cerradas. 10/10 scripts de backend en verde y 119 comprobaciones de contrato.
+
+---
+
+### T-27 · Catálogo de gráficas y ampliación de Tendencias/Hoy
+**Nivel 2** · **Estado**: `en curso` · **Origen**: `INVESTIGACION-AMPLIACION.md` §1.2
+
+Línea, barras, área, dispersión, calor/calendario y distribución sobre los datos reales, con
+selector 7/30/90/mes/año, comparativa con el periodo anterior, y estado vacío honesto por gráfica.
+La gráfica sin datos no se pinta; se explica qué falta.
+
+**Criterio de aceptación**: cada gráfica declara su fuente y su unidad; los números coinciden con la
+respuesta cruda; con la BD parada se ve el vacío, no una línea plana inventada; pruebas de flujo de
+los estados y capturas móvil/escritorio.
+
+**Resultado parcial (2026-11-04).** Tendencias ya tiene: línea de métrica con selector y periodo
+7/30/90, gráfica de carga ATL/CTL, barras de TSS semanal, línea de monotonía, calendario de calor,
+barras de volumen por grupo muscular, reparto empuje/tirón y top de ejercicios con 1RM estimado.
+Todas con estados vacío/carga/error y 3 pruebas de flujo (22 en la suite). **Pendiente**: dispersión
+(ritmo vs FC), fases de sueño en serie (falta agregado por noche), comparativa superpuesta de
+periodos y capturas nuevas de Tendencias.
+
+### T-28 · Ejercicios con dibujo (inicio y fin del movimiento)
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: `ALCANCE-COMPLETO.md` §2
+
+Dos posiciones del movimiento por ejercicio, dibujadas como assets propios y servidas por el
+catálogo; mapeo al catálogo de Garmin (categoría + ejercicio) para el envío al reloj.
+
+**Criterio de aceptación**: cada ejercicio del catálogo tiene su par de dibujos o un aviso honesto de
+que no lo tiene; el editor y la sesión los muestran; el mapeo Garmin cubre lo que se envía y avisa de
+lo que no.
+
+### T-29 · Registro de sesión (T-04) con RPE y corrección
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: `ALCANCE-COMPLETO.md` §3 (ya era T-04)
+
+Cubre lo que T-04 ya pedía y añade RPE por serie además de RIR, tempo cuando exista y el resumen con
+las métricas derivadas de T-26.
+
+**Criterio de aceptación**: el de T-04, más: el RPE se guarda por serie y se ve en el historial; el
+tempo ausente se muestra como "sin tempo", no como cero.
+
+### T-30 · Importar las series de fuerza de Garmin
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: `INVESTIGACION-AMPLIACION.md` §3.3-3.4
+
+Al sincronizar una actividad de fuerza, leer `get_activity_exercise_sets` y guardar las series
+reales, enlazadas a la actividad y a la sesión propia; deduplicar por actividad para no contar dos
+veces.
+
+**Criterio de aceptación**: una actividad de fuerza de Garmin aparece con sus series (ejercicio,
+peso, reps); dos sincronizaciones no duplican; una serie corregida en Garmin se refleja tras el
+siguiente sync. **Requiere probar con la cuenta real de David (Nivel 3).**
+
+### T-31 · Envío real de entrenamientos al reloj
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: `INVESTIGACION-AMPLIACION.md` §3.3
+
+Corregir el builder actual con los modelos tipados de `garminconnect` (sportType 5, repeat groups,
+unidades de peso, descansos, catálogo de 1.527 ejercicios) y probar **un** entrenamiento real en el
+reloj de David antes de activar el envío en la app.
+
+**Criterio de aceptación**: el JSON coincide con la estructura de la librería; el entreno aparece en
+el reloj con ejercicios, series, pesos, reps y descansos; no duplica el entreno al reenviar.
+**Nivel 3 en la prueba real**: cuenta y reloj de David.
+
+### T-32 · Watch-app Connect IQ: sesión, marcar serie y cola offline
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: `INVESTIGACION-AMPLIACION.md` §3.4
+
+Watch-app que muestra la sesión del día (ejercicio, dibujo, peso, reps, descanso), marca series con
+los botones, las manda por HTTP al backend y guarda una cola si no hay conexión. Guarda la mano del
+reloj. Verificado que el SDK 8.3.0 compila estas APIs para el fr965.
+
+**Criterio de aceptación**: instalada en el reloj; marca una serie y llega al backend; sin cobertura
+la guarda y la envía al recuperar; no se pierde la sesión al bloquear la pantalla.
+
+### T-33 · POC de conteo de repeticiones por IMU
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: `INVESTIGACION-AMPLIACION.md` §3.6
+
+Protocolo medido: grabar acelerómetro a 25-50 Hz, etiquetar series reales y comparar detección de
+picos contra la etiqueta en 3 ejercicios. Solo pasa a producto si el error es aceptable; si no, se
+queda el marcado manual.
+
+**Criterio de aceptación**: informe con error por serie y por ejercicio, confusión y condiciones;
+decisión escrita de seguir o descartar. **No se promete un conteo automático general.**
+
+### T-34 · Rediseño móvil-first sobre el sistema de diseño
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: `ALCANCE-COMPLETO.md` §5 + `research/UI-COMPETENCIA.md`
+
+Aplicar los patrones de la investigación visual a las pantallas que se toquen: navegación, registro,
+tarjetas, jerarquía, densidad y gestos. Móvil primero; escritorio para crear y analizar. Sobre los
+tokens existentes, sin inventar un segundo sistema.
+
+**Criterio de aceptación**: cada pantalla revisada cumple los cuatro estados, 44 px, AA y una mano;
+la captura móvil es la referencia y el escritorio no es un móvil estirado.
+
+---
+
 ## Esperando decisión (Nivel 3) — no bloquean la sesión
 
 | # | Pregunta exacta | Por qué es Nivel 3 |

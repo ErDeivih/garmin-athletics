@@ -142,3 +142,42 @@ David ha decidido que el frontend nuevo arranca con **Hoy, Gimnasio y Ajustes** 
 - **T-13 a T-20**: confirmadas como alcance; todas son Nivel 1/2 y siguen en el backlog.
 - **T-21**: pendiente de una tanda de backend (readiness nulo cuando falta biometría).
 - **T-04**: la siguiente; la capa de API (tipos, hooks y contrato verificado) ya está preparada.
+
+## Ampliación completa del producto (2026-11-04)
+
+`ALCANCE-COMPLETO.md` cambia el producto: **no es un panel de lectura, es una app completa de
+entrenamiento** que crea, lleva al reloj, ejecuta y analiza. La investigación previa está en
+`INVESTIGACION-AMPLIACION.md` (gráficas y métricas con datos, UI móvil de la competencia con
+capturas, y viabilidad real del reloj con fuentes).
+
+### Lo que entra
+
+1. **Datos y gráficas**: línea, barras, área, dispersión, calor/calendario y distribución sobre los
+   datos ya ingeridos; **métricas derivadas** (ATL/CTL/TSB, monotonía, tensión, volumen por grupo
+   muscular, progresión, 1RM estimado, empuje/tirón, tiempo bajo tensión) con periodos comparables
+   (7/30/90/mes/año) y estados vacíos honestos.
+2. **Crear entrenamientos**: gimnasio con series, reps, peso, descanso y **RPE**; supersets, drop
+   sets y tempo; ejercicios con **dibujo inicio/fin**; correr, bici y natación por objetivos, zonas
+   e intervalos; plantillas reutilizables.
+3. **Registrar**: según entrenamiento o libre; dos toques por serie; descanso; resumen; guardar como
+   plantilla; corrección posterior con recálculo.
+4. **El reloj**: llevar ejercicios, pesos y reps al reloj; ejecutar y recuperar lo registrado;
+   registrar la mano del reloj. **Connect IQ verificado en este equipo** (SDK 8.3.0 compila para
+   fr965), y **API de workouts no oficial** para el camino nativo. Nada se promete sin probarlo en
+   el reloj de David.
+5. **UI/UX**: móvil primero (se usa en el gimnasio), escritorio para crear y analizar, sobre el
+   sistema de diseño existente. Investigación visual con capturas en `research/UI-COMPETENCIA.md`.
+
+### Orden de valor
+
+**T-26/T-27** (datos y gráficas) → **T-29** (registro, ya era T-04) → **T-28** (creación con
+dibujos) → **T-31/T-30** (reloj: subir y recuperar) → **T-32** (watch-app) → **T-33** (POC de
+detección por movimiento). **T-34** (UI móvil-first) se aplica en cada pantalla que se toque, no como
+un rediseño final. El detalle y los criterios de aceptación están en `BACKLOG.md`.
+
+### Reglas que no cambian
+
+- Sin GitHub Actions, sin secretos en git, sin tocar `frontend/` ni `frontend_mvp/`.
+- Toda métrica se **mide** o no se muestra; una estimación se etiqueta como estimación.
+- Toda promesa sobre el reloj lleva **fuente o prueba**; lo no verificado se dice.
+- Las pruebas son de flujo, no de detalle.

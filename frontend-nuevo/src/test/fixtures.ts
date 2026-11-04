@@ -67,11 +67,99 @@ export const load = {
   end_date: '2026-11-04',
   total_days: 30,
   series: [
+    { date: '2026-10-26', atl: 30, ctl: 40, tsb: -10, tss: 0 },
+    { date: '2026-10-27', atl: 32, ctl: 41, tsb: -9, tss: 45 },
+    { date: '2026-10-28', atl: 34, ctl: 42, tsb: -8, tss: 30 },
+    { date: '2026-10-29', atl: 35, ctl: 42.5, tsb: -7.5, tss: 0 },
+    { date: '2026-10-30', atl: 36, ctl: 43, tsb: -7, tss: 50 },
     { date: '2026-10-31', atl: 38, ctl: 44, tsb: -6, tss: 20 },
     { date: '2026-11-01', atl: 40, ctl: 45, tsb: -5, tss: 35 },
     { date: '2026-11-02', atl: 41, ctl: 45.5, tsb: -4.5, tss: 0 },
     { date: '2026-11-03', atl: 43, ctl: 46, tsb: -4, tss: 50 },
     { date: '2026-11-04', atl: 42, ctl: 46, tsb: -4, tss: 0 },
+  ],
+};
+
+export const loadSummary = {
+  days: 30,
+  end_date: '2026-11-04',
+  series: load.series,
+  weeks: [
+    { week_start: '2026-10-12', week_end: '2026-10-18', tss: 180, days_with_load: 4, complete: true, monotony: 1.8, strain: 324, note: null },
+    { week_start: '2026-10-19', week_end: '2026-10-25', tss: 240, days_with_load: 5, complete: true, monotony: 2.1, strain: 504, note: null },
+    { week_start: '2026-10-26', week_end: '2026-11-01', tss: 150, days_with_load: 3, complete: true, monotony: 1.4, strain: 210, note: null },
+    { week_start: '2026-11-02', week_end: '2026-11-08', tss: 50, days_with_load: 1, complete: false, monotony: null, strain: null, note: 'semana en curso: sin monotonía ni tensión' },
+  ],
+  latest: { date: '2026-11-04', atl: 42, ctl: 46, tsb: -4, acwr: 0.91 },
+  method: 'Monotonía = media(TSS 7 d)/SD(TSS 7 d); tensión = TSS semanal × monotonía (Foster, 1998).',
+};
+
+export const gymStats = {
+  from: '2026-10-06',
+  to: '2026-11-04',
+  days: 30,
+  totals: { sessions: 4, sets: 42, working_sets: 36, tonnage_kg: 18450, reps: 380, duration_min: 240 },
+  by_muscle: [
+    { muscle_group: 'pecho', label: 'Pecho', sets: 12, working_sets: 10, tonnage_kg: 6200, exercises: 2 },
+    { muscle_group: 'espalda', label: 'Espalda', sets: 14, working_sets: 12, tonnage_kg: 7100, exercises: 3 },
+    { muscle_group: 'biceps', label: 'Bíceps', sets: 8, working_sets: 8, tonnage_kg: 2150, exercises: 1 },
+    { muscle_group: 'cuadriceps', label: 'Cuádriceps', sets: 8, working_sets: 6, tonnage_kg: 3000, exercises: 1 },
+  ],
+  by_week: [
+    { week_start: '2026-10-19', sessions: 2, sets: 20, working_sets: 17, tonnage_kg: 9000 },
+    { week_start: '2026-10-26', sessions: 2, sets: 22, working_sets: 19, tonnage_kg: 9450 },
+  ],
+  by_exercise: [
+    { exercise_id: 'e-1', name: 'Press de banca', muscle_group: 'pecho', sets: 8, working_sets: 6, tonnage_kg: 4000, max_weight_kg: 85, estimated_1rm_kg: 102.0 },
+    { exercise_id: 'e-2', name: 'Remo con barra', muscle_group: 'espalda', sets: 10, working_sets: 8, tonnage_kg: 5000, max_weight_kg: 70, estimated_1rm_kg: 88.0 },
+  ],
+  push_pull: {
+    push_tonnage_kg: 6200,
+    pull_tonnage_kg: 9250,
+    ratio: 0.67,
+    classified_tonnage_kg: 15450,
+    unclassified_tonnage_kg: 3000,
+    note: 'Estimado por grupo muscular principal (pecho/hombro/tríceps frente a espalda/bíceps); piernas y core no entran en el ratio.',
+  },
+  e1rm_note: '1RM estimado con Epley sobre series de 1 a 12 repeticiones; no es una medición.',
+};
+
+export const gymStatsEmpty = {
+  ...gymStats,
+  totals: { sessions: 0, sets: 0, working_sets: 0, tonnage_kg: 0, reps: 0, duration_min: 0 },
+  by_muscle: [],
+  by_week: [],
+  by_exercise: [],
+  push_pull: { ...gymStats.push_pull, push_tonnage_kg: 0, pull_tonnage_kg: 0, ratio: null, classified_tonnage_kg: 0, unclassified_tonnage_kg: 0 },
+};
+
+export const loadSummaryEmpty = {
+  ...loadSummary,
+  weeks: [],
+  latest: { date: '2026-11-04', atl: 0, ctl: 0, tsb: 0, acwr: null },
+};
+
+export const trendsEmpty = {
+  metric: 'hrv',
+  days: 30,
+  series: [
+    { date: '2026-10-29', value: null },
+    { date: '2026-10-30', value: null },
+  ],
+};
+
+export const loadEmpty = {
+  start_date: '2026-10-06',
+  end_date: '2026-11-04',
+  total_days: 30,
+  series: [
+    { date: '2026-10-30', atl: 0, ctl: 0, tsb: 0, tss: 0 },
+    { date: '2026-10-31', atl: 0, ctl: 0, tsb: 0, tss: 0 },
+    { date: '2026-11-01', atl: 0, ctl: 0, tsb: 0, tss: 0 },
+    { date: '2026-11-02', atl: 0, ctl: 0, tsb: 0, tss: 0 },
+    { date: '2026-11-03', atl: 0, ctl: 0, tsb: 0, tss: 0 },
+    { date: '2026-11-04', atl: 0, ctl: 0, tsb: 0, tss: 0 },
+    { date: '2026-11-05', atl: 0, ctl: 0, tsb: 0, tss: 0 },
   ],
 };
 

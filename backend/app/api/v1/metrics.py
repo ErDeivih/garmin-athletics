@@ -91,29 +91,35 @@ async def get_load_history(
     user: Optional[User] = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ) -> Dict[str, Any]:
-    end_d = date.today()
-    start_d = end_d - timedelta(days=days + 42) # 42 días extra para estabilizar CTL de Banister
+    display_start, end_d, chart_data = await _compute_load_series(user, db, days)
+    return {
+        "start_date": display_start.isoformat(),
+        "end_date": end_d.isoformat(),
+        "total_days": len(chart_data),
+        "series": chart_data
+    }
 
-    # 1. Obtener todas las actividades en el rango (propias o legacy)
+
+async def _compute_load_series(user: Optional[User], db: AsyncSession, days: int):
+    """Serie Banister diaria (ATL/CTL/TSB/TSS). Compartida por /load y /load-summary."""
+    end_d = date.today()
+    start_d = end_d - timedelta(days=days + 42)  # 42 días extra para estabilizar CTL
+
     start_dt = datetime.combine(start_d, time.min)
     act_query = select(Activity).where(Activity.start_time >= start_dt)
     if user:
         act_query = act_query.where(or_(Activity.user_id == user.id, Activity.user_id.is_(None)))
     else:
         act_query = act_query.where(Activity.user_id.is_(None))
-    act_result = await db.execute(act_query)
-    activities = act_result.scalars().all()
+    activities = (await db.execute(act_query)).scalars().all()
 
-    # Sumar TSS diario
     daily_tss: Dict[date, float] = {}
     for act in activities:
         act_date = act.start_time.date()
         daily_tss[act_date] = daily_tss.get(act_date, 0.0) + act.training_load_tss
 
-    # 2. Calcular serie Banister
     banister_series = FatigueEngine.compute_daily_banister(daily_tss, start_d, end_d)
 
-    # Filtrar solo el rango solicitado por el usuario
     display_start = end_d - timedelta(days=days)
     chart_data = []
     current = display_start
@@ -127,12 +133,83 @@ async def get_load_history(
             "tss": item["tss_today"]
         })
         current += timedelta(days=1)
+    return display_start, end_d, chart_data
+
+
+def _week_start(day: date) -> date:
+    return day - timedelta(days=day.weekday())
+
+
+@router.get("/load-summary", summary="Carga semanal, monotonía y tensión (Foster) a partir de la serie diaria")
+async def get_load_summary(
+    days: int = Query(default=28, ge=7, le=365, description="Días de historial a calcular"),
+    user: Optional[User] = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """Monotonía = media(TSS diario)/desviación típica en una semana completa;
+    tensión = TSS semanal × monotonía (Foster 1998). La semana en curso se
+    devuelve marcada como incompleta y **sin** monotonía: no se compara una
+    semana a medias con una cerrada. Si la desviación es 0, monotonía no existe.
+    """
+    _, end_d, series = await _compute_load_series(user, db, days)
+    today = date.today()
+
+    buckets: Dict[date, List[float]] = {}
+    for point in series:
+        day = date.fromisoformat(point["date"])
+        buckets.setdefault(_week_start(day), []).append(float(point["tss"] or 0.0))
+
+    weeks = []
+    for week_start in sorted(buckets):
+        values = buckets[week_start]
+        week_end = week_start + timedelta(days=6)
+        complete = week_end <= today
+        week_tss = round(sum(values), 2)
+        monotony = None
+        strain = None
+        note = None
+        if not complete:
+            note = "semana en curso: sin monotonía ni tensión"
+        elif len(values) < 7:
+            note = "faltan días en la semana"
+        else:
+            mean = week_tss / 7.0
+            variance = sum((value - mean) ** 2 for value in values) / 7.0
+            sd = variance ** 0.5
+            if sd <= 0:
+                note = "sin variación entre días: monotonía indefinida"
+            else:
+                monotony = round(mean / sd, 2)
+                strain = round(week_tss * monotony, 1)
+        weeks.append({
+            "week_start": week_start.isoformat(),
+            "week_end": week_end.isoformat(),
+            "tss": week_tss,
+            "days_with_load": sum(1 for value in values if value > 0),
+            "complete": complete,
+            "monotony": monotony,
+            "strain": strain,
+            "note": note,
+        })
+
+    latest = series[-1] if series else None
+    acwr = None
+    if latest and latest.get("ctl"):
+        acwr = round(latest["atl"] / latest["ctl"], 2)
 
     return {
-        "start_date": display_start.isoformat(),
+        "days": days,
         "end_date": end_d.isoformat(),
-        "total_days": len(chart_data),
-        "series": chart_data
+        "series": series,
+        "weeks": weeks,
+        "latest": {
+            "date": latest["date"] if latest else None,
+            "atl": latest["atl"] if latest else None,
+            "ctl": latest["ctl"] if latest else None,
+            "tsb": latest["tsb"] if latest else None,
+            "acwr": acwr,
+        },
+        "method": "Monotonía = media(TSS 7 d)/SD(TSS 7 d); tensión = TSS semanal × monotonía (Foster, 1998).",
     }
 
 @router.get("/daily", summary="Métricas completas de un día (el que alimenta los widgets)")

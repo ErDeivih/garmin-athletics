@@ -225,3 +225,64 @@ flujo (`login.test.tsx`, `settings.test.tsx`).
 **Cómo se revierte.** Es lógica de cliente: se quita `session: 'external'` de las llamadas de
 vinculación y las llamadas a `queryClient.clear()`. No toca datos.
 
+---
+
+## 2026-11-04 — D-11 · Se adopta el alcance completo (app de entrenamiento, no panel)
+
+**Contexto.** David escribió `ALCANCE-COMPLETO.md`: el producto deja de ser un panel de lectura y
+pasa a ser una app completa que crea, lleva al reloj, ejecuta y analiza entrenamientos. Orden de
+valor fijado por él: datos/gráficas, registro, creación, reloj, detección por movimiento.
+
+**Decisión.** Se adopta el alcance y se traduce a tareas T-26 a T-34 en `BACKLOG.md`, con
+`INVESTIGACION-AMPLIACION.md` como investigación previa. El backend se amplía de forma **aditiva**
+(endpoints de agregación, campos opcionales, importación de series de Garmin); no se reescribe el
+modelo del gimnasio.
+
+**Motivo.** Es una decisión de producto de David, con orden de valor explícito. La ampliación es
+reversible y no destruye datos.
+
+**Cómo se revierte.** Se retiran las tareas T-26 a T-34 del backlog; los endpoints aditivos y las
+columnas opcionales pueden quedarse sin usar sin migración destructiva.
+
+---
+
+## 2026-11-04 — D-12 · El reloj: primero el workout nativo, después la watch-app
+
+**Contexto.** Hay dos caminos técnicos verificados en la investigación: subir un entrenamiento a
+Garmin Connect con la API **no oficial** (`upload_strength_workout` + `push_workout_to_device`) y
+leer de vuelta las series de una actividad con `get_activity_exercise_sets`; o escribir una app
+Connect IQ propia. El SDK 8.3.0 compila para el fr965 con acelerómetro, grabación y HTTP.
+
+**Decisión.**
+1. **Camino principal**: corregir el builder actual con los modelos tipados de la librería
+   (`StrengthWorkout`: sportType 5, repeat groups, unidades, descansos, catálogo de ejercicios) y
+   probar **un** entrenamiento real en el reloj de David. Después, importar las series de vuelta.
+2. **Watch-app Connect IQ** solo cuando el camino nativo no cubra una necesidad (p. ej. mostrar la
+   sesión con nuestros dibujos o marcar series con HTTP/offline).
+3. **La detección de repeticiones por IMU** es un POC medido, el último paso; no se promete conteo
+   automático general. La mano del reloj se pregunta (el SDK no la expone).
+
+**Motivo.** El camino nativo da más valor con menos código y usa el reloj como lo usa David; la
+watch-app añade control pero también instalación, memoria y batería. La prueba real en el reloj es
+**Nivel 3** porque toca su cuenta y su dispositivo.
+
+**Cómo se revierte.** El envío real sigue apagado por defecto (`dry_run`); la watch-app sería una
+carpeta nueva que no afecta al resto.
+
+---
+
+## 2026-11-04 — D-13 · Las métricas derivadas se calculan en el servidor y se etiquetan
+
+**Contexto.** La ampliación pide monotonía, tensión, volumen por músculo, empuje/tirón, 1RM estimado
+y tiempo bajo tensión. Varias no tienen un dato directo y algunas son estimaciones.
+
+**Decisión.** Las agregaciones se calculan en el backend con SQL sobre las series guardadas
+(T-26); el cliente solo dibuja. Cada métrica lleva su fórmula en la ficha y su etiqueta cuando es
+estimación (el 1RM de Epley, por ejemplo). Si falta el dato de entrada (tempo, patrón de movimiento,
+biometría), la pantalla muestra "sin dato" y qué falta; **no se rellena con ceros ni con constantes**.
+
+**Motivo.** DOCTRINA §2 y la regla de David: "toda métrica que se muestre se mide o no se muestra".
+Se calcula una vez en servidor para que todas las pantallas den el mismo número.
+
+**Cómo se revierte.** Son endpoints y cálculos nuevos; se dejan de usar sin tocar datos.
+

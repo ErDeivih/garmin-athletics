@@ -94,6 +94,14 @@ try {
   await page.getByRole('heading', { name: 'Actividades', exact: true }).waitFor();
   await shot('04-actividades');
 
+  // Tendencias con la ampliación de T-27 (solo visible con la bandera encendida).
+  await page.getByRole('link', { name: 'Tendencias' }).click();
+  await page.getByRole('heading', { name: 'Tendencias', exact: true }).waitFor();
+  await page.getByText(/tss por semana|carga de entrenamiento/i).first().waitFor({ timeout: 15000 });
+  await page.setViewportSize({ width: 390, height: 2600 });
+  await shot('07-tendencias');
+  await page.setViewportSize({ width: 390, height: 844 });
+
   // Escritorio con la configuración por defecto: la bandera se apaga para que
   // la captura enseñe las tres pestañas visibles reales (Hoy, Gimnasio, Ajustes).
   await page.evaluate(() => localStorage.removeItem('garmin-athletics.extended'));

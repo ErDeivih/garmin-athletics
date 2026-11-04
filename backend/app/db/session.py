@@ -67,6 +67,24 @@ async def _run_sqlite_migrations(conn) -> None:
     # como BOOLEAN preservando valores reales.
     await _fix_needs_reauth_type(conn)
 
+    # Índices de las consultas del panel y del gimnasio (T-26). Idempotentes y
+    # aditivos: no tocan datos ni columnas.
+    for ddl in (
+        "CREATE INDEX IF NOT EXISTS idx_session_sets_exercise "
+        "ON session_sets(exercise_id)",
+        "CREATE INDEX IF NOT EXISTS idx_workout_sessions_user_date "
+        "ON workout_sessions(user_id, started_at)",
+        "CREATE INDEX IF NOT EXISTS idx_daily_biometrics_user_date "
+        "ON daily_biometrics(user_id, date)",
+        "CREATE INDEX IF NOT EXISTS idx_activities_user_start "
+        "ON activities(user_id, start_time)",
+    ):
+        try:
+            await conn.exec_driver_sql(ddl)
+        except Exception as exc:  # una tabla antigua sin la columna no debe impedir arrancar
+            logger = __import__("logging").getLogger("migrations")
+            logger.warning(f"No se pudo crear un índice: {exc}")
+
 
 async def _fix_needs_reauth_type(conn) -> None:
     from sqlalchemy import text as _text

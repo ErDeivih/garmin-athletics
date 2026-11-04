@@ -248,6 +248,25 @@ if (hasKeys(zones.body, ['sport', 'days', 'total_secs', 'zones'], 'GET /performa
 const prs = await request('/api/v1/performance/prs', { token });
 check('GET /performance/prs es un array', Array.isArray(prs.body), typeof prs.body);
 
+// --- Métricas derivadas (T-26) ---
+const gymStats = await request('/api/v1/strength/stats?days=90', { token });
+if (hasKeys(gymStats.body, ['from', 'to', 'days', 'totals', 'by_muscle', 'by_week', 'by_exercise', 'push_pull'], 'GET /strength/stats')) {
+  hasKeys(gymStats.body.totals, ['sessions', 'sets', 'working_sets', 'tonnage_kg', 'reps', 'duration_min'], 'strength/stats.totals');
+  hasKeys(gymStats.body.push_pull, ['push_tonnage_kg', 'pull_tonnage_kg', 'ratio', 'classified_tonnage_kg', 'unclassified_tonnage_kg', 'note'], 'strength/stats.push_pull');
+  check('strength/stats by_muscle es array', Array.isArray(gymStats.body.by_muscle));
+  check('strength/stats by_week es array', Array.isArray(gymStats.body.by_week));
+  check('strength/stats by_exercise es array', Array.isArray(gymStats.body.by_exercise));
+  check('strength/stats declara Epley', typeof gymStats.body.e1rm_note === 'string' && gymStats.body.e1rm_note.includes('Epley'));
+}
+
+const loadSummary = await request('/api/v1/metrics/load-summary?days=28', { token });
+if (hasKeys(loadSummary.body, ['days', 'end_date', 'series', 'weeks', 'latest', 'method'], 'GET /metrics/load-summary')) {
+  hasKeys(loadSummary.body.latest, ['date', 'atl', 'ctl', 'tsb', 'acwr'], 'metrics/load-summary.latest');
+  check('load-summary.series es array', Array.isArray(loadSummary.body.series));
+  check('load-summary.weeks es array', Array.isArray(loadSummary.body.weeks));
+  check('load-summary declara Foster', String(loadSummary.body.method).includes('Foster'));
+}
+
 const friends = await request('/api/v1/friends/', { token });
 hasKeys(friends.body, ['friends', 'incoming_requests', 'outgoing_requests'], 'GET /friends/');
 
