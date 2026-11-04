@@ -274,6 +274,39 @@ export interface SleepPhasesResponse {
   note: string;
 }
 
+export interface PushWorkoutPreview {
+  status: 'dry_run';
+  unmapped_exercises: string[];
+  workout_json: {
+    workoutName: string;
+    sportType: { sportTypeId: number; sportTypeKey: string };
+    estimatedDurationInSecs: number;
+    workoutSegments: {
+      segmentOrder: number;
+      workoutSteps: {
+        type: string;
+        numberOfIterations?: number;
+        workoutSteps?: { type: string; endConditionValue?: number; weightValue?: number }[];
+      }[];
+    }[];
+  };
+  builder: string;
+  garmin_catalog_exercises: number;
+  blocks: number;
+  estimated_seconds: number;
+  push_to_device: boolean;
+  mapping: { name: string; enum: string; category: string; exercise: string }[];
+  note: string;
+}
+
+export interface PushWorkoutSent {
+  status: 'sent';
+  unmapped_exercises: string[];
+  garmin_response: Record<string, unknown>;
+  pushed_to_device: unknown;
+  note: string;
+}
+
 // --- Gimnasio ---------------------------------------------------------------
 
 export interface ExerciseBrief {

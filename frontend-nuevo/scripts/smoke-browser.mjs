@@ -101,6 +101,14 @@ try {
   await page.getByRole('link', { name: /volver a gimnasio/i }).click();
   await page.getByRole('heading', { name: 'Gimnasio', exact: true }).waitFor();
 
+  // T-31: previsualización del envío al reloj (dry_run; no toca la cuenta).
+  await page.getByRole('button', { name: /previsualizar envío/i }).click();
+  await page.getByText(/ejercicios en el catálogo garmin/i).waitFor({ timeout: 15000 });
+  await page.setViewportSize({ width: 390, height: 1600 });
+  await shot('11-envio-reloj');
+  await page.getByRole('button', { name: /^cerrar$/i }).click();
+  await page.setViewportSize({ width: 390, height: 844 });
+
   // T-04: empezar la plantilla del día, marcar una serie y terminar la sesión
   // contra el backend real (copia). Esto crea una sesión de verdad.
   await page.getByRole('link', { name: /empezar sesión/i }).click();

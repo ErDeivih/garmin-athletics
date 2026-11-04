@@ -18,6 +18,8 @@ import type {
   PerformanceSummary,
   PersonalRecord,
   PlannedRoute,
+  PushWorkoutPreview,
+  PushWorkoutSent,
   SessionDetail,
   SessionInput,
   SessionList,
@@ -227,6 +229,27 @@ export function useExerciseDetail(exerciseId: string | null) {
 }
 
 /** Terminar la sesión: el borrador vive en el navegador y se manda una vez (D-02). */
+/** Previsualiza o envía una plantilla al reloj de Garmin (T-31). */
+export function usePushWorkout() {
+  return useMutation({
+    mutationFn: (input: {
+      routineName: string;
+      exercises: { name: string; sets: number; reps: number; weight_kg: number; rest_seconds: number }[];
+      dryRun: boolean;
+      pushToDevice?: boolean;
+    }) =>
+      apiFetch<PushWorkoutPreview | PushWorkoutSent>('/api/v1/strength/push-to-garmin', {
+        method: 'POST',
+        body: {
+          routine_name: input.routineName,
+          exercises: input.exercises,
+          dry_run: input.dryRun,
+          push_to_device: input.pushToDevice ?? true,
+        },
+      }),
+  });
+}
+
 export function useCreateSession() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -479,10 +479,13 @@ reloj de David antes de activar el envío en la app.
 **Resultado parcial (2026-11-04).** Builder sustituido por `app/services/garmin_workout.py`, que usa
 `StrengthWorkout` + `create_strength_set` de la librería: **sportType 5**, un `RepeatGroupDTO` por
 ejercicio con serie + descanso, peso en gramos (unidad 8), catálogo de **1.527** ejercicios y mapa
-explícito para los 11 enums que Garmin nombra distinto. Los ejercicios sin mapeo **no se envían** y se
-devuelven en `unmapped`; el envío real los rechaza con 400. `POST /strength/push-to-garmin` con
-`dry_run=true` devuelve el JSON tipado (verificado por contrato, 132 comprobaciones). **Pendiente**:
-botón en la app y la prueba real en el fr255 (Nivel 3).
+explícito para los 11 enums que Garmin nombra distinto (y variantes de nombre del catálogo semilla).
+Los ejercicios sin mapeo **no se envían** y se devuelven en `unmapped`; el envío real los rechaza con
+400. `POST /strength/push-to-garmin` con `dry_run=true` devuelve el JSON tipado (verificado por
+contrato, 132 comprobaciones). UI en **Gimnasio → Enviar al reloj**: previsualiza bloques, duración y
+mapeo, muestra los no mapeados, exige marcar la casilla de confirmación y avisa de que es
+experimental; 2 pruebas de flujo y captura `11-envio-reloj.png`. **Pendiente**: marcar la casilla y
+pulsar «Enviar de verdad» con la cuenta y el fr255 reales (Nivel 3).
 
 **Compatibilidad ya verificada (2026-11-04)**: la PoC Connect IQ de `watch/connectiq-poc/` compila
 para **fr255** (reloj de David, API 5.2), fr255m, fr265, fr965, fenix7, venu3, fr245 (API 3.3),
