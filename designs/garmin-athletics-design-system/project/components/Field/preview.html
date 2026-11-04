@@ -1,0 +1,19 @@
+<!-- @dsCard group="Forms" height=230 subtitle="Normal, con ayuda y con error" -->
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head><meta charset="utf-8"><title>Field — preview</title></head>
+<body>
+  <div class="ga-col">
+    <div class="ga-field">
+      <label class="ga-field__label" for="f1">Correo</label>
+      <input class="ga-field__input" id="f1" type="email" value="atleta@example.com">
+      <span class="ga-field__hint">El mismo con el que entras en Garmin Connect.</span>
+    </div>
+    <div class="ga-field ga-field--invalid">
+      <label class="ga-field__label" for="f2">Peso (kg)</label>
+      <input class="ga-field__input" id="f2" type="text" inputmode="decimal" value="abc" aria-describedby="f2-error">
+      <span class="ga-field__error" id="f2-error">Escribe un número, por ejemplo 82,5.</span>
+    </div>
+  </div>
+</body>
+</html>
