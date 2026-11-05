@@ -527,3 +527,21 @@ T-34 se aplica de forma transversal en cada pantalla que se toque, no como un re
   - Comprobar la compilación en varios perfiles del SDK (fr255, fr265, fr965, fenix7, venu3 y los que haya).
   - Documentar en una tabla: perfil, compila sí/no, API level.
 - La **mano del reloj** no la expone ninguna API: se pregunta una vez y se guarda.
+
+## 5 · Ampliación del 2026-11-05: calendario, IMU y detalle de actividad
+
+Dos investigaciones nuevas, con fuentes y propuestas ejecutables:
+
+1. **`research/IMU-CALENDARIO.md`** — cómo detecta repeticiones el reloj, qué permite Connect IQ
+   (25 Hz, mili-G, un listener, sin poder crear workouts nativos desde la watch-app), precisión
+   reportada en papers, esquema `exercise_motion_profiles`, calibración de 10–15 s y modelo
+   `schedule_rules`/`scheduled_workouts`. Conclusión: el envío al reloj va por la vía **nativa** de
+   Garmin Connect; la watch-app solo para el POC de conteo. Tareas IMU-1..8 y CAL-1..3.
+2. **`research/ACTIVIDADES-COMPETENCIA.md`** — inventario de gráficas de Garmin Connect, Strava,
+   Coros, Suunto, TrainingPeaks, Whoop, Runna y Apple Fitness; qué datos ya da nuestro backend
+   (detalle, streams, splits, track) y diseño del detalle de actividad. Tareas T-35..T-39.
+
+Lo aplicado en el producto: detalle `/actividades/:id` con resumen, zonas, recorrido y series;
+calendario con plantilla semanal, previsualización y envío/programación en Garmin Connect
+(`/calendar/events/{id}/preview|send`, `/calendar/sync-today`). Lo que sigue pendiente y **no se
+promete**: job diario automático, editor de perfiles IMU, conteo automático y prueba en el fr255.

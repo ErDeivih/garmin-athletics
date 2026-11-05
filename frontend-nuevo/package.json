@@ -1,9 +1,9 @@
 {
-  "name": "garmin-athletics-frontend",
+  "name": "forja-frontend",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Frontend nuevo de Garmin Athletics: panel de disposición y gimnasio (T-02)",
+  "description": "Forja: entrenamiento de fuerza, actividades y análisis.",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

@@ -9,12 +9,12 @@ export function PerformancePage() {
 
   return (
     <>
-      <PageHeader title="Rendimiento" description="Zonas, marcas y comparativa del último mes." />
+      <PageHeader title="Rendimiento" description="Tu progreso y tus mejores marcas." />
       {summary.isPending || zones.isPending || prs.isPending ? (
         <LoadingBlock label="Cargando rendimiento" />
       ) : summary.isError || zones.isError || prs.isError ? (
         <ErrorState
-          message={(summary.error ?? zones.error ?? prs.error)?.message ?? 'No se pudo leer el rendimiento.'}
+          message="No se pudo cargar el rendimiento."
           onRetry={() => {
             void summary.refetch();
             void zones.refetch();
@@ -24,16 +24,17 @@ export function PerformancePage() {
       ) : (
         <>
           <section aria-label="Resumen">
-            <SectionTitle hint="últimos 30 días">Resumen de running</SectionTitle>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <SectionTitle hint="Últimos 30 días">Resumen</SectionTitle>
+            <div className="grid grid-cols-3 gap-2">
               <StatCard label="Sesiones" value={summary.data.current.sessions} foot={`Antes: ${summary.data.previous.sessions}`} />
               <StatCard label="Horas" value={formatNumber(summary.data.current.hours)} unit="h" foot={`Antes: ${formatNumber(summary.data.previous.hours, 'h')}`} />
-              <StatCard label="TSS" value={formatNumber(summary.data.current.tss)} foot={`Antes: ${formatNumber(summary.data.previous.tss)}`} />
+              <StatCard label="Carga" value={formatNumber(summary.data.current.tss)} hint="Lo entrenado." foot={`Antes: ${formatNumber(summary.data.previous.tss)}`} />
             </div>
           </section>
 
-          <Card className="mt-6">
-            <SectionTitle hint="30 días">Zonas de frecuencia cardiaca</SectionTitle>
+          <Card className="mt-3">
+            <SectionTitle hint="30 días">Zonas de FC</SectionTitle>
+            <p className="mb-2 text-caption text-ink-muted">Tiempo en cada zona.</p>
             {zones.data.total_secs === 0 ? (
               <p className="text-body text-ink-muted">Sin tiempo registrado en zonas.</p>
             ) : (
@@ -51,12 +52,12 @@ export function PerformancePage() {
             )}
           </Card>
 
-          <Card className="mt-6">
-            <SectionTitle hint="Garmin">Marcas de Garmin</SectionTitle>
+          <Card className="mt-3">
+            <SectionTitle>Marcas</SectionTitle>
             {prs.data.length === 0 ? (
               <EmptyState
                 title="Sin marcas todavía"
-                description="Estas marcas las calcula Garmin al sincronizar actividades. Las marcas de gimnasio (peso máximo por ejercicio) tendrán su propia pantalla, Marcas."
+                description="Tus mejores marcas aparecerán al sincronizar tus entrenamientos."
               />
             ) : (
               <ul className="flex flex-col gap-2">

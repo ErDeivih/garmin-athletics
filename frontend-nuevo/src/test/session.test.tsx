@@ -4,8 +4,8 @@ import { installFakeApi, json } from './fakeApi';
 import { renderApp } from './renderApp';
 import * as f from './fixtures';
 
-const TOKEN_KEY = 'garmin-athletics.token';
-const DRAFT_PREFIX = 'garmin-athletics.session';
+const TOKEN_KEY = 'forja.token';
+const DRAFT_PREFIX = 'forja.session';
 
 const apiSesion = () =>
   installFakeApi({
@@ -55,7 +55,7 @@ describe('registrar una sesión de gimnasio', () => {
     const repsInput = screen.getByLabelText(/reps serie 1 de press de banca/i);
     await user.clear(repsInput);
     await user.type(repsInput, '8');
-    await user.selectOptions(screen.getByLabelText(/rpe serie 1 de press de banca/i), '8');
+    await user.selectOptions(screen.getByLabelText(/esfuerzo serie 1 de press de banca/i), '8');
     expect(screen.getByRole('checkbox', { name: /serie 1 de press de banca/i })).toHaveAttribute('aria-checked', 'true');
 
     await user.click(screen.getAllByRole('button', { name: /terminar sesión/i })[0]!);

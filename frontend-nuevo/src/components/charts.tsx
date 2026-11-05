@@ -1,4 +1,12 @@
-import type { GymStatsMuscle, LoadPoint, LoadWeek, SleepPhasePoint } from '../api/types';
+import type {
+  ActivityHrZone,
+  ActivitySplit,
+  ActivityTrack,
+  GymStatsMuscle,
+  LoadPoint,
+  LoadWeek,
+  SleepPhasePoint,
+} from '../api/types';
 import { formatDate, formatNumber } from '../lib/format';
 
 /*
@@ -41,17 +49,17 @@ export function LoadChart({ series }: { series: LoadPoint[] }) {
       <div className="mb-2 flex flex-wrap items-center gap-3 text-caption">
         <span className="inline-flex items-center gap-1 text-ink-muted">
           <span aria-hidden="true" className="size-2 rounded-full bg-accent" />
-          CTL (forma) {formatNumber(latest?.ctl)}
+          Forma {formatNumber(latest?.ctl)}
         </span>
         <span className="inline-flex items-center gap-1 text-ink-muted">
           <span aria-hidden="true" className="size-2 rounded-full bg-warn" />
-          ATL (fatiga) {formatNumber(latest?.atl)}
+          Carga aguda {formatNumber(latest?.atl)}
         </span>
-        <span className="text-ink-faint">TSB {formatNumber(latest?.tsb)}</span>
+        <span className="text-ink-faint">Frescura {formatNumber(latest?.tsb)}</span>
       </div>
       <svg
         role="img"
-        aria-label="Carga de entrenamiento: ATL y CTL"
+        aria-label="Carga de entrenamiento: carga aguda y forma"
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         className="h-40 w-full"
       >
@@ -170,13 +178,13 @@ export function WeeklyTssChart({ weeks }: { weeks: LoadWeek[] }) {
     <figure className="m-0">
       <div
         role="img"
-        aria-label="TSS por semana en el periodo"
+        aria-label="Carga semanal en el periodo"
         className="flex h-36 items-end gap-1"
       >
         {withTss.map((week) => (
           <span
             key={week.week_start}
-            title={`Semana del ${formatDate(week.week_start)}: ${formatNumber(week.tss)} TSS`}
+            title={`Semana del ${formatDate(week.week_start)}: ${formatNumber(week.tss)} de carga`}
             className="flex-1 rounded-t-sm bg-accent"
             style={{ height: `${Math.max(3, (week.tss / max) * 100)}%`, opacity: week.complete ? 1 : 0.45 }}
           />
@@ -198,7 +206,7 @@ export function MonotonyChart({ weeks }: { weeks: LoadWeek[] }) {
   if (points.length < 2) {
     return (
       <p className="text-body text-ink-muted">
-        Faltan semanas cerradas para dibujar la monotonía: hacen falta al menos dos.
+        Faltan semanas para comparar.
       </p>
     );
   }
@@ -221,7 +229,7 @@ export function MonotonyChart({ weeks }: { weeks: LoadWeek[] }) {
     <figure className="m-0">
       <svg
         role="img"
-        aria-label="Monotonía semanal del entrenamiento (Foster)"
+        aria-label="Variación semanal del entrenamiento"
         viewBox={`0 0 ${width} ${height}`}
         className="h-32 w-full"
       >
@@ -256,7 +264,7 @@ export function ActivityHeatmap({ series }: { series: LoadPoint[] }) {
     <figure className="m-0 overflow-x-auto">
       <svg
         role="img"
-        aria-label="Calendario de carga: un cuadro por día, más oscuro con más TSS"
+        aria-label="Calendario de carga: un cuadro por día, más intenso con más carga"
         viewBox={`0 0 ${width} ${height}`}
         className="h-auto w-full min-w-[280px] max-w-[720px]"
       >
@@ -274,7 +282,7 @@ export function ActivityHeatmap({ series }: { series: LoadPoint[] }) {
               fill="var(--ga-accent)"
               opacity={point.tss ? 0.2 + intensity * 0.8 : 0.08}
             >
-              <title>{`${formatDate(point.date)}: ${formatNumber(point.tss)} TSS`}</title>
+              <title>{`${formatDate(point.date)}: ${formatNumber(point.tss)} de carga`}</title>
             </rect>
           );
         })}
@@ -306,9 +314,8 @@ export function PushPullChart({  pushPull,
       <figcaption className="mt-2 flex flex-wrap justify-between gap-2 text-caption text-ink-muted">
         <span>Empuje {formatNumber(pushPull.push_tonnage_kg, 'kg')} ({pushPct} %)</span>
         <span>Tirón {formatNumber(pushPull.pull_tonnage_kg, 'kg')}</span>
-        <span>{pushPull.ratio === null ? 'ratio sin tirón' : `ratio ${formatNumber(pushPull.ratio)}`}</span>
+        <span>{pushPull.ratio === null ? 'sin tirón registrado' : `${formatNumber(pushPull.ratio)} de empuje por cada 1 de tirón`}</span>
       </figcaption>
-      <p className="mt-1 text-caption text-ink-faint">{pushPull.note}</p>
     </figure>
   );
 }
@@ -414,5 +421,143 @@ export function WeightRepsScatter({
         {sets.length} series de trabajo · cada punto es una serie real
       </figcaption>
     </figure>
+  );
+}
+
+/** Serie temporal de una actividad: FC, ritmo, altitud o velocidad. */
+export function ActivityStreamChart({
+  label,
+  values,
+  unit,
+  color = 'var(--ga-accent)',
+  formatValue = (value) => formatNumber(value),
+}: {
+  label: string;
+  values: (number | null)[];
+  unit?: string;
+  color?: string;
+  formatValue?: (value: number) => string;
+}) {
+  const clean = values.filter((value): value is number => value !== null && Number.isFinite(value));
+  if (clean.length < 2) {
+    return <p className="text-caption text-ink-faint">Sin datos suficientes para dibujar {label.toLowerCase()}.</p>;
+  }
+  const width = 560;
+  const height = 150;
+  const pad = 24;
+  const min = Math.min(...clean);
+  const max = Math.max(...clean);
+  const span = max - min || 1;
+  const step = (width - pad * 2) / (values.length - 1);
+  const points = values
+    .map((value, index) =>
+      value === null
+        ? null
+        : `${pad + index * step},${height - pad - ((value - min) / span) * (height - pad * 2)}`,
+    )
+    .filter((point): point is string => point !== null);
+  const path = points.map((point, index) => `${index === 0 ? 'M' : 'L'}${point}`).join(' ');
+  return (
+    <figure className="m-0">
+      <div className="mb-1 flex items-baseline justify-between gap-2">
+        <span className="text-caption uppercase tracking-wider text-ink-muted">{label}</span>
+        {unit ? <span className="text-caption text-ink-faint">{unit}</span> : null}
+      </div>
+      <svg
+        role="img"
+        aria-label={`${label}: serie temporal de la actividad`}
+        viewBox={`0 0 ${width} ${height}`}
+        className="h-32 w-full"
+        preserveAspectRatio="none"
+      >
+        <line x1={pad} y1={height - pad} x2={width - pad} y2={height - pad} stroke="var(--ga-line)" />
+        <path d={path} fill="none" stroke={color} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
+        <text x={4} y={pad + 4} fill="var(--ga-ink-faint)" fontSize="10">
+          {formatValue(max)}
+        </text>
+        <text x={4} y={height - pad} fill="var(--ga-ink-faint)" fontSize="10">
+          {formatValue(min)}
+        </text>
+      </svg>
+    </figure>
+  );
+}
+
+/** Recorrido GPS simplificado, sin teselas ni mapas de terceros. */
+export function RouteSketch({ track }: { track: ActivityTrack }) {
+  const lat = track.points.lat;
+  const lon = track.points.lon;
+  if (lat.length < 2 || lon.length < 2) {
+    return <p className="text-caption text-ink-faint">Sin recorrido guardado.</p>;
+  }
+  const width = 560;
+  const height = 240;
+  const pad = 14;
+  const minLat = Math.min(...lat);
+  const maxLat = Math.max(...lat);
+  const minLon = Math.min(...lon);
+  const maxLon = Math.max(...lon);
+  const spanLat = maxLat - minLat || 1;
+  const spanLon = maxLon - minLon || 1;
+  const x = (value: number) => pad + ((value - minLon) / spanLon) * (width - pad * 2);
+  const y = (value: number) => height - pad - ((value - minLat) / spanLat) * (height - pad * 2);
+  const path = lat.map((value, index) => `${index === 0 ? 'M' : 'L'}${x(lon[index] ?? value)},${y(value)}`).join(' ');
+  return (
+    <figure className="m-0">
+      <svg role="img" aria-label="Recorrido de la actividad" viewBox={`0 0 ${width} ${height}`} className="h-44 w-full">
+        <rect x="0" y="0" width={width} height={height} fill="var(--ga-raised)" rx="10" />
+        <path d={path} fill="none" stroke="var(--ga-accent)" strokeWidth={3} strokeLinejoin="round" strokeLinecap="round" />
+      </svg>
+      <figcaption className="mt-1 text-caption text-ink-faint">
+        {formatNumber(track.distance_m / 1000, 'km')} · desnivel {formatNumber(track.gain_m, 'm')}
+      </figcaption>
+    </figure>
+  );
+}
+
+/** Zonas de frecuencia cardiaca en minutos. */
+export function HrZonesChart({ zones }: { zones: ActivityHrZone[] }) {
+  const rows = zones
+    .map((zone, index) => ({
+      label: zone.label ?? `Z${zone.zone ?? index + 1}`,
+      secs: zone.seconds ?? zone.secs ?? 0,
+      low: zone.low,
+    }))
+    .filter((zone) => zone.secs > 0);
+  if (rows.length === 0) {
+    return <p className="text-caption text-ink-faint">Sin zonas de FC para esta actividad.</p>;
+  }
+  const total = rows.reduce((sum, row) => sum + row.secs, 0) || 1;
+  return (
+    <ul className="flex flex-col gap-2" aria-label="Zonas de frecuencia cardiaca">
+      {rows.map((row) => (
+        <li key={row.label} className="grid grid-cols-[3rem_1fr_3.5rem] items-center gap-2 text-caption">
+          <span className="text-ink-muted">{row.label}</span>
+          <span className="h-2.5 overflow-hidden rounded-full bg-raised">
+            <span className="block h-full rounded-full bg-accent" style={{ width: `${(row.secs / total) * 100}%` }} />
+          </span>
+          <span className="tnum text-right text-ink-muted">{formatNumber(row.secs / 60, 'min')}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Parciales por kilómetro. */
+export function SplitsList({ splits }: { splits: ActivitySplit[] }) {
+  if (splits.length === 0) {
+    return <p className="text-caption text-ink-faint">Sin parciales por kilómetro.</p>;
+  }
+  return (
+    <ul className="flex flex-col divide-y divide-line" aria-label="Parciales por kilómetro">
+      {splits.map((split) => (
+        <li key={split.km} className="grid grid-cols-4 items-center gap-2 py-1.5 text-caption">
+          <span className="text-ink-muted">Km {split.km}</span>
+          <span className="tnum text-ink">{split.pace ?? '—'}</span>
+          <span className="tnum text-right text-ink-muted">{split.hr_avg ? `${split.hr_avg} lpm` : '—'}</span>
+          <span className="tnum text-right text-ink-muted">{formatNumber(split.gain_m, 'm')}</span>
+        </li>
+      ))}
+    </ul>
   );
 }

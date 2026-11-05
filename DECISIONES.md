@@ -1,4 +1,4 @@
-# DECISIONES.md — Garmin Athletics
+# DECISIONES.md — Forja
 
 Decisiones de **Nivel 2** (las tomo yo, las dejo escritas y David las revisa cuando quiera).
 Formato: decisión · motivo · cómo se revierte.
@@ -135,7 +135,7 @@ primera pantalla del frontend nuevo (T-03) está a punto de empezar y, si cada p
 colores y tamaños, corregirlo después cuesta más que hacerlo bien una vez.
 
 **Decisión.** Antes de T-03 se construye el sistema de diseño **dark-first** con la skill
-`claude-design-system`, en `designs/garmin-athletics-design-system/`:
+`claude-design-system`, en `designs/forja-design-system/`:
 
 - tokens de color, tipografía, espaciado y radios **en un solo fichero**;
 - **contraste AA calculado**, no estimado;
@@ -296,7 +296,7 @@ borrador vive en el navegador y D-03 que el descanso se calcula por hora absolut
 
 **Decisión.**
 - El borrador se guarda en `localStorage` bajo
-  `garmin-athletics.session.<userId>.<templateId>`: cambiar de usuario o de plantilla no mezcla
+  `forja.session.<userId>.<templateId>`: cambiar de usuario o de plantilla no mezcla
   sesiones. Se escribe en cada cambio y se borra al terminar o descartar.
 - Cada serie guarda `weight`, `reps`, `rpe` y `completedAt`; el RPE es opcional y se añade al modelo
   como columna `rpe` (migración aditiva) y al cuerpo de `POST /strength/sessions`.
@@ -360,4 +360,49 @@ librería exige un `StrengthWorkout`, no un diccionario, así que el envío real
 ejercicio. Es preferible negarse y explicar qué falta.
 
 **Cómo se revierte.** Volver al builder anterior o permitir un fallback; no toca datos.
+
+---
+
+## 2026-11-05 — D-17 · La app se llama Forja
+
+**Contexto.** «Garmin» es marca registrada y `DOCTRINA-CALIDAD.md` §9 prohíbe usar el nombre de otra
+empresa como nombre de la app. David elige **Forja**.
+
+**Decisión.**
+- Nombre de producto **Forja**; paquete `forja-frontend`; título `Forja`; claves de
+  almacenamiento `forja.*`.
+- «Garmin» se mantiene solo para la cuenta/reloj del usuario («Vincular cuenta», «Enviar al reloj»,
+  integración en Ajustes) y en el código de integración, nunca como nombre de la app.
+- El repositorio y la carpeta del monorepo no se renombran en esta sesión (sería otra operación);
+  los documentos y la interfaz sí.
+
+**Cómo se revierte.** Es una constante de marca y cadenas de texto; cambiarla no toca datos.
+
+---
+
+## 2026-11-05 — D-18 · Regla de textos: se borran, no se sustituyen
+
+**Contexto.** `DOCTRINA-CALIDAD.md` §8: la interfaz no explica cómo está hecha.
+
+**Decisión.** Antes de publicar una pantalla se recorre cada texto y se pregunta si sirve para
+decidir o actuar. Si no, se borra: no se reescribe con otra explicación técnica. Sí se conservan
+explicaciones breves de las medidas («carga aguda», «frescura») porque ayudan a interpretar un dato.
+La verificación incluye capturas y revisión de textos en todas las pantallas.
+
+**Cómo se revierte.** No hay datos afectados.
+
+---
+
+## 2026-11-05 — D-19 · Calendario: la plantilla se programa y se envía por la vía nativa
+
+**Contexto.** David quiere programar entrenos en días concretos o repetirlos cada semana y que el
+entreno del día llegue solo al reloj. Una app Connect IQ no puede crear workouts nativos ni
+calendario (ver `research/IMU-CALENDARIO.md`).
+
+**Decisión.** El calendario guarda eventos recurrentes con `weekday` y `template_id`; el backend
+construye el workout tipado y lo sube y programa con la API de Garmin Connect. La UI permite
+previsualizar, enviar y cargar el de hoy. El job diario automático (CAL-1/CAL-2) queda como tarea
+siguiente; hoy el envío es explícito desde la app. La prueba real en el fr255 es Nivel 3.
+
+**Cómo se revierte.** Columnas nuevas y endpoints; borrar el evento no borra historial.
 

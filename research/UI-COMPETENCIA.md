@@ -177,7 +177,7 @@ Fitbit ganan en panel del día, no en registro.
 
 ---
 
-## 4. Qué adoptamos para Garmin Athletics
+## 4. Qué adoptamos para Forja
 
 Todas las decisiones usan tokens existentes (`project/tokens.json`); ninguna inventa valores.
 

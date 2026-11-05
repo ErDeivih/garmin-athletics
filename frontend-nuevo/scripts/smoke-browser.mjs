@@ -6,7 +6,8 @@
  *
  * Uso: node scripts/smoke-browser.mjs [appUrl] [apiUrl]
  */
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, copyFileSync, unlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
@@ -53,19 +54,41 @@ const pageErrors = [];
 page.on('console', (message) => {
   if (message.type() === 'error') consoleErrors.push(message.text());
 });
+page.on('response', (response) => {
+  if (response.status() >= 400) pageErrors.push(`${response.status()} ${response.url()}`);
+});
 page.on('pageerror', (error) => pageErrors.push(error.message));
 
 const steps = [];
 const shot = async (name) => {
   // Deja terminar la transición de color (120 ms) para que la captura sea estable.
   await page.waitForTimeout(250);
-  await page.screenshot({ path: join(shotsDir, `${name}.png`), fullPage: true });
+  // Chrome escribe primero en temporales: el disco del repo a veces devuelve
+  // UNKNOWN al abrir un PNG recién creado (antivirus/escáner). Copiar después
+  // con reintentos evita que el humo falle por el sistema de ficheros.
+  const tmp = join(tmpdir(), `forja-${name}-${Date.now()}.png`);
+  await page.screenshot({ path: tmp, fullPage: true });
+  const target = join(shotsDir, `${name}.png`);
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    try {
+      copyFileSync(tmp, target);
+      break;
+    } catch (error) {
+      if (attempt === 4) throw error;
+      await page.waitForTimeout(250);
+    }
+  }
+  try {
+    unlinkSync(tmp);
+  } catch {
+    // el temporal queda en %TEMP%; no afecta a la entrega
+  }
   steps.push(name);
 };
 
 try {
   await page.goto(APP, { waitUntil: 'domcontentloaded' });
-  await page.getByRole('heading', { name: /entra en garmin athletics/i }).waitFor();
+  await page.getByRole('heading', { name: /entra en Forja/i }).waitFor();
   await shot('01-login');
 
   await page.getByLabel(/correo/i).fill(email);
@@ -88,7 +111,7 @@ try {
   await shot('03-gimnasio');
 
   // T-28: catálogo con dibujos inicio/fin.
-  await page.getByRole('link', { name: /catálogo de ejercicios/i }).click();
+  await page.getByRole('link', { name: /^catálogo$/i }).click();
   await page.getByRole('heading', { name: 'Catálogo', exact: true }).waitFor();
   await page.getByRole('img', { name: /dibujo de press de banca/i }).waitFor({ timeout: 15000 });
   // Filtra para que la captura enseñe los dibujos a tamaño legible.
@@ -102,8 +125,8 @@ try {
   await page.getByRole('heading', { name: 'Gimnasio', exact: true }).waitFor();
 
   // T-31: previsualización del envío al reloj (dry_run; no toca la cuenta).
-  await page.getByRole('button', { name: /previsualizar envío/i }).click();
-  await page.getByText(/ejercicios en el catálogo garmin/i).waitFor({ timeout: 15000 });
+  await page.getByRole('button', { name: /preparar envío/i }).click();
+  await page.getByText(/ejercicios? · ~/i).waitFor({ timeout: 15000 });
   await page.setViewportSize({ width: 390, height: 1600 });
   await shot('11-envio-reloj');
   await page.getByRole('button', { name: /^cerrar$/i }).click();
@@ -129,22 +152,60 @@ try {
 
   await page.getByRole('link', { name: 'Ajustes' }).click();
   await page.getByRole('heading', { name: 'Ajustes', exact: true }).waitFor();
-  await page.getByRole('checkbox', { name: /secciones ampliadas/i }).check();
+  await page.getByRole('checkbox', { name: /mostrar todas las secciones/i }).check();
   await page.getByRole('link', { name: 'Actividades' }).click();
   await page.getByRole('heading', { name: 'Actividades', exact: true }).waitFor();
   await shot('04-actividades');
 
+  // Detalle de actividad: elige una salida con GPS y track disponible.
+  const firstActivity = page.locator('a[href^="/actividades/"]').filter({ hasText: /Carrera|Ciclismo|Fútbol/i }).first();
+  if ((await firstActivity.count()) > 0) {
+    await firstActivity.click();
+    await page.getByRole('img', { name: /recorrido de la actividad/i }).waitFor({ timeout: 15000 }).catch(() => {});
+    await page.waitForTimeout(800);
+    await page.setViewportSize({ width: 390, height: 2400 });
+    await shot('12-actividad');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole('main').getByRole('link', { name: /^actividades$/i }).click();
+    await page.getByRole('heading', { name: 'Actividades', exact: true }).waitFor();
+  }
+
+  // Calendario: programar una plantilla semanal y ver la semana.
+  await page.getByRole('link', { name: 'Calendario' }).click();
+  await page.getByRole('heading', { name: 'Calendario', exact: true }).waitFor();
+  await page.getByLabel(/plantilla/i).selectOption({ label: 'Empuje A' }).catch(() => {});
+  await page.getByRole('button', { name: /^programar$/i }).click().catch(() => {});
+  await page.waitForTimeout(600);
+  await page.setViewportSize({ width: 390, height: 2000 });
+  await shot('13-calendario');
+  await page.setViewportSize({ width: 390, height: 844 });
+
   // Tendencias con la ampliación de T-27 (solo visible con la bandera encendida).
   await page.getByRole('link', { name: 'Tendencias' }).click();
   await page.getByRole('heading', { name: 'Tendencias', exact: true }).waitFor();
-  await page.getByText(/tss por semana|carga de entrenamiento/i).first().waitFor({ timeout: 15000 });
+  await page.getByText(/carga semanal|carga de entrenamiento/i).first().waitFor({ timeout: 15000 });
   await page.setViewportSize({ width: 390, height: 2600 });
   await shot('07-tendencias');
   await page.setViewportSize({ width: 390, height: 844 });
 
+  // Resto de pantallas ampliadas y Ajustes con la nueva densidad.
+  await page.getByRole('link', { name: 'Ajustes' }).click();
+  await page.getByRole('heading', { name: 'Ajustes', exact: true }).waitFor();
+  await page.setViewportSize({ width: 390, height: 2000 });
+  await shot('14-ajustes');
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const [section, name] of [['Rendimiento', '15-rendimiento'], ['Rutas', '16-rutas'], ['Social', '17-social']]) {
+    await page.getByRole('link', { name: section }).click();
+    await page.getByRole('heading', { name: section, exact: true }).waitFor();
+    await page.waitForTimeout(400);
+    await page.setViewportSize({ width: 390, height: 1800 });
+    await shot(name);
+    await page.setViewportSize({ width: 390, height: 844 });
+  }
+
   // Escritorio con la configuración por defecto: la bandera se apaga para que
   // la captura enseñe las tres pestañas visibles reales (Hoy, Gimnasio, Ajustes).
-  await page.evaluate(() => localStorage.removeItem('garmin-athletics.extended'));
+  await page.evaluate(() => localStorage.removeItem('forja.extended'));
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(`${APP}/`, { waitUntil: 'domcontentloaded' });
   await page.getByRole('heading', { name: 'Hoy', exact: true }).waitFor();

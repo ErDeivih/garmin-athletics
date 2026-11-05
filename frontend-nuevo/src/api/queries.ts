@@ -1,7 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from './client';
 import type {
+  ActivityDetail,
+  ActivitySplitsResponse,
+  ActivityStreams,
   ActivitySummary,
+  ActivityTrack,
   AlertsResponse,
   CalendarResponse,
   DailyMetrics,
@@ -55,6 +59,10 @@ export const queryKeys = {
   exercises: (search: string, muscle: string, equipment: string) =>
     ['gym', 'exercises', search, muscle, equipment] as const,
   activities: ['activities'] as const,
+  activity: (id: string) => ['activities', id] as const,
+  activityStreams: (id: string) => ['activities', id, 'streams'] as const,
+  activitySplits: (id: string) => ['activities', id, 'splits'] as const,
+  activityTrack: (id: string) => ['activities', id, 'track'] as const,
   routes: ['routes'] as const,
   leaderboard: ['social', 'leaderboard'] as const,
   trends: (metric: string, days: number) => ['metrics', 'trends', metric, days] as const,
@@ -285,6 +293,41 @@ export function useActivities() {
   });
 }
 
+export function useActivityDetail(id: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.activity(id ?? ''),
+    queryFn: () => apiFetch<ActivityDetail>(`/api/v1/activities/${id}`),
+    enabled: Boolean(id),
+  });
+}
+
+export function useActivityStreams(id: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.activityStreams(id ?? ''),
+    queryFn: () => apiFetch<ActivityStreams>(`/api/v1/activities/${id}/streams?max_points=500`),
+    enabled: Boolean(id) && enabled,
+    retry: false,
+  });
+}
+
+export function useActivitySplits(id: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.activitySplits(id ?? ''),
+    queryFn: () => apiFetch<ActivitySplitsResponse>(`/api/v1/activities/${id}/splits`),
+    enabled: Boolean(id) && enabled,
+    retry: false,
+  });
+}
+
+export function useActivityTrack(id: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.activityTrack(id ?? ''),
+    queryFn: () => apiFetch<ActivityTrack>(`/api/v1/activities/${id}/track?max_points=400`),
+    enabled: Boolean(id) && enabled,
+    retry: false,
+  });
+}
+
 export function useRoutes() {
   return useQuery({
     queryKey: queryKeys.routes,
@@ -327,13 +370,73 @@ export function usePrs() {
   });
 }
 
-export function useCalendar() {
-  return useQuery({
+export function useCreateCalendarEvent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: {
+      title: string;
+      event_type: string;
+      start_local: string;
+      duration_min: number;
+      weekday: number;
+      template_id: string;
+    }) =>
+      apiFetch<{ status: string; id: string }>('/api/v1/calendar/events', {
+        method: 'POST',
+        body: payload,
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.calendar }),
+  });
+}
+
+export function useDeleteCalendarEvent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch<{ status: string }>(`/api/v1/calendar/events/${id}`, { method: 'DELETE' }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.calendar }),
+  });
+}
+
+export function usePreviewEventWorkout() {
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch<{
+        status: string;
+        blocks: number;
+        estimated_seconds: number;
+        unmapped_exercises: string[];
+        target_date: string;
+      }>(`/api/v1/calendar/events/${id}/preview`, { method: 'POST' }),
+  });
+}
+
+export function useSendEventWorkout() {
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch<{ status: string; target_date: string }>(
+        `/api/v1/calendar/events/${id}/send`,
+        { method: 'POST' },
+      ),
+  });
+}
+
+export function useSyncTodayWorkouts() {
+  return useMutation({
+    mutationFn: () =>
+      apiFetch<{ status: string; sent: number; message?: string }>(
+        '/api/v1/calendar/sync-today',
+        { method: 'POST' },
+      ),
+  });
+}
+
+export function useCalendar() {  return useQuery({
     queryKey: queryKeys.calendar,
     queryFn: () => {
       const to = new Date();
       const from = new Date();
-      from.setDate(from.getDate() - 6);
+      to.setDate(to.getDate() + 13);
       // Fecha local, no UTC: a las 00:30 en Madrid, toISOString() daría el día anterior.
       const localIso = (date: Date) =>
         `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;

@@ -6,9 +6,8 @@ import { ApiError, apiFetch } from '../api/client';
 import { queryKeys } from '../api/queries';
 import { useDeleteAccount, useSyncNow, useSyncStatus } from '../api/queries';
 import type { GarminLinkResult } from '../api/types';
-import { EXTENDED_SECTIONS_KEY, setExtendedSections, useExtendedSections } from '../config/features';
+import { setExtendedSections, useExtendedSections } from '../config/features';
 import { Badge, Button, Card, ErrorState, Field, PageHeader, SectionTitle } from '../components/ui';
-import { formatRelative, formatDate } from '../lib/format';
 import { applyTheme, readTheme, type Theme } from '../lib/theme';
 
 function GarminLinkForm() {
@@ -81,21 +80,21 @@ function GarminLinkForm() {
   };
 
   if (saved) {
-    return <p className="text-body text-success">Cuenta de Garmin guardada. La contraseña no se ha almacenado.</p>;
+    return <p className="text-body text-success">Cuenta vinculada. No guardamos tu contraseña.</p>;
   }
 
   return (
     <div className="mt-4 border-t border-line pt-4">
-      <h3 className="mb-2 text-heading text-ink">Vincular Garmin Connect</h3>
+      <h3 className="mb-2 text-heading text-ink">Vincular cuenta</h3>
       <p className="mb-4 text-caption text-ink-muted">
-        La contraseña se usa una sola vez para obtener los tokens y se descarta. Ni la app ni el servidor la guardan.
+        No guardamos tu contraseña.
       </p>
       {ticket ? (
         <form onSubmit={onMfa} className="flex flex-col gap-3">
           <Field
             id="mfa-code"
             label="Código de verificación"
-            hint="El código de dos pasos que te acaba de enviar Garmin."
+            hint="El código de dos pasos."
             inputMode="numeric"
             autoComplete="one-time-code"
             value={code}
@@ -115,7 +114,7 @@ function GarminLinkForm() {
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
           <Field
             id="garmin-email"
-            label="Correo de Garmin"
+            label="Correo"
             type="email"
             autoComplete="username"
             value={email}
@@ -124,10 +123,9 @@ function GarminLinkForm() {
           />
           <Field
             id="garmin-password"
-            label="Contraseña de Garmin"
+            label="Contraseña"
             type="password"
             autoComplete="current-password"
-            hint="Viaja una vez y no se guarda."
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             required
@@ -138,7 +136,7 @@ function GarminLinkForm() {
             </p>
           ) : null}
           <Button type="submit" variant="primary" disabled={busy || email.length === 0 || password.length === 0}>
-            {busy ? 'Vinculando…' : 'Vincular cuenta'}
+            {busy ? 'Vinculando…' : 'Conectar'}
           </Button>
         </form>
       )}
@@ -164,10 +162,10 @@ export function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Ajustes" description="Cuenta, conexión con Garmin y preferencias." />
+      <PageHeader title="Ajustes" description="Cuenta, conexión y preferencias." />
 
       <Card>
-        <SectionTitle hint="Garmin Connect">Conexión</SectionTitle>
+        <SectionTitle hint="Cuenta">Conexión</SectionTitle>
         {sync.isPending ? (
           <p className="text-body text-ink-muted">Comprobando la conexión…</p>
         ) : sync.isError ? (
@@ -176,14 +174,10 @@ export function SettingsPage() {
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone="go">Vinculado</Badge>
-              <span className="text-body text-ink">{sync.data.garmin_email ?? 'Cuenta de Garmin'}</span>
+              <span className="text-body text-ink">{sync.data.garmin_email ?? 'Cuenta'}</span>
             </div>
-            <p className="text-caption text-ink-faint">
-              Última sincronización {formatRelative(sync.data.last_sync_at)} · {sync.data.activities_7d} actividades y{' '}
-              {sync.data.tss_7d} TSS en 7 días.
-            </p>
             {sync.data.needs_reauth ? (
-              <p className="text-body text-warn">Garmin pide volver a iniciar sesión. Vuelve a vincular la cuenta.</p>
+              <p className="text-body text-warn">Vuelve a vincular tu cuenta para seguir sincronizando.</p>
             ) : null}
             <div className="flex flex-wrap items-center gap-2">
               <Button
@@ -213,11 +207,11 @@ export function SettingsPage() {
         ) : (
           <div className="flex flex-col gap-3">
             <p className="text-body text-ink-muted">
-              Sin Garmin Connect no hay biometría ni actividades: el panel «Hoy» estará vacío a propósito.
+              Conecta tu cuenta para ver tu actividad y tu recuperación.
             </p>
             <Button variant="primary" onClick={() => setShowLink((value) => !value)}>
               <Link2 aria-hidden="true" className="size-4" />
-              Vincular Garmin
+              Vincular cuenta
             </Button>
             {showLink ? <GarminLinkForm /> : null}
           </div>
@@ -250,16 +244,12 @@ export function SettingsPage() {
             aria-describedby="extended-sections-hint"
           />
           <label htmlFor="extended-sections" className="text-body text-ink">
-            Secciones ampliadas
+            Mostrar todas las secciones
             <span id="extended-sections-hint" className="mt-1 block text-caption text-ink-muted">
-              Actividades, Calendario, Tendencias, Rendimiento, Rutas y Social. Están construidas contra la misma API;
-              la bandera solo decide si se ven.
+              Actividades, Calendario, Tendencias, Rendimiento, Rutas y Social.
             </span>
           </label>
         </div>
-        <p className="mt-3 text-caption text-ink-faint">
-          Atajo de desarrollo: {EXTENDED_SECTIONS_KEY} en el almacenamiento del navegador.
-        </p>
       </Card>
 
       <Card className="mt-6">
@@ -272,10 +262,6 @@ export function SettingsPage() {
           <div>
             <dt className="text-caption uppercase tracking-wider text-ink-muted">Correo</dt>
             <dd className="text-body text-ink">{user?.email ?? 'sin correo'}</dd>
-          </div>
-          <div>
-            <dt className="text-caption uppercase tracking-wider text-ink-muted">Alta</dt>
-            <dd className="text-body text-ink">{formatDate(user?.created_at)}</dd>
           </div>
         </dl>
         <Button variant="secondary" onClick={() => void logout()}>

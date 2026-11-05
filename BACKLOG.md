@@ -1,4 +1,4 @@
-# BACKLOG.md — Garmin Athletics
+# BACKLOG.md — Forja
 
 **Rama**: `master` · **Última revisión**: 2026-11-04
 
@@ -55,7 +55,7 @@ navegación, tema oscuro, cliente HTTP con Bearer obligatorio y `src/api/types.t
 **Criterio de aceptación**: arranca con `npm run dev`; login real contra el backend; navegación
 entre secciones; `tsc --noEmit` limpio; `frontend/` y `frontend_mvp/` intactos.
 
-**Resultado (2026-11-04).** Sistema de diseño en `designs/garmin-athletics-design-system/`
+**Resultado (2026-11-04).** Sistema de diseño en `designs/forja-design-system/`
 (escala de 4 px, AA calculado: 52 pares, 2 temas) y app con login real, navegación generada desde el
 registro de pantallas, Hoy, Gimnasio y Ajustes, más seis secciones de bandera (Actividades,
 Calendario, Tendencias, Rendimiento, Rutas, Social). Pruebas: 19 flujos en verde (Vitest + Testing
@@ -528,6 +528,50 @@ la captura móvil es la referencia y el escritorio no es un móvil estirado.
 
 ---
 
+## Correcciones de David (2026-11-05)
+
+Mandato: `DOCTRINA-CALIDAD.md` §8 y §9; detalle aplicado en `CORRECCIONES-2026-11-05.md`.
+
+### T-40 · Marca Forja y textos de la interfaz
+**Nivel 1** · **Estado**: `hecha` (2026-11-05)
+
+Renombrar la app (Forja, paquete `forja-frontend`, título y logo) y borrar los textos de
+desarrollador de todas las pantallas: tokens, sincronización interna, TSS/ATL/CTL como jerga,
+«API», «mapeo», enums, tareas y promesas futuras. Regla §8: si no ayuda a decidir o actuar, se
+borra; no se sustituye.
+
+### T-41 · Densidad móvil de todas las pantallas
+**Nivel 1** · **Estado**: `hecha` (2026-11-05)
+
+Tarjetas de `p-3` en móvil, métricas en dos columnas, fuera datos duplicados (tarjeta «Tus números»
+de Gimnasio), explicación breve de cada medida y color con AA. Capturas 390×844 en `screenshots/`.
+
+### T-42 · Calendario de entrenamientos con plantilla y envío al reloj
+**Nivel 2** · **Estado**: `en curso` (2026-11-05)
+
+Programar una plantilla en uno o varios días de la semana, ver los entrenos semanales, previsualizar
+el workout y enviarlo/programarlo en Garmin Connect; botón «Cargar el de hoy en el reloj». Backend:
+`template_id`/`garmin_workout_id`/`last_scheduled_date` y endpoints de preview/send/sync-today.
+**Pendiente**: job diario automático (CAL-1/CAL-2 en `research/IMU-CALENDARIO.md`) y prueba real en
+el fr255 (Nivel 3).
+
+### T-43 · Detección automática de repeticiones por IMU (diseño + POC)
+**Nivel 2** · **Estado**: `pendiente` · **Origen**: `research/IMU-CALENDARIO.md`
+
+Perfil de movimiento versionado por ejercicio (`exercise_motion_profiles`), calibración guiada de
+10–15 s, detector de picos en Monkey C y POC con 3 ejercicios. No se promete conteo automático hasta
+que el POC cumpla ≥90 % de series con error ≤1 rep. Tareas IMU-1..8 del informe.
+
+### T-44 · Bloque de Actividades: detalle rico
+**Nivel 2** · **Estado**: `en curso` (2026-11-05)
+
+Ruta `/actividades/:id` con resumen, zonas de FC, recorrido SVG, series de FC/ritmo/altitud/velocidad
+y parciales. Fuente: `research/ACTIVIDADES-COMPETENCIA.md` (T-35/T-36).
+**Pendiente**: vueltas, meteo, botón Actualizar, filtros y paginación SQL (T-37/T-38) y altitud
+(T-39).
+
+---
+
 ## Esperando decisión (Nivel 3) — no bloquean la sesión
 
 | # | Pregunta exacta | Por qué es Nivel 3 |
@@ -572,3 +616,5 @@ la captura móvil es la referencia y el escritorio no es un móvil estirado.
 | T-27 | Tendencias: línea, barras, calor, dispersión, sueño y comparativa | 2026-11-04 | `sleep-phases` + `sets_sample`/`previous`; 25 pruebas de frontend y captura real |
 | T-28 | Ejercicios con dibujo inicio/fin + catálogo consultable | 2026-11-04 | 17 patrones SVG propios, aviso honesto sin dibujo; 27 pruebas de frontend y captura del catálogo |
 | Reloj (base T-31) | Compatibilidad de la PoC Connect IQ con fr255 y 8 perfiles más | 2026-11-04 | `watch/connectiq-poc/` + matriz en `INVESTIGACION-AMPLIACION.md` §3.1; no probado en reloj real |
+| T-40/T-41 | Forja: marca, textos §8 y densidad móvil en todas las pantallas | 2026-11-05 | 31/31 pruebas frontend, capturas 390×844 y `CORRECCIONES-2026-11-05.md` |
+| T-42/T-44 | Calendario con plantilla y envío; detalle de Actividad con gráficas | 2026-11-05 | Backend de calendario + preview, `/actividades/:id`; 2 flujos nuevos; pendiente validar en fr255 |

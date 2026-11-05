@@ -4,7 +4,7 @@ import { installFakeApi, json } from './fakeApi';
 import { renderApp } from './renderApp';
 import * as f from './fixtures';
 
-const TOKEN_KEY = 'garmin-athletics.token';
+const TOKEN_KEY = 'forja.token';
 const weekday = (new Date().getDay() + 6) % 7;
 const templates = {
   ...f.templates,
@@ -54,25 +54,24 @@ function install(overrides: Record<string, unknown> = {}) {
 }
 
 describe('envío de la plantilla al reloj', () => {
-  it('previsualiza el mapeo, exige confirmación y envía de verdad', async () => {
+  it('prepara el envío, exige confirmación y lo manda al reloj', async () => {
     localStorage.setItem(TOKEN_KEY, 'test-token');
     const api = install();
     const user = userEvent.setup();
     renderApp('/gimnasio');
 
-    await user.click(await screen.findByRole('button', { name: /previsualizar envío/i }));
-    expect(await screen.findByText(/1 bloques · ~10 min/i)).toBeInTheDocument();
-    expect(screen.getByText(/press de banca → bench_press \/ barbell_bench_press/i)).toBeInTheDocument();
+    await user.click(await screen.findByRole('button', { name: /preparar envío/i }));
+    expect(await screen.findByText(/1 ejercicio · ~10 min/i)).toBeInTheDocument();
 
-    const confirm = screen.getByRole('checkbox', { name: /entiendo que es experimental/i });
-    const send = screen.getByRole('button', { name: /enviar de verdad/i });
+    const confirm = screen.getByRole('checkbox', { name: /lo revisaré en el reloj/i });
+    const send = screen.getByRole('button', { name: /enviar al reloj/i });
     expect(send).toBeDisabled();
     await user.click(confirm);
-    const enabled = screen.getByRole('button', { name: /enviar de verdad/i });
+    const enabled = screen.getByRole('button', { name: /enviar al reloj/i });
     expect(enabled).toBeEnabled();
     await user.click(enabled);
 
-    expect(await screen.findByText(/enviado a garmin connect/i)).toBeInTheDocument();
+    expect(await screen.findByText(/enviado. compruébalo en el reloj/i)).toBeInTheDocument();
     const sentCall = api.calls.find(
       (call) => {
         if (call.method !== 'POST' || call.path !== '/api/v1/strength/push-to-garmin') return false;
@@ -88,7 +87,7 @@ describe('envío de la plantilla al reloj', () => {
     });
   });
 
-  it('si un ejercicio no tiene mapeo Garmin, no deja enviar', async () => {
+  it('si un ejercicio no se puede enviar, no deja mandarlo', async () => {
     localStorage.setItem(TOKEN_KEY, 'test-token');
     install({
       'POST /api/v1/strength/push-to-garmin': json({ ...preview, unmapped_exercises: ['Ejercicio raro'] }),
@@ -96,8 +95,8 @@ describe('envío de la plantilla al reloj', () => {
     const user = userEvent.setup();
     renderApp('/gimnasio');
 
-    await user.click(await screen.findByRole('button', { name: /previsualizar envío/i }));
-    expect(await screen.findByText(/sin mapeo garmin: ejercicio raro/i)).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByRole('button', { name: /enviar de verdad/i })).toBeNull());
+    await user.click(await screen.findByRole('button', { name: /preparar envío/i }));
+    expect(await screen.findByText(/no se pueden enviar: ejercicio raro/i)).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('button', { name: /enviar al reloj/i })).toBeNull());
   });
 });

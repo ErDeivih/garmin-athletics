@@ -7,15 +7,15 @@ export function SocialPage() {
 
   return (
     <>
-      <PageHeader title="Social" description="Esfuerzo compartido con tus amigos: solo agregados, nunca datos crudos." />
+      <PageHeader title="Social" description="Compara tu semana con la de tus amigos." />
       {leaderboard.isPending ? (
         <LoadingBlock label="Cargando la clasificación" />
       ) : leaderboard.isError ? (
-        <ErrorState message={leaderboard.error.message} onRetry={() => void leaderboard.refetch()} />
+        <ErrorState message="No se pudo cargar la clasificación." onRetry={() => void leaderboard.refetch()} />
       ) : leaderboard.data.ranking.length === 0 ? (
         <EmptyState
           title="Aún no hay clasificación"
-          description="La clasificación compara el TSS semanal entre tú y tus amigos. Hace falta añadir amigos y tener actividad en los últimos días."
+          description="La clasificación compara la carga semanal: lo que cada uno ha entrenado. Añade amigos y entrena para aparecer."
         />
       ) : (
         <Card>
@@ -29,17 +29,17 @@ export function SocialPage() {
                       {entry.athlete.display_name ?? entry.athlete.username}
                     </span>
                     <span className="block text-caption text-ink-faint">
-                      {formatNumber(entry.activity_count)} actividades · CTL {formatNumber(entry.ctl)}
+                      {formatNumber(entry.activity_count)} actividades
                     </span>
                   </span>
                 </span>
                 <span className="flex items-center gap-3">
                   <span className="tnum font-display text-title text-ink">{formatNumber(entry.weekly_tss)}</span>
+                  <span className="text-caption text-ink-muted">carga</span>
                 </span>
               </li>
             ))}
           </ul>
-          <p className="mt-4 text-caption text-ink-faint">{leaderboard.data.note}</p>
         </Card>
       )}
     </>

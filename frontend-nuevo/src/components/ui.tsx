@@ -60,7 +60,7 @@ export function Card({
   as?: 'section' | 'div' | 'article';
 }) {
   return (
-    <Tag className={`rounded-lg border border-line bg-surface p-4 shadow-sm ${className}`}>{children}</Tag>
+    <Tag className={`rounded-lg border border-line bg-surface p-3 shadow-sm sm:p-4 ${className}`}>{children}</Tag>
   );
 }
 
@@ -74,10 +74,10 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <header className="mb-4 flex flex-wrap items-end justify-between gap-3 sm:mb-6 sm:gap-4">
       <div>
         <h1 className="text-title font-display uppercase tracking-wide text-ink">{title}</h1>
-        {description ? <p className="mt-1 text-body text-ink-muted">{description}</p> : null}
+        {description ? <p className="mt-1 max-w-prose text-body text-ink-muted">{description}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
     </header>
@@ -91,7 +91,9 @@ export function StatCard({
   delta,
   deltaTone = 'muted',
   foot,
+  hint,
   hero = false,
+  className = '',
 }: {
   label: string;
   value: string | number;
@@ -99,17 +101,22 @@ export function StatCard({
   delta?: string;
   deltaTone?: 'up' | 'down' | 'muted';
   foot?: string;
+  hint?: string;
   hero?: boolean;
+  className?: string;
 }) {
   const deltaClass =
     deltaTone === 'up' ? 'text-success' : deltaTone === 'down' ? 'text-danger' : 'text-ink-muted';
   return (
     <article
-      className={`flex flex-col gap-2 rounded-lg border bg-surface p-4 shadow-sm ${hero ? 'border-line-strong' : 'border-line'}`}
+      className={`flex min-w-0 flex-col gap-1.5 rounded-lg border bg-surface p-3 shadow-sm sm:p-4 ${
+        hero ? 'border-line-strong' : 'border-line'
+      } ${className}`}
     >
       <span className="text-caption uppercase tracking-wider text-ink-muted">{label}</span>
+      {hint ? <span className="text-caption leading-snug text-ink-faint">{hint}</span> : null}
       <span className="flex items-baseline gap-1">
-        <span className="tnum font-display text-hero font-bold text-ink">{value}</span>
+        <span className={`tnum font-display font-bold text-ink ${hero ? 'text-hero' : 'text-title'}`}>{value}</span>
         {unit ? <span className="text-caption text-ink-muted">{unit}</span> : null}
       </span>
       {delta ? <span className={`text-caption ${deltaClass}`}>{delta}</span> : null}
@@ -168,9 +175,9 @@ export function LoadingBlock({ label = 'Cargando…' }: { label?: string }) {
 
 export function SectionTitle({ children, hint }: { children: ReactNode; hint?: string }) {
   return (
-    <div className="mb-3 flex items-baseline justify-between gap-3">
+    <div className="mb-2 flex items-baseline justify-between gap-2 sm:mb-3 sm:gap-3">
       <h2 className="text-heading text-ink">{children}</h2>
-      {hint ? <span className="text-caption text-ink-faint">{hint}</span> : null}
+      {hint ? <span className="text-right text-caption text-ink-faint">{hint}</span> : null}
     </div>
   );
 }

@@ -4,8 +4,8 @@ import { installFakeApi, json } from './fakeApi';
 import { renderApp } from './renderApp';
 import * as f from './fixtures';
 
-const TOKEN_KEY = 'garmin-athletics.token';
-const FLAG_KEY = 'garmin-athletics.extended';
+const TOKEN_KEY = 'forja.token';
+const FLAG_KEY = 'forja.extended';
 
 const apiConDatos = () =>
   installFakeApi({
@@ -27,8 +27,8 @@ describe('tendencias y métricas derivadas', () => {
     expect(await screen.findByRole('heading', { name: 'Tendencias' })).toBeInTheDocument();
     expect(await screen.findByRole('img', { name: /serie de la métrica/i })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: /carga de entrenamiento/i })).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: /tss por semana/i })).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: /monotonía semanal/i })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /carga semanal/i })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /variación semanal/i })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: /calendario de carga/i })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: /volumen por grupo muscular/i })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: /reparto de volumen/i })).toBeInTheDocument();
@@ -36,9 +36,7 @@ describe('tendencias y métricas derivadas', () => {
     expect(screen.getByRole('img', { name: /peso frente a repeticiones/i })).toBeInTheDocument();
     // Cifras del backend, no inventadas.
     expect(screen.getByText(/18\.450 kg totales/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/1RM est\./i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/estimado por grupo principal/i)).toBeInTheDocument();
-    expect(screen.getByText(/vs periodo anterior: \+23 % de tonelaje/i)).toBeInTheDocument();
+    expect(screen.getByText(/\+23 % de peso movido que antes/i)).toBeInTheDocument();
   });
 
   it('cambiar de periodo y de métrica consulta la API con esos parámetros', async () => {
@@ -48,7 +46,7 @@ describe('tendencias y métricas derivadas', () => {
     const user = userEvent.setup();
     renderApp('/tendencias');
 
-    await screen.findByRole('img', { name: /tss por semana/i });
+    await screen.findByRole('img', { name: /carga semanal/i });
     await user.click(screen.getByRole('button', { name: '90 d' }));
 
     const loadCall = api.calls.find(
@@ -82,7 +80,7 @@ describe('tendencias y métricas derivadas', () => {
     expect(screen.getByText(/sin noches con fases de sueño reales/i)).toBeInTheDocument();
     expect(screen.getByText(/faltan series de trabajo para dibujar la dispersión/i)).toBeInTheDocument();
     expect(screen.queryByRole('img', { name: /serie de la métrica/i })).toBeNull();
-    expect(screen.queryByRole('img', { name: /tss por semana/i })).toBeNull();
+    expect(screen.queryByRole('img', { name: /carga semanal/i })).toBeNull();
     expect(screen.queryByRole('img', { name: /fases de sueño por noche/i })).toBeNull();
   });
 });

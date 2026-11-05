@@ -55,13 +55,13 @@ export function CatalogPage() {
         <ErrorState message={exercises.error.message} onRetry={() => void exercises.refetch()} />
       ) : exercises.data.items.length === 0 ? (
         <EmptyState
-          title="Todavía no hay ejercicios"
-          description="No hay ejercicios que coincidan con la búsqueda. Prueba otro término o crea ejercicios propios cuando exista el editor."
+          title="Sin resultados"
+          description="No hay ejercicios que coincidan con la búsqueda. Prueba otro término."
         />
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2">
+        <ul className="grid gap-3 sm:grid-cols-2">
           {exercises.data.items.map((exercise) => (
-            <li key={exercise.id} className="rounded-lg border border-line bg-surface p-4 shadow-sm">
+            <li key={exercise.id} className="rounded-lg border border-line bg-surface p-3 shadow-sm">
               <div className="mb-2 flex items-baseline justify-between gap-2">
                 <h2 className="text-heading text-ink">{exercise.name}</h2>
                 <span className="text-caption text-ink-faint">{exercise.muscle_group_label}</span>
@@ -70,12 +70,12 @@ export function CatalogPage() {
                 name={exercise.name}
                 garminEnum={exercise.garmin_enum}
                 muscleGroup={exercise.muscle_group_label}
+                compact
               />
               <p className="mt-2 text-caption text-ink-muted">
                 {exercise.equipment_label}
                 {exercise.is_timed ? ' · por tiempo' : ''}
                 {exercise.is_unilateral ? ' · unilateral' : ''}
-                {exercise.garmin_enum ? ` · Garmin: ${exercise.garmin_enum}` : ' · sin enum de Garmin'}
               </p>
               {exercise.notes ? <p className="mt-1 text-caption text-ink-faint">{exercise.notes}</p> : null}
             </li>

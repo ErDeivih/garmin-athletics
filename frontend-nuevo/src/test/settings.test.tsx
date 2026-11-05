@@ -5,7 +5,7 @@ import { renderApp } from './renderApp';
 import { initTheme } from '../lib/theme';
 import * as f from './fixtures';
 
-const TOKEN_KEY = 'garmin-athletics.token';
+const TOKEN_KEY = 'forja.token';
 
 describe('ajustes y sincronización', () => {
   it('lanza una sincronización y cuenta que ha ido bien', async () => {
@@ -25,13 +25,13 @@ describe('ajustes y sincronización', () => {
     const user = userEvent.setup();
     renderApp('/ajustes');
 
-    await user.click(await screen.findByRole('button', { name: /sincronizar ahora/i }));
+    await user.click(await screen.findByRole('button', { name: /sincronizar ahora/i }, { timeout: 4000 }));
 
     expect(await screen.findByRole('status')).toHaveTextContent(/sincronización completada/i);
     expect(api.calls.filter((call) => call.path === '/api/v1/sync/status').length).toBeGreaterThan(1);
   });
 
-  it('sin Garmin vinculado pide vincular en vez de ofrecer sincronizar', async () => {
+  it('sin cuenta vinculada pide vincular en vez de ofrecer sincronizar', async () => {
     localStorage.setItem(TOKEN_KEY, 'test-token');
     installFakeApi({
       'GET /api/v1/auth/me': json(f.me),
@@ -41,29 +41,29 @@ describe('ajustes y sincronización', () => {
     });
     renderApp('/ajustes');
 
-    expect(await screen.findByRole('button', { name: /vincular garmin/i })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /vincular cuenta/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /sincronizar ahora/i })).toBeNull();
   });
 
-  it('una contraseña de Garmin incorrecta muestra el error sin cerrar la sesión', async () => {
+  it('una contraseña incorrecta muestra el error sin cerrar la sesión', async () => {
     localStorage.setItem(TOKEN_KEY, 'test-token');
     installFakeApi({
       'GET /api/v1/auth/me': json(f.me),
       'GET /api/v1/metrics/daily': json(f.daily),
       'GET /api/v1/alerts': json(f.alerts),
       'GET /api/v1/sync/status': json(f.syncStatusUnlinked),
-      'PUT /api/v1/auth/garmin-credentials': json({ detail: 'Garmin rechazó las credenciales.' }, 401),
+      'PUT /api/v1/auth/garmin-credentials': json({ detail: 'La contraseña no es correcta.' }, 401),
     });
     const user = userEvent.setup();
     renderApp('/ajustes');
 
-    await user.click(await screen.findByRole('button', { name: /vincular garmin/i }));
-    await user.type(screen.getByLabelText(/correo de garmin/i), 'atleta@example.com');
-    await user.type(screen.getByLabelText(/contraseña de garmin/i), 'mal');
-    await user.click(screen.getByRole('button', { name: /vincular cuenta/i }));
+    await user.click(await screen.findByRole('button', { name: /vincular cuenta/i }));
+    await user.type(screen.getByLabelText(/^correo$/i), 'atleta@example.com');
+    await user.type(screen.getByLabelText(/^contraseña$/i), 'mal');
+    await user.click(screen.getByRole('button', { name: /^conectar$/i }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(/garmin rechazó las credenciales/i);
-    // Sigue dentro: el 401 era de Garmin, no de la sesión de la app.
+    expect(await screen.findByRole('alert')).toHaveTextContent(/la contraseña no es correcta/i);
+    // Sigue dentro: el 401 era de la cuenta externa, no de la sesión de la app.
     expect(screen.getByRole('heading', { name: 'Ajustes' })).toBeInTheDocument();
     expect(localStorage.getItem(TOKEN_KEY)).toBe('test-token');
   });
@@ -88,7 +88,7 @@ describe('ajustes y sincronización', () => {
     expect(confirm).toBeEnabled();
     await user.click(confirm);
 
-    expect(await screen.findByRole('heading', { name: /entra en garmin athletics/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /entra en Forja/i })).toBeInTheDocument();
     expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
     const deleted = api.calls.find((call) => call.method === 'DELETE' && call.path === '/api/v1/auth/account');
     expect(deleted?.headers.authorization ?? deleted?.headers.Authorization).toBe('Bearer test-token');
@@ -107,7 +107,7 @@ describe('ajustes y sincronización', () => {
 
     await user.click(await screen.findByRole('button', { name: /claro/i }));
     expect(document.documentElement.dataset.theme).toBe('light');
-    expect(localStorage.getItem('garmin-athletics.theme')).toBe('light');
+    expect(localStorage.getItem('forja.theme')).toBe('light');
 
     // Simula recargar: se desmonta la app, main.tsx vuelve a aplicar el tema y
     // se monta de nuevo con la sesión guardada.

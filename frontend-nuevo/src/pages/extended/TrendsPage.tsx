@@ -87,7 +87,6 @@ export function TrendsPage() {
   const sleepPhases = useSleepPhases(period);
 
   const trendValues = trends.data?.series.filter((point) => point.value !== null) ?? [];
-  const latestSummary = summary.data?.latest;
   const completeWeeks = summary.data?.weeks.filter((week) => week.complete) ?? [];
   const lastWeek = [...completeWeeks].reverse().find((week) => week.tss > 0);
   const totals = gym.data?.totals;
@@ -100,7 +99,7 @@ export function TrendsPage() {
     <>
       <PageHeader
         title="Tendencias"
-        description="Cómo evolucionan tus métricas, tu carga y tu gimnasio en el periodo elegido."
+        description="Tu evolución, tu carga y tu gimnasio."
         actions={
           <div className="flex flex-wrap gap-2" role="group" aria-label="Periodo">
             {PERIODS.map((option) => (
@@ -134,48 +133,50 @@ export function TrendsPage() {
         {trends.isPending ? (
           <LoadingBlock label="Cargando la tendencia" />
         ) : trends.isError ? (
-          <ErrorState message={trends.error.message} onRetry={() => void trends.refetch()} />
+          <ErrorState message="No se pudo cargar la tendencia." onRetry={() => void trends.refetch()} />
         ) : trendValues.length === 0 ? (
           <EmptyState
             title="Sin datos para esta métrica"
-            description="La API ha respondido, pero no hay valores en la ventana. Si la sincronización está parada, aparecerá vacío a propósito."
+            description="No hay valores en este periodo."
           />
         ) : (
           <TrendLine series={trends.data.series} />
         )}
       </Card>
 
-      <section className="mt-6 grid gap-4 lg:grid-cols-2" aria-label="Carga de entrenamiento">
+      <section className="mt-3 grid gap-3 lg:grid-cols-2" aria-label="Carga de entrenamiento">
         <Card>
-          <SectionTitle hint="ATL fatiga · CTL forma">Carga de entrenamiento</SectionTitle>
+          <SectionTitle hint={`${period} días`}>Carga de entrenamiento</SectionTitle>
+          <p className="mb-2 text-caption text-ink-muted">
+            Carga aguda: lo entrenado esta semana. Forma: lo acumulado en semanas.
+          </p>
           {load.isPending ? (
-            <p role="status" className="text-body text-ink-muted">Cargando la serie de carga…</p>
+            <p role="status" className="text-body text-ink-muted">Cargando la carga…</p>
           ) : load.isError ? (
-            <p role="alert" className="text-body text-danger">
-              No se pudo cargar la serie: {load.error.message}
-            </p>
+            <p role="alert" className="text-body text-danger">No se pudo cargar la carga.</p>
           ) : (
             <LoadChart series={load.data.series} />
           )}
         </Card>
         <Card>
-          <SectionTitle hint="Foster 1998">Semanas, monotonía y tensión</SectionTitle>
+          <SectionTitle hint="Cada semana">Carga semanal</SectionTitle>
           {summary.isPending ? (
             <p role="status" className="text-body text-ink-muted">Cargando la carga semanal…</p>
           ) : summary.isError ? (
-            <p role="alert" className="text-body text-danger">
-              No se pudo cargar la carga semanal: {summary.error.message}
-            </p>
+            <p role="alert" className="text-body text-danger">No se pudo cargar la carga semanal.</p>
           ) : (
             <>
               <WeeklyTssChart weeks={summary.data.weeks} />
-              <div className="tnum mt-3 grid grid-cols-2 gap-2 text-caption text-ink-muted sm:grid-cols-4">
-                <span>Semana {formatNumber(lastWeek?.tss)} TSS</span>
-                <span>Monotonía {lastWeek?.monotony === null || lastWeek?.monotony === undefined ? 'sin dato' : formatNumber(lastWeek.monotony)}</span>
-                <span>Tensión {lastWeek?.strain === null || lastWeek?.strain === undefined ? 'sin dato' : formatNumber(lastWeek.strain)}</span>
-                <span>ACWR {latestSummary?.acwr === null || latestSummary?.acwr === undefined ? 'sin dato' : formatNumber(latestSummary.acwr)}</span>
+              <div className="tnum mt-2 grid grid-cols-2 gap-2 text-caption text-ink-muted">
+                <span>Carga semanal {formatNumber(lastWeek?.tss)}</span>
+                <span>
+                  Variación{' '}
+                  {lastWeek?.monotony === null || lastWeek?.monotony === undefined
+                    ? 'sin dato'
+                    : formatNumber(lastWeek.monotony)}
+                </span>
               </div>
-              <div className="mt-4 border-t border-line pt-3">
+              <div className="mt-3 border-t border-line pt-2">
                 <MonotonyChart weeks={summary.data.weeks} />
               </div>
             </>
@@ -183,44 +184,44 @@ export function TrendsPage() {
         </Card>
       </section>
 
-      <Card className="mt-6">
+      <Card className="mt-3">
         <SectionTitle hint={`${period} días`}>Calendario de actividad</SectionTitle>
         {load.isPending ? (
           <p role="status" className="text-body text-ink-muted">Cargando el calendario…</p>
         ) : load.isError ? (
-          <p role="alert" className="text-body text-danger">{load.error.message}</p>
+          <p role="alert" className="text-body text-danger">No se pudo cargar el calendario.</p>
         ) : (
           <ActivityHeatmap series={load.data.series} />
         )}
       </Card>
 
-      <section className="mt-6 grid gap-4 lg:grid-cols-2" aria-label="Sueño y dispersión">
+      <section className="mt-3 grid gap-3 lg:grid-cols-2" aria-label="Sueño y dispersión">
         <Card>
           <SectionTitle hint={`${period} días`}>Fases de sueño</SectionTitle>
           {sleepPhases.isPending ? (
             <p role="status" className="text-body text-ink-muted">Cargando las fases de sueño…</p>
           ) : sleepPhases.isError ? (
-            <p role="alert" className="text-body text-danger">{sleepPhases.error.message}</p>
+            <p role="alert" className="text-body text-danger">No se pudieron cargar las fases de sueño.</p>
           ) : (
             <>
               <SleepPhasesChart series={sleepPhases.data.series} />
-              <p className="mt-2 text-caption text-ink-faint">{sleepPhases.data.note}</p>
+              <p className="mt-2 text-caption text-ink-faint">Solo noches con datos.</p>
             </>
           )}
         </Card>
         <Card>
-          <SectionTitle hint="series de trabajo">Peso × repeticiones</SectionTitle>
+          <SectionTitle hint="Cada punto, una serie">Peso × repeticiones</SectionTitle>
           {gym.isPending ? (
-            <p role="status" className="text-body text-ink-muted">Cargando la dispersión…</p>
+            <p role="status" className="text-body text-ink-muted">Cargando…</p>
           ) : gym.isError ? (
-            <p role="alert" className="text-body text-danger">{gym.error.message}</p>
+            <p role="alert" className="text-body text-danger">No se pudo cargar la dispersión.</p>
           ) : (
             <WeightRepsScatter sets={gym.data.sets_sample} />
           )}
         </Card>
       </section>
 
-      <section className="mt-6 grid gap-4 lg:grid-cols-2" aria-label="Gimnasio">
+      <section className="mt-3 grid gap-3 lg:grid-cols-2" aria-label="Gimnasio">
         <Card>
           <SectionTitle hint={`${totals?.sessions ?? 0} ${(totals?.sessions ?? 0) === 1 ? 'sesión' : 'sesiones'}`}>
             Volumen por grupo muscular
@@ -228,51 +229,47 @@ export function TrendsPage() {
           {gym.isPending ? (
             <p role="status" className="text-body text-ink-muted">Cargando el gimnasio…</p>
           ) : gym.isError ? (
-            <p role="alert" className="text-body text-danger">{gym.error.message}</p>
+            <p role="alert" className="text-body text-danger">No se pudo cargar el gimnasio.</p>
           ) : (
             <>
-              <div className="tnum mb-3 grid grid-cols-3 gap-2 text-caption text-ink-muted">
+              <div className="tnum mb-2 grid grid-cols-3 gap-2 text-caption text-ink-muted">
                 <span>{formatNumber(totals?.tonnage_kg, 'kg')} totales</span>
                 <span>{formatNumber(totals?.working_sets)} series</span>
                 <span>{formatNumber(totals?.reps)} repeticiones</span>
               </div>
-              <p className="mb-3 text-caption text-ink-faint">
+              <p className="mb-2 text-caption text-ink-faint">
                 {tonnageDelta === null
-                  ? 'Sin periodo anterior comparable: no hay porcentaje que enseñar.'
-                  : `Vs periodo anterior: ${tonnageDelta >= 0 ? '+' : ''}${tonnageDelta} % de tonelaje.`}
+                  ? 'Sin periodo anterior comparable.'
+                  : `${tonnageDelta >= 0 ? '+' : ''}${tonnageDelta} % de peso movido que antes.`}
               </p>
               <MuscleVolumeChart rows={gym.data.by_muscle} />
             </>
           )}
         </Card>
         <Card>
-          <SectionTitle hint="estimado por grupo principal">Empuje / tirón</SectionTitle>
+          <SectionTitle hint="Por grupo principal">Empuje / tirón</SectionTitle>
           {gym.isPending ? (
             <p role="status" className="text-body text-ink-muted">Cargando el reparto…</p>
           ) : gym.isError ? (
-            <p role="alert" className="text-body text-danger">{gym.error.message}</p>
+            <p role="alert" className="text-body text-danger">No se pudo cargar el reparto.</p>
           ) : (
             <>
               <PushPullChart pushPull={gym.data.push_pull} />
-              <div className="mt-4 border-t border-line pt-3">
-                <SectionTitle>Top ejercicios por volumen</SectionTitle>
+              <div className="mt-3 border-t border-line pt-2">
+                <SectionTitle>Top ejercicios</SectionTitle>
                 <ol className="flex flex-col gap-1">
                   {gym.data.by_exercise.slice(0, 5).map((exercise) => (
                     <li key={exercise.exercise_id} className="flex items-center justify-between gap-2 text-body">
                       <span className="truncate text-ink">{exercise.name}</span>
                       <span className="tnum text-caption text-ink-muted">
                         {formatNumber(exercise.tonnage_kg, 'kg')}
-                        {exercise.estimated_1rm_kg !== null
-                          ? ` · 1RM est. ${formatNumber(exercise.estimated_1rm_kg, 'kg')}`
-                          : ''}
                       </span>
                     </li>
                   ))}
                   {gym.data.by_exercise.length === 0 ? (
-                    <li className="text-caption text-ink-faint">Sin ejercicios registrados en el periodo.</li>
+                    <li className="text-caption text-ink-faint">Sin ejercicios en el periodo.</li>
                   ) : null}
                 </ol>
-                <p className="mt-2 text-caption text-ink-faint">{gym.data.e1rm_note}</p>
               </div>
             </>
           )}

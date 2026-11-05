@@ -30,12 +30,12 @@ export function LoginPage() {
     <div className="grid min-h-dvh place-items-center bg-bg px-4 py-10 text-ink">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex items-baseline gap-2">
-          <span className="font-display text-title font-bold uppercase tracking-wide">Garmin</span>
-          <span className="text-caption uppercase tracking-widest text-accent">Athletics</span>
+          <span className="font-display text-title font-bold uppercase tracking-wide">Forja</span>
+          <span className="text-caption uppercase tracking-widest text-accent">Entrena</span>
         </div>
-        <h1 className="mb-2 font-display text-title uppercase tracking-wide">Entra en Garmin Athletics</h1>
+        <h1 className="mb-2 font-display text-title uppercase tracking-wide">Entra en Forja</h1>
         <p className="mb-6 text-body text-ink-muted">
-          El panel de disposición y el registro de fuerza, en un solo sitio.
+          Tu entrenamiento y su análisis, en un solo sitio.
         </p>
         {sessionExpired ? (
           <p role="status" className="mb-4 rounded-md border border-warn bg-warn-soft px-3 py-2 text-body text-warn">
@@ -72,9 +72,6 @@ export function LoginPage() {
             {pending ? 'Entrando…' : 'Entrar'}
           </Button>
         </form>
-        <p className="mt-6 text-caption text-ink-faint">
-          El token dura 30 días. Si caduca, la app te pedirá volver a entrar.
-        </p>
       </div>
     </div>
   );

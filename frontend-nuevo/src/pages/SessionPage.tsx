@@ -36,7 +36,7 @@ interface SessionDraft {
   exercises: DraftExercise[];
 }
 
-const STORAGE_PREFIX = 'garmin-athletics.session';
+const STORAGE_PREFIX = 'forja.session';
 
 const toNumber = (value: string): number => {
   const cleaned = value.replace(',', '.').trim();
@@ -138,7 +138,7 @@ function RestTimer({ endsAt, now }: { endsAt: string | null; now: number }) {
         {remaining > 0 ? `${minutes}:${String(seconds).padStart(2, '0')}` : 'Listo'}
       </span>
       <span className="text-caption text-ink-faint">
-        {remaining > 0 ? 'Sigue contando con la pantalla apagada' : 'Puedes empezar la siguiente serie'}
+        {remaining > 0 ? 'Sigue aunque bloquees el móvil' : 'Puedes empezar la siguiente serie'}
       </span>
     </div>
   );
@@ -165,20 +165,19 @@ function SessionSummary({ session }: { session: SessionDetail }) {
           </Link>
         }
       />
-      <section aria-label="Resumen" className="grid gap-4 sm:grid-cols-3">
+      <section aria-label="Resumen" className="grid grid-cols-2 gap-3">
         {[
-          { label: 'Tonelaje', value: formatNumber(session.total_tonnage_kg, 'kg') },
+          { label: 'Peso movido', value: formatNumber(session.total_tonnage_kg, 'kg') },
           { label: 'Series', value: String(session.sets_count) },
-          { label: 'TSS', value: formatNumber(session.computed_tss) },
         ].map((item) => (
           <Card key={item.label}>
             <span className="block text-caption uppercase tracking-wider text-ink-muted">{item.label}</span>
-            <span className="tnum font-display text-hero text-ink">{item.value}</span>
+            <span className="tnum font-display text-title text-ink">{item.value}</span>
           </Card>
         ))}
       </section>
-      <Card className="mt-6">
-        <SectionTitle hint="volumen de trabajo por grupo">Reparto muscular</SectionTitle>
+      <Card className="mt-3">
+        <SectionTitle>Reparto muscular</SectionTitle>
         {byMuscle.size === 0 ? (
           <p className="text-body text-ink-muted">Sin series de trabajo: no hay volumen que repartir.</p>
         ) : (
@@ -192,7 +191,7 @@ function SessionSummary({ session }: { session: SessionDetail }) {
           </ul>
         )}
       </Card>
-      <Card className="mt-6">
+      <Card className="mt-3">
         <SectionTitle>Series registradas</SectionTitle>
         <ul className="flex flex-col gap-3">
           {session.exercises.map((exercise) => (
@@ -204,7 +203,7 @@ function SessionSummary({ session }: { session: SessionDetail }) {
                     <span>Serie {item.set_number}</span>
                     <span className="tnum">
                       {formatNumber(item.weight_kg, 'kg')} × {item.reps}
-                      {item.rpe !== null ? ` · RPE ${item.rpe}` : ''}
+                      {item.rpe !== null ? ` · esfuerzo ${item.rpe}` : ''}
                     </span>
                   </li>
                 ))}
@@ -213,9 +212,7 @@ function SessionSummary({ session }: { session: SessionDetail }) {
           ))}
         </ul>
       </Card>
-      <p className="mt-4 text-caption text-ink-faint">
-        La sesión ya está en el historial y suma en la carga. El borrador se ha borrado de este navegador.
-      </p>
+      <p className="mt-4 text-caption text-ink-faint">Guardada en tu historial.</p>
     </>
   );
 }
@@ -389,7 +386,7 @@ export function SessionPage() {
         <PageHeader title="Entrenar" description="Elige una plantilla para empezar la sesión." />
         <EmptyState
           title="Sin plantilla seleccionada"
-          description="Abre una plantilla desde Gimnasio y pulsa Empezar. La sesión libre es la tarea T-13."
+          description="Abre una plantilla desde Gimnasio y pulsa Empezar."
           action={
             <Link to="/gimnasio" className="text-body font-semibold text-accent underline">
               Ir a Gimnasio
@@ -447,7 +444,7 @@ export function SessionPage() {
       {confirmDiscard ? (
         <Card className="mb-4 border-danger">
           <p className="mb-3 text-body text-ink">
-            ¿Descartar la sesión en curso? Se pierde el borrador de este navegador y no se guarda nada.
+            ¿Descartar esta sesión? No se guardará.
           </p>
           <div className="flex flex-wrap gap-2">
             <Button
@@ -497,7 +494,7 @@ export function SessionPage() {
                 <span>Serie</span>
                 <span>Peso (kg)</span>
                 <span>Reps</span>
-                <span>RPE</span>
+                <span>Esfuerzo</span>
                 <span className="text-right">Hecha</span>
               </div>
               <ul className="mt-1 flex flex-col gap-1">
@@ -524,7 +521,7 @@ export function SessionPage() {
                       onChange={(event) => updateSet(exerciseIndex, setIndex, { reps: event.target.value })}
                     />
                     <select
-                      aria-label={`RPE serie ${setIndex + 1} de ${exercise.name}`}
+                      aria-label={`Esfuerzo serie ${setIndex + 1} de ${exercise.name}`}
                       className="focus-ring min-h-11 w-full min-w-0 rounded-md border border-line-strong bg-raised px-1 text-body text-ink"
                       value={item.rpe}
                       onChange={(event) => updateSet(exerciseIndex, setIndex, { rpe: event.target.value })}

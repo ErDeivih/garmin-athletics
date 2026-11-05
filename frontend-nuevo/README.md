@@ -1,4 +1,4 @@
-# frontend-nuevo — Garmin Athletics
+# frontend-nuevo — Forja
 
 Frontend nuevo, escrito desde cero contra el backend actual (`/api/v1`). Sustituye a `frontend/` y
 `frontend_mvp/`, que quedan como referencia y **no se tocan**.
@@ -36,23 +36,25 @@ tarea T-23 del backlog.
 
 | Área | Estado |
 |---|---|
-| Sistema de diseño | `../designs/garmin-athletics-design-system/` — tokens, README, componentes y contraste AA calculado. La app consume `src/styles/tokens.generated.css`. |
+| Sistema de diseño | `../designs/forja-design-system/` — tokens, README, componentes y contraste AA calculado. La app consume `src/styles/tokens.generated.css`. |
 | Autenticación | Login, restauración de sesión contra `/auth/me`, cierre de sesión, 401 global. |
 | Navegación | Registro de secciones: **Hoy · Gimnasio · Ajustes** visibles; el resto tras `VITE_FEATURE_EXTENDED` con interruptor en Ajustes. Barra lateral en escritorio, pestañas abajo en móvil. |
-| Hoy | Readiness con sus tres componentes, sueño, HRV, Body Battery, FC en reposo, estrés, carga TSB/ATL/CTL, avisos y estado de sync. **Gráfica de carga de 30 días** (ATL/CTL) y **curva de Body Battery** del día, en SVG propio. **Sin datos no inventa nada**: estado vacío que explica qué falta. |
-| Gimnasio | Plantilla del día, plantillas reales, últimas sesiones con tonelaje/TSS/duración, botón **Empezar** en cada plantilla y **Enviar al reloj**: previsualiza el mapeo Garmin y exige confirmación antes de tocar la cuenta. |
-| **Entrenar (T-04/T-29)** | Plantilla cargada con la **última marca precargada**, tabla `Serie · Peso · Reps · RPE · Hecha`, check de 44 px que marca y arranca el descanso (hora de fin absoluta), corrección de una serie ya marcada, borrador que **sobrevive a recargar**, **dibujo inicio/fin** del ejercicio y resumen de tonelaje/series/TSS/reparto muscular al terminar. |
-| **Catálogo (T-28 parcial)** | Lista de ejercicios con búsqueda y filtro muscular, su **par de dibujos inicio/fin** por patrón, el enum de Garmin y un aviso honesto cuando no hay patrón visual. La creación/edición de ejercicios sigue siendo T-06/T-05. |
+| Hoy | Disposición con explicación breve, sueño, HRV, Body Battery, FC en reposo, estrés, frescura y avisos. **Gráfica de carga de 30 días** y **curva de Body Battery** del día, en SVG propio. **Sin datos no inventa nada**: estado vacío que explica qué falta. |
+| Gimnasio | Plantilla del día, plantillas reales, últimas sesiones y **Enviar al reloj**: prepara el workout, enseña bloques y duración, exige confirmación y avisa si algo no se puede enviar. |
+| **Entrenar (T-04/T-29)** | Plantilla cargada con la **última marca precargada**, tabla `Serie · Peso · Reps · Esfuerzo · Hecha`, check de 44 px que marca y arranca el descanso (hora de fin absoluta), corrección de una serie ya marcada, borrador que **sobrevive a recargar**, **dibujo inicio/fin** del ejercicio y resumen de peso movido/series/reparto muscular al terminar. |
+| **Catálogo (T-28 parcial)** | Lista de ejercicios con búsqueda y filtro muscular, su **par de dibujos inicio/fin** por patrón y un aviso honesto cuando no hay patrón visual. La creación/edición de ejercicios sigue siendo T-06/T-05. |
+| **Actividades** | Lista con distancia, FC y desnivel; detalle con resumen, zonas de FC, recorrido GPS en SVG, series de FC/ritmo/altitud/velocidad y parciales por kilómetro. Sin TSS ni textos internos. |
+| **Calendario** | Programar una plantilla en varios días de la semana (se repite), ver los entrenos semanales, previsualizar el workout, enviarlo/programarlo y **cargar el de hoy en el reloj**. Distingue **Plan** de **Hecho**. |
 | Tendencias | Línea de métrica, carga ATL/CTL, barras semanales, monotonía, calendario de calor, fases de sueño apiladas, dispersión peso×reps, volumen por grupo muscular, empuje/tirón, top de ejercicios y comparativa con el periodo anterior; periodos 7/30/90/año. |
 | Ajustes | Estado de Garmin, sync manual, vinculación con contraseña de un solo uso y 2FA, tema oscuro/claro, bandera de secciones, cuenta, cierre de sesión y **borrado de cuenta** con confirmación literal (borra también el gimnasio). |
 | Secciones de bandera | Actividades, Calendario, Tendencias, Rendimiento, Rutas y Social, con datos reales de la API; vacío, carga y error en todas. El estado de "sin permiso" por pantalla es T-25. |
-| Todavía no | Sesión libre (T-13), guardar sesión como plantilla (T-17), editor de plantilla (T-05), creación/edición de ejercicios (T-06), historial por ejercicio (T-07/T-08), subnavegación de Gimnasio (T-24), ampliaciones T-18/T-19/T-20, botón de envío al reloj (T-31), watch-app (T-32) y POC IMU (T-33). Están en `../BACKLOG.md`. |
+| Todavía no | Sesión libre (T-13), guardar sesión como plantilla (T-17), editor de plantilla (T-05), creación/edición de ejercicios (T-06), historial por ejercicio (T-07/T-08), subnavegación de Gimnasio (T-24), ampliaciones T-18/T-19/T-20, job diario de auto-carga (T-42), watch-app (T-32), perfil IMU por ejercicio (T-43) y POC de conteo (T-33). Están en `../BACKLOG.md`. |
 
 ## Pruebas y puertas
 
 ```powershell
 npm run check        # tokens generados + contraste AA + typecheck + pruebas de flujo
-npm test             # Vitest + Testing Library: login, navegación, bandera, Hoy, Ajustes, Tendencias y sesión
+npm test             # Vitest + Testing Library: login, navegación, Hoy, Ajustes, Tendencias, sesión, Actividad y Calendario
 npm run build        # tsc --noEmit + build de producción
 ```
 
@@ -60,7 +62,7 @@ Además, contra un backend real sobre una **copia** de la base de datos:
 
 ```powershell
 # en otra terminal, con DATABASE_URL apuntando a la copia
-node scripts/verify-api.mjs http://127.0.0.1:8010   # 61 comprobaciones del contrato
+node scripts/verify-api.mjs http://127.0.0.1:8010   # 132 comprobaciones del contrato
 node scripts/smoke-browser.mjs                      # navegador real (Chrome/Edge) + capturas
 ```
 

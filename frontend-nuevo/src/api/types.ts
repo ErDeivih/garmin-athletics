@@ -493,6 +493,67 @@ export interface ActivitySummary {
   rpe: number | null;
 }
 
+export interface ActivityHrZone {
+  zone?: number;
+  secs?: number;
+  seconds?: number;
+  low?: number;
+  label?: string;
+}
+
+export interface ActivityDetail extends ActivitySummary {
+  avg_cadence: number | null;
+  avg_power: number | null;
+  avg_speed_kmh: number | null;
+  calories: number | null;
+  loss_m: number | null;
+  min_alt: number | null;
+  max_alt: number | null;
+  bbox: [number, number, number, number] | null;
+  hr_zones: ActivityHrZone[] | null;
+  weather: Record<string, unknown> | null;
+  laps: Record<string, unknown>[];
+}
+
+export interface ActivityStreams {
+  activity_id: string;
+  count: number;
+  t_s: number[];
+  dist_m: number[];
+  ele: (number | null)[];
+  speed_ms: (number | null)[];
+  hr: (number | null)[];
+  pace_sec_km: (number | null)[];
+}
+
+export interface ActivitySplit {
+  km: number;
+  duration_s: number;
+  pace: string | null;
+  hr_avg: number | null;
+  gain_m: number;
+}
+
+export interface ActivitySplitsResponse {
+  activity_id: string;
+  splits: ActivitySplit[];
+}
+
+export interface ActivityTrack {
+  activity_id: string;
+  point_count: number;
+  distance_m: number;
+  gain_m: number;
+  loss_m: number;
+  bbox: [number, number, number, number] | null;
+  points: {
+    lat: number[];
+    lon: number[];
+    ele?: (number | null)[];
+    hr?: (number | null)[];
+  };
+}
+
 export interface PlannedRoute {
   id: string;
   name: string;
@@ -575,8 +636,10 @@ export interface CalendarEvent {
   start: string;
   duration_min: number | null;
   weekday: number | null;
+  template_id: string | null;
   is_immovable: boolean;
   notes: string | null;
+  recurring?: boolean;
 }
 
 export interface CalendarDay {

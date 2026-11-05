@@ -4,8 +4,8 @@ import { installFakeApi, json } from './fakeApi';
 import { renderApp } from './renderApp';
 import * as f from './fixtures';
 
-const TOKEN_KEY = 'garmin-athletics.token';
-const FLAG_KEY = 'garmin-athletics.extended';
+const TOKEN_KEY = 'forja.token';
+const FLAG_KEY = 'forja.extended';
 
 const apiConSesión = () =>
   installFakeApi({
@@ -28,7 +28,7 @@ describe('secciones ampliadas detrás de bandera', () => {
     expect(screen.queryByRole('link', { name: 'Actividades' })).toBeNull();
 
     await user.click(screen.getByRole('link', { name: 'Ajustes' }));
-    await user.click(await screen.findByRole('checkbox', { name: /secciones ampliadas/i }));
+    await user.click(await screen.findByRole('checkbox', { name: /mostrar todas las secciones/i }));
 
     expect(await screen.findByRole('link', { name: 'Actividades' })).toBeInTheDocument();
     expect(localStorage.getItem(FLAG_KEY)).toBe('true');

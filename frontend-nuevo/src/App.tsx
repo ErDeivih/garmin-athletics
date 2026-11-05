@@ -9,6 +9,7 @@ import { ErrorState, LoadingBlock, PageHeader } from './components/ui';
 import { LoginPage } from './pages/LoginPage';
 import { SessionPage } from './pages/SessionPage';
 import { CatalogPage } from './pages/extended/CatalogPage';
+import { ActivityDetailPage } from './pages/extended/ActivityDetailPage';
 import { UnavailablePage } from './pages/extended/UnavailablePage';
 
 const queryClient = new QueryClient({
@@ -26,8 +27,8 @@ function BootScreen() {
     <div className="grid min-h-dvh place-items-center bg-bg px-4 text-ink">
       <div className="w-full max-w-sm">
         <p className="mb-6 flex items-baseline gap-2">
-          <span className="font-display text-title font-bold uppercase tracking-wide">Garmin</span>
-          <span className="text-caption uppercase tracking-widest text-accent">Athletics</span>
+          <span className="font-display text-title font-bold uppercase tracking-wide">Forja</span>
+          <span className="text-caption uppercase tracking-widest text-accent">Entrena</span>
         </p>
         <LoadingBlock label="Comprobando la sesión" />
       </div>
@@ -91,6 +92,14 @@ function AuthGate() {
         })}
         <Route path="gimnasio/entrenar" element={<SessionPage />} />
         <Route path="gimnasio/catalogo" element={<CatalogPage />} />
+        <Route
+          path="actividades/:id"
+          element={
+            <Gate enabled={extended}>
+              <ActivityDetailPage />
+            </Gate>
+          }
+        />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { useAlerts, useDailyMetrics, useLoad, useSyncNow, useSyncStatus } from '../api/queries';
 import type { AlertSeverity, ReadinessStatus } from '../api/types';
 import {
@@ -14,12 +14,18 @@ import {
   StatCard,
 } from '../components/ui';
 import { BodyBatteryChart, LoadChart } from '../components/charts';
-import { formatLongDate, formatNumber, formatRelative } from '../lib/format';
+import { formatLongDate, formatNumber } from '../lib/format';
 
 const statusTone: Record<ReadinessStatus, 'go' | 'warn' | 'stop'> = {
   VERDE: 'go',
   AMARILLO: 'warn',
   ROJO: 'stop',
+};
+
+const statusLabel: Record<ReadinessStatus, string> = {
+  VERDE: 'Listo',
+  AMARILLO: 'Con cuidado',
+  ROJO: 'Descansa',
 };
 
 const alertTone: Record<AlertSeverity, 'stop' | 'warn' | 'info'> = {
@@ -51,7 +57,7 @@ function SyncBanner() {
   if (sync.isError) {
     return (
       <p role="alert" className="mb-4 rounded-md border border-warn bg-warn-soft px-3 py-2 text-body text-warn">
-        No se pudo leer el estado de Garmin. Revisa la conexión en Ajustes.
+        No se pudo comprobar la conexión.
       </p>
     );
   }
@@ -62,7 +68,7 @@ function SyncBanner() {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-md border border-warn bg-warn-soft px-3 py-2">
         <span className="flex items-center gap-2 text-body text-warn">
           <AlertTriangle aria-hidden="true" className="size-4" />
-          Garmin necesita que vuelvas a iniciar sesión.
+          Vuelve a vincular tu cuenta.
         </span>
         <Link className="focus-ring rounded-md px-2 py-1 text-body font-semibold text-warn underline" to="/ajustes">
           Revisar conexión
@@ -75,20 +81,15 @@ function SyncBanner() {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-md border border-line bg-raised px-3 py-2">
         <span className="flex items-center gap-2 text-body text-ink-muted">
           <AlertTriangle aria-hidden="true" className="size-4 text-warn" />
-          Garmin Connect no está vinculado: el panel solo tiene datos antiguos.
+          Conecta tu cuenta para ver tus datos.
         </span>
         <Link className="focus-ring rounded-md px-2 py-1 text-body font-semibold text-accent underline" to="/ajustes">
-          Vincular Garmin
+          Vincular
         </Link>
       </div>
     );
   }
-  return (
-    <p className="mb-4 flex items-center gap-2 text-caption text-ink-faint">
-      <CheckCircle2 aria-hidden="true" className="size-4 text-success" />
-      Garmin · última sincronización {formatRelative(status.last_sync_at)}
-    </p>
-  );
+  return null;
 }
 
 export function TodayPage() {
@@ -118,7 +119,7 @@ export function TodayPage() {
     return (
       <>
         {header}
-        <ErrorState message={daily.error.message} onRetry={() => void daily.refetch()} />
+        <ErrorState message="No se pudieron cargar tus datos de hoy." onRetry={() => void daily.refetch()} />
       </>
     );
   }
@@ -134,8 +135,8 @@ export function TodayPage() {
           title="Sin datos de hoy"
           description={
             linked
-              ? 'La cuenta de Garmin está vinculada, pero la sincronización todavía no ha traído la biometría de hoy. Lánzala a mano o espera a la próxima.'
-              : 'Para ver tu disposición hacen falta los datos de tu cuenta de Garmin. Vincúlala en Ajustes y sincroniza.'
+              ? 'Todavía no hay datos de hoy. Sincroniza para verlos.'
+              : 'Conecta tu cuenta para ver tu disposición.'
           }
           action={
             linked ? (
@@ -147,14 +148,14 @@ export function TodayPage() {
                 to="/ajustes"
                 className="focus-ring inline-flex min-h-11 items-center justify-center rounded-md bg-accent px-4 text-body font-semibold text-on-accent"
               >
-                Vincular Garmin
+                Vincular cuenta
               </Link>
             )
           }
         />
         {syncNow.isError ? (
           <p role="alert" className="mt-4 text-body text-danger">
-            {syncNow.error.message}
+            No se pudo sincronizar. Inténtalo otra vez.
           </p>
         ) : null}
       </>
@@ -162,65 +163,39 @@ export function TodayPage() {
   }
 
   const readiness = metrics.readiness;
-  const components = readiness.components;
 
   return (
     <>
       {header}
       <SyncBanner />
 
-      <section aria-label="Disposición" className="grid gap-4 lg:grid-cols-3">
-        <StatCard
-          hero
-          label="Disposición"
-          value={readiness.score}
-          unit="/ 100"
-          delta={`${readiness.message}`}
-          foot={`Sueño ${formatNumber(components.sleep_contribution)} · HRV ${formatNumber(components.hrv_contribution)} · TSB ${formatNumber(components.tsb_contribution)}`}
-        />
-        <div className="lg:col-span-2">
-          <Card>
-            <SectionTitle hint="Peso de cada componente">Cómo se compone</SectionTitle>
-            <span className="mb-3 inline-flex">
-              <Badge tone={statusTone[readiness.status]}>{readiness.status}</Badge>
-            </span>
-            <dl className="grid gap-3 sm:grid-cols-3">
-              <div>
-                <dt className="text-caption uppercase tracking-wider text-ink-muted">Sueño</dt>
-                <dd className="tnum font-display text-title text-ink">
-                  {formatNumber(components.sleep_contribution)}
-                </dd>
-                <span className="text-caption text-ink-faint">de 35 puntos</span>
-              </div>
-              <div>
-                <dt className="text-caption uppercase tracking-wider text-ink-muted">HRV</dt>
-                <dd className="tnum font-display text-title text-ink">
-                  {formatNumber(components.hrv_contribution)}
-                </dd>
-                <span className="text-caption text-ink-faint">de 40 puntos</span>
-              </div>
-              <div>
-                <dt className="text-caption uppercase tracking-wider text-ink-muted">TSB</dt>
-                <dd className="tnum font-display text-title text-ink">
-                  {formatNumber(components.tsb_contribution)}
-                </dd>
-                <span className="text-caption text-ink-faint">de 25 puntos</span>
-              </div>
-            </dl>
-          </Card>
-        </div>
+      <section aria-label="Disposición">
+        <Card className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <span className="text-caption uppercase tracking-wider text-ink-muted">Disposición</span>
+            <p className="mt-0.5 text-caption text-ink-faint">Tu estado para entrenar hoy.</p>
+            <div className="mt-1 flex items-baseline gap-2">
+              <span className="tnum font-display text-hero font-bold text-ink">{readiness.score}</span>
+              <span className="text-caption text-ink-muted">/ 100</span>
+            </div>
+            <p className="mt-1 text-body text-ink">{readiness.message}</p>
+          </div>
+          <Badge tone={statusTone[readiness.status]}>{statusLabel[readiness.status]}</Badge>
+        </Card>
       </section>
 
-      <section aria-label="Métricas de hoy" className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <section aria-label="Métricas de hoy" className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           label="Sueño"
+          hint="Cuánto y cómo has dormido."
           value={metrics.sleep.hours ?? '—'}
           unit={metrics.sleep.hours === null ? 'sin dato' : 'h'}
-          delta={metrics.sleep.score === null ? 'sin puntuación' : `Puntuación ${metrics.sleep.score}`}
-          foot={`Media 7 d: ${formatNumber(metrics.sleep.avg_7d, 'h')} · eficiencia ${formatNumber(metrics.sleep.efficiency, '%')}`}
+          delta={metrics.sleep.score === null ? undefined : `Puntuación ${metrics.sleep.score}`}
+          foot={`Media 7 d: ${formatNumber(metrics.sleep.avg_7d, 'h')}`}
         />
         <StatCard
           label="HRV"
+          hint="Variación entre latidos."
           value={metrics.hrv.overnight ?? '—'}
           unit={metrics.hrv.overnight === null ? 'sin dato' : 'ms'}
           delta={HRV_STATUS_LABEL[metrics.hrv.status.toLowerCase()] ?? 'Sin dato'}
@@ -228,41 +203,48 @@ export function TodayPage() {
         />
         <StatCard
           label="FC en reposo"
+          hint="Tu pulso en calma."
           value={metrics.resting_hr ?? '—'}
           unit={metrics.resting_hr === null ? 'sin dato' : 'lpm'}
           foot={`Media 7 d: ${formatNumber(metrics.resting_hr_7d, 'lpm')}`}
         />
         <StatCard
           label="Estrés"
+          hint="Cuánto ha subido tu pulso sin esfuerzo."
           value={metrics.stress_avg ?? '—'}
           unit="/ 100"
           foot="Media del día"
         />
         <StatCard
-          label="Carga y frescura"
+          label="Frescura"
+          hint="Positivo: descansado. Negativo: cargado."
           value={formatNumber(metrics.tsb)}
-          unit="TSB"
-          foot={`ATL ${formatNumber(metrics.atl)} · CTL ${formatNumber(metrics.ctl)}`}
+          foot={`Carga aguda ${formatNumber(metrics.atl)} · Forma ${formatNumber(metrics.ctl)}`}
+          className="col-span-2 sm:col-span-1"
         />
       </section>
 
-      <section aria-label="Carga y energía" className="mt-6 grid gap-4 lg:grid-cols-3">
+      <section aria-label="Carga y energía" className="mt-3 grid gap-3 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <SectionTitle hint="30 días · ATL fatiga, CTL forma">Carga de entrenamiento</SectionTitle>
+          <SectionTitle hint="Últimos 30 días">Carga de entrenamiento</SectionTitle>
+          <p className="mb-2 text-caption text-ink-muted">
+            Carga aguda: lo que has entrenado esta semana. Forma: lo acumulado en las últimas semanas.
+          </p>
           {load.isPending ? (
             <p role="status" className="text-body text-ink-muted">
-              Cargando la serie de carga…
+              Cargando la carga…
             </p>
           ) : load.isError ? (
             <p role="alert" className="text-body text-danger">
-              No se pudo cargar la serie de carga: {load.error.message}
+              No se pudo cargar la carga.
             </p>
           ) : (
             <LoadChart series={load.data.series} />
           )}
         </Card>
         <Card>
-          <SectionTitle hint="curva de hoy">Body Battery</SectionTitle>
+          <SectionTitle hint="Hoy">Body Battery</SectionTitle>
+          <p className="mb-2 text-caption text-ink-muted">Energía disponible a lo largo del día.</p>
           <BodyBatteryChart curve={metrics.body_battery.curve ?? []} />
           <p className="mt-2 text-caption text-ink-muted">
             Al despertar {formatNumber(metrics.body_battery.wake)} / 100 · máx{' '}
@@ -271,18 +253,18 @@ export function TodayPage() {
         </Card>
       </section>
 
-      <Card className="mt-6">
+      <Card className="mt-3">
         <SectionTitle hint={alerts.data ? `${alerts.data.count} avisos` : undefined}>Avisos</SectionTitle>
         {alerts.isPending ? (
           <p className="text-body text-ink-muted">Cargando avisos…</p>
         ) : alerts.isError ? (
           <p role="alert" className="text-body text-danger">
-            {alerts.error.message}
+            No se pudieron cargar los avisos.
           </p>
         ) : alerts.data.alerts.length === 0 ? (
           <p className="text-body text-ink-muted">Ningún aviso para hoy.</p>
         ) : (
-          <ul className="flex flex-col gap-3">
+          <ul className="flex flex-col gap-2">
             {alerts.data.alerts.map((alert) => (
               <li key={`${alert.type}-${alert.message}`} className="flex flex-wrap items-start gap-2">
                 <Badge tone={alertTone[alert.severity]}>{alertLabel[alert.severity]}</Badge>

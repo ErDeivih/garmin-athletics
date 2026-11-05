@@ -213,6 +213,31 @@ def test_calendar_alerts_performance_prs():
 
         # Borrar evento
         assert client.delete(f"{API}/calendar/events/{ev['id']}", headers=h).status_code == 200
+
+        # Calendario → reloj: evento semanal con plantilla y previsualización real
+        bench = client.get(f"{API}/strength/exercises?q=press de banca", headers=h).json()["items"][0]
+        tpl = client.post(f"{API}/strength/templates", headers=h, json={
+            "name": "Empuje calendario", "weekday": date.today().weekday(),
+            "exercises": [{"exercise_id": bench["id"], "sets": 3, "reps": 8,
+                           "weight_kg": 60, "rest_seconds": 120}]}).json()
+        weekly = client.post(f"{API}/calendar/events", headers=h, json={
+            "title": "Empuje calendario", "event_type": "strength",
+            "start_local": date.today().isoformat() + "T18:00:00",
+            "duration_min": 60, "weekday": date.today().weekday(),
+            "template_id": tpl["id"]}).json()
+        assert weekly["status"] == "created"
+        cal2 = client.get(
+            f"{API}/calendar/?from={date.today().isoformat()}&to={(date.today() + timedelta(days=7)).isoformat()}",
+            headers=h).json()
+        recurring = [e for d in cal2["days"] for e in d["events"] if e["id"] == weekly["id"]]
+        assert recurring and recurring[0]["template_id"] == tpl["id"]
+        preview = client.post(f"{API}/calendar/events/{weekly['id']}/preview", headers=h)
+        assert preview.status_code == 200, preview.text
+        body = preview.json()
+        assert body["blocks"] == 1 and body["unmapped_exercises"] == []
+        assert body["workout_json"]["sportType"]["sportTypeId"] == 5
+        assert client.post(f"{API}/calendar/events/{weekly['id']}/preview").status_code == 401
+        assert client.delete(f"{API}/calendar/events/{weekly['id']}", headers=h).status_code == 200
     finally:
         _restore(r)
 

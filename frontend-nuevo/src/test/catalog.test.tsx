@@ -4,7 +4,7 @@ import { installFakeApi, json } from './fakeApi';
 import { renderApp } from './renderApp';
 import * as f from './fixtures';
 
-const TOKEN_KEY = 'garmin-athletics.token';
+const TOKEN_KEY = 'forja.token';
 
 const catalog = {
   total: 2,
@@ -58,8 +58,7 @@ describe('catálogo de ejercicios con dibujos', () => {
     expect(await screen.findByRole('heading', { name: 'Catálogo' })).toBeInTheDocument();
     expect(await screen.findByRole('img', { name: /dibujo de press de banca/i })).toBeInTheDocument();
     expect(screen.getByText(/sin dibujo para «ejercicio propio raro»/i)).toBeInTheDocument();
-    expect(screen.getByText(/garmin: barbell_bench_press/i)).toBeInTheDocument();
-    expect(screen.getByText(/sin enum de garmin/i)).toBeInTheDocument();
+    expect(screen.getByText(/^barra$/i)).toBeInTheDocument();
   });
 
   it('busca en el catálogo y pide los resultados a la API', async () => {

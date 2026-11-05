@@ -9,7 +9,7 @@ import { useSyncExternalStore } from 'react';
  * La verdad está en localStorage (o en el entorno): no se guarda una copia en
  * memoria que pueda quedar desincronizada.
  */
-const STORAGE_KEY = 'garmin-athletics.extended';
+const STORAGE_KEY = 'forja.extended';
 const listeners = new Set<() => void>();
 
 function readFlag(): boolean {

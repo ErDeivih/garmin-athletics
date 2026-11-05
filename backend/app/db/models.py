@@ -175,6 +175,9 @@ class CalendarEvent(Base):
     start_local = Column(DateTime, nullable=False)
     duration_min = Column(Integer, nullable=False, default=60)
     weekday = Column(Integer, nullable=True)  # 0=lunes..6=domingo (recurrente semanal)
+    template_id = Column(String(36), nullable=True, index=True)  # plantilla que se envía al reloj
+    garmin_workout_id = Column(String(64), nullable=True)
+    last_scheduled_date = Column(Date, nullable=True)
     is_immovable = Column(Boolean, default=False)
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
