@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 /*
  * Dibujos propios de inicio/fin de movimiento (T-28). No se copia ningún asset
- * de Garmin: son figuras esquemáticas de línea dibujadas aquí, por patrón de
+ * del reloj: son figuras esquemáticas de línea dibujadas aquí, por patrón de
  * movimiento. Un ejercicio sin patrón conocido se declara sin dibujo en vez de
  * enseñar uno que no corresponde.
  */
@@ -457,9 +457,9 @@ function normalize(value: string): string {
     .toLowerCase();
 }
 
-/** Elige el patrón visual por enum de Garmin y, si no, por nombre. */
-export function exercisePattern(name: string, garminEnum?: string | null): ExercisePattern | null {
-  const enumValue = (garminEnum ?? '').toUpperCase();
+/** Elige el patrón visual por el enum del reloj y, si no, por nombre. */
+export function exercisePattern(name: string, watchEnum?: string | null): ExercisePattern | null {
+  const enumValue = (watchEnum ?? '').toUpperCase();
   if (enumValue) {
     if (enumValue.includes('BENCH_PRESS') || enumValue.includes('CHEST_FLY') || enumValue.includes('PEC')) return 'press';
     if (enumValue.includes('PUSH_UP') || enumValue.includes('DIP')) return 'pushup';
@@ -502,16 +502,16 @@ export function exercisePattern(name: string, garminEnum?: string | null): Exerc
 
 export function ExerciseIllustration({
   name,
-  garminEnum,
+  watchEnum,
   muscleGroup,
   compact = false,
 }: {
   name: string;
-  garminEnum?: string | null;
+  watchEnum?: string | null;
   muscleGroup?: string;
   compact?: boolean;
 }) {
-  const pattern = exercisePattern(name, garminEnum);
+  const pattern = exercisePattern(name, watchEnum);
   if (pattern === null) {
     return (
       <p className="text-caption text-ink-faint">

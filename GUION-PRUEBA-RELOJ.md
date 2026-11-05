@@ -1,63 +1,73 @@
 # Guion de prueba con el reloj real (fr255)
 
-Para el día que David pueda dar el 2FA y el reloj. El objetivo es que esa sesión sea **un solo
-paso**: seguir esta lista, apuntar lo que se ve y decidir. No promete que funcione: comprueba.
+El día que David pueda dar el 2FA y el reloj, esta es la única lista que hay que seguir. No promete
+que funcione: comprueba y deja evidencia. El 2FA lo introduce David; el agente no lo pide ni lo
+guarda.
+
+## Checklist de una pasada
+
+| # | Acción | Debe verse | Si falla |
+|---|---|---|---|
+| 1 | Backend con la cuenta real y **Ajustes → Vincular cuenta** (correo, contraseña, 2FA) | «Vinculado» | Apuntar el mensaje, sin contraseña ni código |
+| 2 | **Gimnasio → Preparar envío → Enviar al reloj** | «Enviado. Compruébalo en el reloj.» | Apuntar el `detail` del backend |
+| 3 | Abrir el entreno en el reloj y pulsar **Empezar** | Ejercicios, series, peso y repeticiones | Captura del reloj y qué pantalla falta |
+| 4 | **Calendario → Programar entrenamiento** (hoy) → **Cargar el de hoy en el reloj** | «Entreno de hoy cargado en el reloj.» | Apuntar `sent` y el error |
+| 5 | Repetir el paso 4 el mismo día | «No hay entrenamientos para hoy» o `sent: 0` | Comprobar que no hay dos entrenos |
+| 6 | Terminar una serie en el reloj y sincronizar | La actividad aparece en la app | Hora, modelo y captura |
+| 7 | Importar la actividad: `POST /strength/import-garmin/{id}` | `sets_imported > 0` | Apuntar `unmapped` y el `id` |
+| 8 | **Catálogo → Configurar detección** y activar un perfil | «Detección activada.» | Revisar los valores y el 422 |
+| 9 | POC IMU con la watch-app (cuando exista) | Conteo por serie | Ver Prueba D |
 
 ## Antes de empezar
 
-- Backend levantado contra la **cuenta real** de David (no la copia), con `garmin_tokens` de su
-  usuario.
-- Reloj **Forerunner 255** cargado, emparejado con la cuenta de Garmin Connect y con la app de
-  Garmin Connect abierta al menos una vez.
-- Una plantilla de gimnasio con 2–3 ejercicios y series/pesos/reps reales.
-- 2FA a mano: el código lo introduce David; el agente no lo pide ni lo guarda.
+- Backend levantado contra la **cuenta real** de David (no la copia), con sus tokens.
+- Reloj **Forerunner 255** cargado y emparejado con Garmin Connect; abrir la app de Garmin Connect
+  una vez.
+- Una plantilla con 2–3 ejercicios, series, pesos, reps y descansos reales.
+- Una actividad con GPS ya sincronizada, para comprobar el detalle y las vueltas.
+- El guion no necesita GitHub Actions ni instalar nada en el reloj para A–C.
 
 ## Prueba A — Enviar un entrenamiento al reloj (T-31)
 
-1. En la app: **Ajustes → Vincular cuenta**. Introducir correo, contraseña y el código 2FA.
-   Debe quedar «Vinculado».
+1. **Ajustes → Vincular cuenta**. Correo, contraseña y código 2FA. Debe quedar «Vinculado».
 2. **Gimnasio → Enviar al reloj → Preparar envío**.
    Debe verse `N ejercicios · ~N min` y ningún aviso de «No se pueden enviar».
 3. Marcar «Lo revisaré en el reloj» y pulsar **Enviar al reloj**.
-4. **Qué debe volver al backend**: respuesta `status: sent`, un `workoutId` de Garmin y
-   `pushed_to_device`. En los logs, ni `502` ni `400`.
-5. **Qué debe verse en el reloj**: el entrenamiento en el calendario de Garmin Connect para hoy;
-   al abrirlo, los ejercicios, series, peso y repeticiones. Si el reloj no lo muestra, apuntar
-   exactamente qué muestra (lista vacía, entreno sin nombre, error) y en qué pantalla.
-6. Pulsar **Empezar** en el reloj y completar una serie. Debe quedar registrada en el reloj y
-   aparecer en Garmin Connect.
+4. **Backend**: `status: sent`, `workoutId` y `pushed_to_device`; ni 502 ni 400.
+5. **Reloj**: el entreno en el calendario de hoy, con ejercicios, series, peso y repeticiones. Si no
+   aparece, apuntar qué muestra exactamente.
+6. Pulsar **Empezar** y completar una serie. Debe registrarse en el reloj y en Garmin Connect.
 
-**Si falla**: anotar el `detail` del backend (sin contraseña), la hora y el modelo. No reintentar
-en bucle: un envío repetido puede duplicar el entreno.
+**Si falla**: anotar el `detail` (sin secretos), la hora y el modelo. No reintentar en bucle: un
+envío repetido puede duplicar el entreno.
 
 ## Prueba B — Calendario y auto-carga (T-42)
 
-1. **Calendario → Programar entrenamiento**: elegir la plantilla, el día de hoy y la hora.
-   Debe aparecer en «Tus entrenamientos semanales».
+1. **Calendario → Programar entrenamiento**: elegir plantilla, hoy y la hora. Debe aparecer en
+   «Tus entrenamientos semanales».
 2. **Cargar el de hoy en el reloj**. Debe devolver `sent: 1`.
-3. Alternativa automática: esperar al job de las 06:30 o ejecutar el endpoint
-   `POST /api/v1/calendar/sync-today` con el token de David.
-4. **En el reloj**: el entreno de hoy debe estar en el calendario y abrirse como en la Prueba A.
-5. Ejecutarlo de nuevo el mismo día: debe responder `sent: 0` y **no duplicar** (idempotencia).
+3. Alternativa automática: esperar al job de las **06:30** o ejecutar
+   `POST /api/v1/calendar/sync-today` con el token.
+4. **Reloj**: el entreno de hoy debe estar en el calendario y abrirse como en A.
+5. Ejecutarlo otra vez el mismo día: `sent: 0`, sin duplicar (idempotencia).
 
 ## Prueba C — Importar las series reales (T-30)
 
-1. Terminar una actividad de fuerza en el reloj (puede ser la de la Prueba A).
-2. Sincronizar en Garmin Connect y esperar a que aparezca la actividad.
+1. Terminar una actividad de fuerza en el reloj.
+2. Sincronizar en Garmin Connect y esperar a que aparezca.
 3. Llamar `POST /api/v1/strength/import-garmin/{activity_id}` con el token.
-4. **Qué debe volver**: `sets_imported > 0`, `unmapped` vacío si todos los ejercicios están en el
-   catálogo; la sesión en el historial con peso/reps.
-5. Repetir la llamada: debe responder `409 already_imported`, sin duplicar.
+4. **Debe volver**: `sets_imported > 0`, `unmapped` vacío si todo está en el catálogo y la sesión en
+   el historial con peso/reps.
+5. Repetir: `409 already_imported`, sin duplicar.
 
-## Prueba D — Patrón IMU por ejercicio (T-43, solo diseño/POC)
+## Prueba D — Patrón IMU por ejercicio (T-43, POC)
 
-No hay watch-app instalada todavía. Para el día del reloj:
-
-1. Elegir 3 ejercicios de brazo (curl, press militar, elevación lateral).
-2. Grabar con la watch-app de calibración 15 s (IMU-5/IMU-6, pendiente) o con el simulador.
-3. Subir las muestras a `POST /strength/exercises/{id}/motion-profile/calibrate`.
-4. Repetir 5 series de 8–12 reps etiquetadas a mano y comparar con el detector.
-5. **Criterio**: ≥90 % de series con error ≤1 rep y ≥90 % de series detectadas. Si no, el conteo
+1. En la app: **Catálogo → Configurar detección** en 3 ejercicios de brazo (curl, press militar,
+   elevación lateral). Ajustar duración de repetición y sensibilidad, y **Guardar y activar**.
+2. Con la watch-app de calibración (IMU-5/IMU-6, pendiente): grabar 15 s y subir las muestras a
+   `POST /strength/exercises/{id}/motion-profile/calibrate`.
+3. Hacer 5 series de 8–12 reps etiquetadas a mano y comparar con el detector.
+4. **Criterio**: ≥90 % de series con error ≤1 rep y ≥90 % de series detectadas. Si no, el conteo
    automático se queda fuera y se mantiene el marcado manual.
 
 ## Evidencia que hay que dejar
@@ -71,9 +81,10 @@ No hay watch-app instalada todavía. Para el día del reloj:
 
 Hasta que A–C estén hechas, T-30/T-31/T-42 siguen **en curso**, no cerradas.
 
-## Preparación ya hecha (2026-11-05)
+## Ya preparado (2026-11-05)
 
-- El perfil IMU se configura desde **Catálogo → Configurar detección** (duración, sensibilidad, eje,
-  inicio de serie, activar/desactivar). La captura guiada desde el reloj es la parte que falta.
-- El calendario y la auto-carga de las 06:30 están implementados y probados con dobles.
-- El envío al reloj y la importación tienen endpoint y UI; solo falta la cuenta real.
+- **Editor IMU**: Catálogo → Configurar detección. Perfil versionado, activar/desactivar y
+  calibración en seco; falta la captura guiada desde el reloj.
+- **Calendario y auto-carga** a las 06:30 implementados y probados con dobles.
+- **Actividades**: filtros por deporte/texto, vueltas y detalle completo con gráficas.
+- **Envío e importación**: endpoints y UI listos; solo falta la cuenta real.

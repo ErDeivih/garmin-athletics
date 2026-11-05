@@ -12,8 +12,6 @@ import type {
   ExerciseDetailResponse,
   ExerciseHistoryResponse,
   ExerciseList,
-  GarminLinkResult,
-  GarminStatus,
   GymStatsResponse,
   LastMarksResponse,
   LeaderboardResponse,
@@ -52,7 +50,7 @@ export const queryKeys = {
   gymStats: (days: number) => ['gym', 'stats', days] as const,
   alerts: ['alerts'] as const,
   sync: ['sync', 'status'] as const,
-  garmin: ['garmin', 'status'] as const,
+  watchAccount: ['watch', 'account'] as const,
   templates: ['gym', 'templates'] as const,
   sessions: ['gym', 'sessions'] as const,
   session: (id: string) => ['gym', 'session', id] as const,
@@ -135,14 +133,6 @@ export function useSyncStatus() {
   });
 }
 
-export function useGarminStatus() {
-  return useQuery({
-    queryKey: queryKeys.garmin,
-    queryFn: () => apiFetch<GarminStatus>('/api/v1/auth/garmin-status'),
-  });
-}
-
-/** Borrado GDPR: el backend debe borrar también el gimnasio (T-22). */
 export function useDeleteAccount() {
   return useMutation({
     mutationFn: () => apiFetch<{ status: string }>('/api/v1/auth/account', { method: 'DELETE' }),
@@ -158,25 +148,6 @@ export function useSyncNow() {  const queryClient = useQueryClient();
         queryClient.invalidateQueries({ queryKey: queryKeys.daily }),
         queryClient.invalidateQueries({ queryKey: queryKeys.alerts }),
         queryClient.invalidateQueries({ queryKey: queryKeys.activities }),
-      ]);
-    },
-  });
-}
-
-export function useLinkGarmin() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (payload: { garmin_email: string; garmin_password: string }) =>
-      apiFetch<GarminLinkResult>('/api/v1/auth/garmin-credentials', {
-        method: 'PUT',
-        body: payload,
-        // Ver AuthContext/client: un 401 de Garmin no es una sesión caducada.
-        session: 'external',
-      }),
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.sync }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.garmin }),
       ]);
     },
   });

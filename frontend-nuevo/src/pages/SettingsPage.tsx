@@ -5,12 +5,12 @@ import { useAuth } from '../auth/AuthContext';
 import { ApiError, apiFetch } from '../api/client';
 import { queryKeys } from '../api/queries';
 import { useDeleteAccount, useSyncNow, useSyncStatus } from '../api/queries';
-import type { GarminLinkResult } from '../api/types';
+import type { WatchLinkResult } from '../api/types';
 import { setExtendedSections, useExtendedSections } from '../config/features';
 import { Badge, Button, Card, ErrorState, Field, PageHeader, SectionTitle } from '../components/ui';
 import { applyTheme, readTheme, type Theme } from '../lib/theme';
 
-function GarminLinkForm() {
+function LinkAccountForm() {
   const queryClient = useQueryClient();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,7 +23,7 @@ function GarminLinkForm() {
   const refresh = () =>
     Promise.all([
       queryClient.invalidateQueries({ queryKey: queryKeys.sync }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.garmin }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.watchAccount }),
     ]);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -31,11 +31,11 @@ function GarminLinkForm() {
     setError(null);
     setBusy(true);
     try {
-      const result = await apiFetch<GarminLinkResult>('/api/v1/auth/garmin-credentials', {
+      const result = await apiFetch<WatchLinkResult>('/api/v1/auth/garmin-credentials', {
         method: 'PUT',
         body: { garmin_email: email.trim().toLowerCase(), garmin_password: password },
-        // Un 401 aquí es una contraseña de Garmin incorrecta, no una sesión
-        // caducada: la app no debe expulsar al atleta de su sesión.
+        // Un 401 aquí es una contraseña incorrecta de la cuenta externa, no una
+        // sesión caducada: la app no debe expulsar al atleta de su sesión.
         session: 'external',
       });
       if (result.status === 'need_mfa') {
@@ -57,7 +57,7 @@ function GarminLinkForm() {
     setError(null);
     setBusy(true);
     try {
-      await apiFetch<GarminLinkResult>('/api/v1/auth/garmin-mfa', {
+      await apiFetch<WatchLinkResult>('/api/v1/auth/garmin-mfa', {
         method: 'POST',
         body: {
           garmin_email: email.trim().toLowerCase(),
@@ -113,7 +113,7 @@ function GarminLinkForm() {
       ) : (
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
           <Field
-            id="garmin-email"
+            id="watch-email"
             label="Correo"
             type="email"
             autoComplete="username"
@@ -122,7 +122,7 @@ function GarminLinkForm() {
             required
           />
           <Field
-            id="garmin-password"
+            id="watch-password"
             label="Contraseña"
             type="password"
             autoComplete="current-password"
@@ -202,7 +202,7 @@ export function SettingsPage() {
                 {syncNow.error.message}
               </p>
             ) : null}
-            {showLink ? <GarminLinkForm /> : null}
+            {showLink ? <LinkAccountForm /> : null}
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -213,7 +213,7 @@ export function SettingsPage() {
               <Link2 aria-hidden="true" className="size-4" />
               Vincular cuenta
             </Button>
-            {showLink ? <GarminLinkForm /> : null}
+            {showLink ? <LinkAccountForm /> : null}
           </div>
         )}
       </Card>

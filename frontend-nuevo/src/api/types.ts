@@ -30,14 +30,14 @@ export interface UserProfile {
   created_at: string | null;
 }
 
-export interface GarminStatus {
+export interface WatchAccountStatus {
   linked: boolean;
   garmin_email?: string | null;
   needs_reauth?: boolean;
   last_sync_at?: string | null;
 }
 
-export interface GarminLinkResult {
+export interface WatchLinkResult {
   status: 'saved' | 'need_mfa';
   garmin_email?: string;
   ticket?: Record<string, unknown>;

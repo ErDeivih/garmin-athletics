@@ -41,7 +41,7 @@ const alertLabel: Record<AlertSeverity, string> = {
 };
 
 // El backend puede devolver el estado de HRV como `normal` (calculado) o con el
-// texto que manda Garmin (`BALANCED`); la interfaz habla siempre en español.
+// texto de la cuenta externa (`BALANCED`); la interfaz habla siempre en español.
 const HRV_STATUS_LABEL: Record<string, string> = {
   normal: 'En tu media',
   balanced: 'En tu media',

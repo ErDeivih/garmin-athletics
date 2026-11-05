@@ -68,7 +68,7 @@ export function CatalogPage() {
               </div>
               <ExerciseIllustration
                 name={exercise.name}
-                garminEnum={exercise.garmin_enum}
+                watchEnum={exercise.garmin_enum}
                 muscleGroup={exercise.muscle_group_label}
                 compact
               />
