@@ -31,9 +31,11 @@ Compilación verificada con SDK 8.3.0, `minSdkVersion 3.3.0`:
    pantallas. Con ambos configurados en los ajustes de la app desde Garmin Connect, pide el entreno
    de hoy al backend.
 
-**Nota de esta máquina**: el simulador pide permiso de firewall al arrancar; sin pulsar «Permitir»
-`monkeydo` no puede conectar y la pantalla queda negra. Es un permiso local de Windows, no un fallo de
-la app. Tras permitirlo una vez, `.\capture-simulator.ps1 -KeyPath <clave.der>` compila, lanza el
+**Paso exacto de firewall**: al arrancar `simulator.exe`, Windows Defender muestra
+«¿Quieres permitir que las redes públicas y privadas accedan a esta aplicación?» con dos botones.
+Hay que pulsar **Permitir** una vez (no «Cancelar»). No hace falta ser administrador ni desactivar el
+firewall. Sin ese clic, `monkeydo` no conecta con el simulador y la pantalla queda negra; no es un
+fallo de la app. Tras permitirlo, `.\capture-simulator.ps1 -KeyPath <clave.der>` compila, lanza el
 simulador y guarda las capturas en `screenshots/`.
 
 ## API que usa
