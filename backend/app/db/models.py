@@ -264,6 +264,21 @@ class WorkoutSession(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
+class ExerciseMotionProfile(Base):
+    """Perfil versionado de movimiento para contar repeticiones con el IMU (T-43)."""
+    __tablename__ = "exercise_motion_profiles"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    exercise_id = Column(String(36), nullable=False, index=True)
+    user_id = Column(String(36), nullable=True, index=True)  # NULL = perfil del catálogo
+    version = Column(Integer, nullable=False, default=1)
+    status = Column(String(10), nullable=False, default="draft")  # draft|active|retired
+    profile = Column(JSON, nullable=False)
+    calibration = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class SessionSet(Base):
     """Una serie individual de una sesión (lo que permite corregir una serie sin tocar el resto)."""
     __tablename__ = "session_sets"

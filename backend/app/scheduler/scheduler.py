@@ -74,6 +74,29 @@ async def _sync_global_legacy() -> None:
         logger.error(f"❌ Error en la sincronización global de Garmin: {e}")
 
 
+async def _auto_push_calendar_async() -> None:
+    """Sube al reloj el entrenamiento programado para hoy."""
+    from app.services.calendar_auto import auto_push_today_all
+
+    try:
+        summary = await auto_push_today_all()
+        logger.info(
+            "✅ Auto-carga de calendario: %s usuario(s), %s entreno(s) agendado(s)",
+            summary.get("users"), summary.get("sent"),
+        )
+    except Exception as exc:
+        logger.error("❌ Error en la auto-carga del calendario: %s", exc)
+
+
+def scheduled_calendar_auto_push():
+    """Job diario: deja en el reloj el entreno que toca hoy."""
+    logger.info("⏰ Auto-carga del entrenamiento del día en el reloj...")
+    try:
+        asyncio.run(_auto_push_calendar_async())
+    except Exception as exc:
+        logger.error("❌ Error fatal en el job de auto-carga: %s", exc)
+
+
 def scheduled_garmin_sync():
     """Tarea programada desatendida: sincroniza todos los usuarios con Garmin vinculado."""
     logger.info("⏰ Ejecutando sincronización desatendida programada de Garmin...")
@@ -91,6 +114,16 @@ def start_scheduler():
     """
     if scheduler.running:
         return
+
+    # Auto-carga del entreno del día antes del sync matutino
+    scheduler.add_job(
+        scheduled_calendar_auto_push,
+        trigger="cron",
+        hour=6,
+        minute=30,
+        id="calendar_auto_push",
+        replace_existing=True
+    )
 
     # Job matutino 07:00 AM
     scheduler.add_job(

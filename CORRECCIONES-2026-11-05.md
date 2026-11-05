@@ -77,9 +77,21 @@ Contraste AA se mantiene: los tokens no cambian. La puerta `check-contrast.mjs` 
 - Diseño de detección IMU por ejercicio y calendario: `research/IMU-CALENDARIO.md` (esquema
   `exercise_motion_profiles`, calibración de 10–15 s, tareas IMU-1..8 y CAL-1..3).
 
+**Actualización de la mañana del 2026-11-05:** el job de auto-carga ya existe (06:30, idempotente,
+`tests/test_calendar_auto.py`); el perfil IMU tiene modelo, API de versiones, calibración y detector
+en seco (`tests/test_motion_profile.py`, 5/5 reps con señal sintética). El guion para el día del
+reloj está en `GUION-PRUEBA-RELOJ.md`.
+
+## 5.1 Guion de la prueba real
+
+`GUION-PRUEBA-RELOJ.md`: pasos A (envío), B (calendario), C (importación) y D (POC IMU), con lo que
+debe verse en el reloj y lo que debe volver al backend. El 2FA lo introduce David; el agente no lo
+pide ni lo guarda.
+
 ## 6. Evidencia de esta sesión
 
 - Frontend: **31/31** pruebas en 11 ficheros; typecheck y build limpios.
-- Backend: **11/11** scripts en verde (incluye calendario con plantilla y preview).
+- Backend: **13/13** scripts en verde (incluye calendario con plantilla/preview, auto-carga y perfil
+  IMU en seco).
 - Humo real: 16 capturas 390×844, 0 errores de consola.
 - Sin GitHub Actions; push selectivo al final de la sesión.

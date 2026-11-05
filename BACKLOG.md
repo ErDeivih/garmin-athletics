@@ -555,12 +555,24 @@ el workout y enviarlo/programarlo en Garmin Connect; botón «Cargar el de hoy e
 **Pendiente**: job diario automático (CAL-1/CAL-2 en `research/IMU-CALENDARIO.md`) y prueba real en
 el fr255 (Nivel 3).
 
+**Resultado (2026-11-05).** Auto-carga implementada: job APScheduler a las 06:30 que recorre los
+eventos de hoy, construye el workout tipado, lo sube y lo agenda; idempotente por
+`last_scheduled_date`; `tests/test_calendar_auto.py` con doble de Garmin (sube, agenda y no duplica).
+UI: programar en varios días, previsualizar, enviar y «Cargar el de hoy». Guion de prueba real:
+`GUION-PRUEBA-RELOJ.md`.
+
 ### T-43 · Detección automática de repeticiones por IMU (diseño + POC)
-**Nivel 2** · **Estado**: `pendiente` · **Origen**: `research/IMU-CALENDARIO.md`
+**Nivel 2** · **Estado**: `en curso` (2026-11-05) · **Origen**: `research/IMU-CALENDARIO.md`
 
 Perfil de movimiento versionado por ejercicio (`exercise_motion_profiles`), calibración guiada de
 10–15 s, detector de picos en Monkey C y POC con 3 ejercicios. No se promete conteo automático hasta
 que el POC cumpla ≥90 % de series con error ≤1 rep. Tareas IMU-1..8 del informe.
+
+**Resultado parcial (2026-11-05).** Modelo `exercise_motion_profiles` (versión, estado
+draft/active/retired, JSON y calibración) y API `GET/PUT /strength/exercises/{id}/motion-profile`,
+`/versions`, `/calibrate` y `/detect`. Calibración en seco con señal sintética: 5/5 reps, periodo
+2,4 s; versionado retira el activo anterior; validación 422. `tests/test_motion_profile.py`.
+**Pendiente**: editor de calibración en la app, watch-app de captura y POC en el fr255.
 
 ### T-44 · Bloque de Actividades: detalle rico
 **Nivel 2** · **Estado**: `en curso` (2026-11-05)
@@ -617,4 +629,5 @@ y parciales. Fuente: `research/ACTIVIDADES-COMPETENCIA.md` (T-35/T-36).
 | T-28 | Ejercicios con dibujo inicio/fin + catálogo consultable | 2026-11-04 | 17 patrones SVG propios, aviso honesto sin dibujo; 27 pruebas de frontend y captura del catálogo |
 | Reloj (base T-31) | Compatibilidad de la PoC Connect IQ con fr255 y 8 perfiles más | 2026-11-04 | `watch/connectiq-poc/` + matriz en `INVESTIGACION-AMPLIACION.md` §3.1; no probado en reloj real |
 | T-40/T-41 | Forja: marca, textos §8 y densidad móvil en todas las pantallas | 2026-11-05 | 31/31 pruebas frontend, capturas 390×844 y `CORRECCIONES-2026-11-05.md` |
-| T-42/T-44 | Calendario con plantilla y envío; detalle de Actividad con gráficas | 2026-11-05 | Backend de calendario + preview, `/actividades/:id`; 2 flujos nuevos; pendiente validar en fr255 |
+| T-42/T-44 | Calendario con plantilla y envío; detalle de Actividad con gráficas | 2026-11-05 | Backend de calendario + auto-carga 06:30, `/actividades/:id`; 3 flujos nuevos; pendiente validar en fr255 |
+| T-43 (base) | Perfil de movimiento IMU y calibración en seco | 2026-11-05 | Modelo + API + `tests/test_motion_profile.py` (5/5 reps); falta editor y POC en reloj |
