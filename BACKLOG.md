@@ -497,14 +497,18 @@ el reloj con ejercicios, series, pesos, reps y descansos; no duplica el entreno 
 **Nivel 3 en la prueba real**: cuenta y reloj de David.
 
 ### T-32 · Watch-app Connect IQ: sesión, marcar serie y cola offline
-**Nivel 2** · **Estado**: `pendiente` · **Origen**: `INVESTIGACION-AMPLIACION.md` §3.4
+**Nivel 2** · **Estado**: `en curso` (2026-11-05) · **Origen**: `INVESTIGACION-AMPLIACION.md` §3.4
 
-Watch-app que muestra la sesión del día (ejercicio, dibujo, peso, reps, descanso), marca series con
-los botones, las manda por HTTP al backend y guarda una cola si no hay conexión. Guarda la mano del
-reloj. Verificado que el SDK 8.3.0 compila estas APIs para el fr965.
+Watch-app que muestra la sesión del día (ejercicio, peso, reps), marca series con
+los botones, las manda por HTTP al backend y guarda una cola si no hay conexión. La mano del
+reloj queda para una versión posterior (no hay IMU en esta entrega).
 
-**Criterio de aceptación**: instalada en el reloj; marca una serie y llega al backend; sin cobertura
-la guarda y la envía al recuperar; no se pierde la sesión al bloquear la pantalla.
+**Resultado parcial (2026-11-05).** Proyecto en `watch/forja-watch/` con diseño, pantallas de
+carga/entreno/fin/sin conexión, cola en `Application.Storage`, `ActivityRecording` y cliente HTTP
+`/watch/today` + `/watch/sets`. Compila para **fr255 (104.892 B)**, fr245, fenix6, fr965 y venu3 con
+`minSdkVersion 3.3.0`. Backend `watch.py` con entreno de hoy y series idempotentes
+(`tests/test_watch_api.py`). **Pendiente**: permiso de firewall del simulador para las capturas,
+instalación real (Nivel 3) y emparejamiento por código en vez de token en ajustes.
 
 ### T-33 · POC de conteo de repeticiones por IMU
 **Nivel 2** · **Estado**: `pendiente` · **Origen**: `INVESTIGACION-AMPLIACION.md` §3.6

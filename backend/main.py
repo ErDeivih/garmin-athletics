@@ -9,6 +9,7 @@ from app.api.v1.activities import router as activities_router
 from app.api.v1.strength import router as strength_router
 from app.api.v1.gym import router as gym_router
 from app.api.v1.motion import router as motion_router
+from app.api.v1.watch import router as watch_router
 from app.api.v1.social_auth import router as auth_router
 from app.api.v1.friends import router as friends_router
 from app.api.v1.social import router as social_router
@@ -58,6 +59,7 @@ app.include_router(strength_router, prefix=settings.API_V1_STR)
 # (ruta exacta ya existente) gana a `/strength/exercises/{exercise_id}`.
 app.include_router(gym_router, prefix=settings.API_V1_STR)
 app.include_router(motion_router, prefix=settings.API_V1_STR)
+app.include_router(watch_router, prefix=settings.API_V1_STR)
 app.include_router(auth_router, prefix=settings.API_V1_STR)
 app.include_router(friends_router, prefix=settings.API_V1_STR)
 app.include_router(social_router, prefix=settings.API_V1_STR)

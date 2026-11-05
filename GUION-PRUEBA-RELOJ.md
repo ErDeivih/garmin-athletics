@@ -70,6 +70,22 @@ envío repetido puede duplicar el entreno.
 4. **Criterio**: ≥90 % de series con error ≤1 rep y ≥90 % de series detectadas. Si no, el conteo
    automático se queda fuera y se mantiene el marcado manual.
 
+## Prueba E — Watch-app propia (T-32)
+
+Depende de tener el `.prg` firmado y la instalación de desarrollador en el fr255 (Nivel 3). El
+proyecto está en `watch/forja-watch/`.
+
+1. Instalar `build/forja-fr255.prg` en el reloj con el flujo de desarrollador.
+2. En Garmin Connect → app Forja → Ajustes, poner la dirección del backend y el token de David.
+3. Abrir **Forja** en el reloj. Debe pedir el entreno de hoy.
+4. **Debe verse**: «FORJA», el nombre del entreno, «Ejercicio 1/N», el ejercicio, «Serie 1/N», el
+   peso, `× reps` y «OK hecha».
+5. Pulsar OK: la serie desaparece de la pantalla y avanza; el backend recibe `/watch/sets` (misma
+   serie dos veces = `duplicate: true`, no dos filas).
+6. Apagar el móvil/reloj o dejar sin red y marcar otra serie: debe verse «1 por enviar» al terminar y
+   enviarse al recuperar la conexión.
+7. **No se promete instalación desde aquí**: si falla el sideload, apuntar el error y seguir con A–C.
+
 ## Evidencia que hay que dejar
 
 | Prueba | Qué apuntar | Dónde |

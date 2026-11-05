@@ -296,6 +296,7 @@ class SessionSet(Base):
     set_type = Column(String(20), nullable=False, default="normal")  # normal|warmup|drop|failure
     rest_seconds = Column(Integer, nullable=True)
     completed_at = Column(DateTime, nullable=True)
+    client_set_id = Column(String(64), nullable=True, index=True)  # idempotencia del reloj (T-32)
 
 
 class DailyStat(Base):

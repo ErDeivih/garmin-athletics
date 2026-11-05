@@ -22,7 +22,7 @@ async def _run_sqlite_migrations(conn) -> None:
 
     table_columns = {
         "strength_logs": [("user_id", "VARCHAR(36)")],
-        "session_sets": [("rpe", "INTEGER")],
+        "session_sets": [("rpe", "INTEGER"), ("client_set_id", "VARCHAR(64)")],
         "calendar_events": [
             ("template_id", "VARCHAR(36)"),
             ("garmin_workout_id", "VARCHAR(64)"),
