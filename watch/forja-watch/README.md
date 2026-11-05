@@ -33,7 +33,8 @@ Compilación verificada con SDK 8.3.0, `minSdkVersion 3.3.0`:
 
 **Nota de esta máquina**: el simulador pide permiso de firewall al arrancar; sin pulsar «Permitir»
 `monkeydo` no puede conectar y la pantalla queda negra. Es un permiso local de Windows, no un fallo de
-la app. Las capturas del simulador quedan pendientes de ese permiso.
+la app. Tras permitirlo una vez, `.\capture-simulator.ps1 -KeyPath <clave.der>` compila, lanza el
+simulador y guarda las capturas en `screenshots/`.
 
 ## API que usa
 
