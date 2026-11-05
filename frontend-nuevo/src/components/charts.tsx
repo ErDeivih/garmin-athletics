@@ -1,5 +1,6 @@
 import type {
   ActivityHrZone,
+  ActivityLap,
   ActivitySplit,
   ActivityTrack,
   GymStatsMuscle,
@@ -543,9 +544,27 @@ export function HrZonesChart({ zones }: { zones: ActivityHrZone[] }) {
   );
 }
 
+/** Vueltas registradas por el reloj (no calculadas). */
+export function LapsList({ laps }: { laps: ActivityLap[] }) {
+  if (laps.length === 0) {
+    return <p className="text-caption text-ink-faint">Sin vueltas registradas.</p>;
+  }
+  return (
+    <ul className="flex flex-col divide-y divide-line" aria-label="Vueltas de la actividad">
+      {laps.map((lap) => (
+        <li key={lap.n} className="grid grid-cols-[2.2rem_1fr_1fr_4rem] items-center gap-2 py-1.5 text-caption">
+          <span className="text-ink-muted">V{lap.n}</span>
+          <span className="tnum text-ink">{lap.pace ?? formatNumber(lap.distance_m / 1000, 'km')}</span>
+          <span className="tnum text-ink-muted">{formatNumber(lap.duration_s / 60, 'min')}</span>
+          <span className="tnum text-right text-ink-muted">{lap.avg_hr ? `${lap.avg_hr} lpm` : '—'}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 /** Parciales por kilómetro. */
-export function SplitsList({ splits }: { splits: ActivitySplit[] }) {
-  if (splits.length === 0) {
+export function SplitsList({ splits }: { splits: ActivitySplit[] }) {  if (splits.length === 0) {
     return <p className="text-caption text-ink-faint">Sin parciales por kilómetro.</p>;
   }
   return (

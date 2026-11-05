@@ -135,6 +135,24 @@ async def save_motion_profile(
     return {"status": "saved", "id": row.id, "version": version, "profile_status": row.status}
 
 
+@router.delete("/exercises/{exercise_id}/motion-profile/active", summary="Desactivar la detección")
+async def deactivate_motion_profile(
+    exercise_id: str,
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    await _owned_exercise(db, user, exercise_id)
+    rows = (await db.execute(select(ExerciseMotionProfile).where(
+        ExerciseMotionProfile.exercise_id == exercise_id,
+        ExerciseMotionProfile.user_id == user.id,
+        ExerciseMotionProfile.status == "active",
+    ))).scalars().all()
+    for row in rows:
+        row.status = "retired"
+    await db.commit()
+    return {"status": "retired", "count": len(rows)}
+
+
 @router.get("/exercises/{exercise_id}/motion-profile/versions", summary="Historial de perfiles")
 async def list_motion_versions(
     exercise_id: str,

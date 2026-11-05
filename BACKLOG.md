@@ -570,17 +570,20 @@ que el POC cumpla ≥90 % de series con error ≤1 rep. Tareas IMU-1..8 del info
 
 **Resultado parcial (2026-11-05).** Modelo `exercise_motion_profiles` (versión, estado
 draft/active/retired, JSON y calibración) y API `GET/PUT /strength/exercises/{id}/motion-profile`,
-`/versions`, `/calibrate` y `/detect`. Calibración en seco con señal sintética: 5/5 reps, periodo
-2,4 s; versionado retira el activo anterior; validación 422. `tests/test_motion_profile.py`.
-**Pendiente**: editor de calibración en la app, watch-app de captura y POC en el fr255.
+`/versions`, `/calibrate`, `/detect` y desactivar. Calibración en seco con señal sintética: 5/5 reps,
+periodo 2,4 s; versionado retira el activo anterior; validación 422. `tests/test_motion_profile.py`.
+**Editor en la app**: página `/gimnasio/ejercicios/:id/deteccion` con duración, sensibilidad, eje,
+inicio de serie, activar/desactivar y estado; enlace desde el catálogo; `motion.test.tsx`.
+**Pendiente**: captura guiada desde el reloj (watch-app) y POC en el fr255.
 
 ### T-44 · Bloque de Actividades: detalle rico
-**Nivel 2** · **Estado**: `en curso` (2026-11-05)
+**Nivel 2** · **Estado**: `hecha` (2026-11-05) · **Origen**: `research/ACTIVIDADES-COMPETENCIA.md`
 
-Ruta `/actividades/:id` con resumen, zonas de FC, recorrido SVG, series de FC/ritmo/altitud/velocidad
-y parciales. Fuente: `research/ACTIVIDADES-COMPETENCIA.md` (T-35/T-36).
-**Pendiente**: vueltas, meteo, botón Actualizar, filtros y paginación SQL (T-37/T-38) y altitud
-(T-39).
+Ruta `/actividades/:id` con resumen ampliado (distancia, duración, ritmo, FC media/máx, cadencia,
+potencia, desnivel, bajada, altitud, calorías, carga), zonas de FC, recorrido SVG, series de
+FC/ritmo/altitud/velocidad, parciales, vueltas y meteo. Lista con filtros por deporte/texto contra la
+API y estados vacío/carga/error. Las gráficas sin datos no se pintan. 2 flujos nuevos
+(`activity.test.tsx`, `activity-filters.test.tsx`).
 
 ---
 

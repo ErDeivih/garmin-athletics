@@ -90,7 +90,7 @@ pide ni lo guarda.
 
 ## 6. Evidencia de esta sesión
 
-- Frontend: **31/31** pruebas en 11 ficheros; typecheck y build limpios.
+- Frontend: **33/33** pruebas en 13 ficheros; typecheck y build limpios.
 - Backend: **13/13** scripts en verde (incluye calendario con plantilla/preview, auto-carga y perfil
   IMU en seco).
 - Humo real: 16 capturas 390×844, 0 errores de consola.

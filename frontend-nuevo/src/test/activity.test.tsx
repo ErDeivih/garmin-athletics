@@ -33,8 +33,11 @@ const detail = {
   max_alt: 690,
   bbox: null,
   hr_zones: [{ zone: 2, secs: 900 }, { zone: 3, secs: 600 }],
-  weather: null,
-  laps: [],
+  weather: { temp_c: 14, feels_like_c: 13, wind_kmh: 8, humidity: 60 },
+  laps: [
+    { n: 1, distance_m: 1000, duration_s: 300, pace: '5:00 /km', avg_hr: 145, max_hr: 152, gain_m: 4, loss_m: 2, calories: 60, avg_speed: 3.33 },
+    { n: 2, distance_m: 1200, duration_s: 360, pace: '5:00 /km', avg_hr: 150, max_hr: 158, gain_m: 6, loss_m: 4, calories: 72, avg_speed: 3.33 },
+  ],
 };
 
 const streams = {
@@ -89,6 +92,8 @@ describe('detalle de una actividad', () => {
     expect(await screen.findByRole('img', { name: /^Ritmo: serie temporal/i })).toBeInTheDocument();
     expect(await screen.findByRole('list', { name: /zonas de frecuencia cardiaca/i })).toBeInTheDocument();
     expect(await screen.findByRole('list', { name: /parciales por kilómetro/i })).toBeInTheDocument();
-    expect(await screen.findByText('5:00 /km')).toBeInTheDocument();
+    expect(await screen.findByRole('list', { name: /vueltas de la actividad/i })).toBeInTheDocument();
+    expect(screen.getByText(/^meteo$/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/^5:00 \/km$/).length).toBeGreaterThan(0);
   });
 });

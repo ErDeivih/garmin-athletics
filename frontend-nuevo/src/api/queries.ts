@@ -19,6 +19,8 @@ import type {
   LeaderboardResponse,
   LoadResponse,
   LoadSummaryResponse,
+  MotionProfileResponse,
+  MotionProfileSaveResult,
   PerformanceSummary,
   PersonalRecord,
   PlannedRoute,
@@ -63,6 +65,7 @@ export const queryKeys = {
   activityStreams: (id: string) => ['activities', id, 'streams'] as const,
   activitySplits: (id: string) => ['activities', id, 'splits'] as const,
   activityTrack: (id: string) => ['activities', id, 'track'] as const,
+  motionProfile: (exerciseId: string) => ['gym', 'motion-profile', exerciseId] as const,
   routes: ['routes'] as const,
   leaderboard: ['social', 'leaderboard'] as const,
   trends: (metric: string, days: number) => ['metrics', 'trends', metric, days] as const,
@@ -258,6 +261,38 @@ export function usePushWorkout() {
   });
 }
 
+export function useMotionProfile(exerciseId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.motionProfile(exerciseId ?? ''),
+    queryFn: () => apiFetch<MotionProfileResponse>(`/api/v1/strength/exercises/${exerciseId}/motion-profile`),
+    enabled: Boolean(exerciseId),
+  });
+}
+
+export function useSaveMotionProfile(exerciseId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { profile: Record<string, unknown>; status: 'draft' | 'active' | 'retired'; calibration?: Record<string, unknown> }) =>
+      apiFetch<MotionProfileSaveResult>(`/api/v1/strength/exercises/${exerciseId}/motion-profile`, {
+        method: 'PUT',
+        body: payload,
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.motionProfile(exerciseId ?? '') }),
+  });
+}
+
+export function useDeactivateMotionProfile(exerciseId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiFetch<{ status: string; count: number }>(
+        `/api/v1/strength/exercises/${exerciseId}/motion-profile/active`,
+        { method: 'DELETE' },
+      ),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.motionProfile(exerciseId ?? '') }),
+  });
+}
+
 export function useCreateSession() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -286,10 +321,14 @@ export function useExercises(search = '', muscle = '', equipment = '') {
   });
 }
 
-export function useActivities() {
+export function useActivities(filters: { sport?: string; q?: string; limit?: number } = {}) {
+  const params = new URLSearchParams();
+  params.set('limit', String(filters.limit ?? 50));
+  if (filters.sport && filters.sport !== 'all') params.set('sport', filters.sport);
+  if (filters.q?.trim()) params.set('q', filters.q.trim());
   return useQuery({
-    queryKey: queryKeys.activities,
-    queryFn: () => apiFetch<ActivitySummary[]>('/api/v1/activities/?limit=20'),
+    queryKey: [...queryKeys.activities, filters.sport ?? 'all', filters.q ?? '', filters.limit ?? 50],
+    queryFn: () => apiFetch<ActivitySummary[]>(`/api/v1/activities/?${params.toString()}`),
   });
 }
 

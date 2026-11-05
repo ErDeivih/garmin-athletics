@@ -8,6 +8,7 @@ import {
 import {
   ActivityStreamChart,
   HrZonesChart,
+  LapsList,
   RouteSketch,
   SplitsList,
 } from '../../components/charts';
@@ -82,10 +83,26 @@ export function ActivityDetailPage() {
     pace && showsPace ? { label: 'Ritmo', value: pace } : null,
     activity.avg_hr ? { label: 'FC media', value: formatNumber(activity.avg_hr, 'lpm') } : null,
     activity.max_hr ? { label: 'FC máx.', value: formatNumber(activity.max_hr, 'lpm') } : null,
+    activity.avg_cadence ? { label: 'Cadencia', value: `${formatNumber(activity.avg_cadence)} rpm` } : null,
+    activity.avg_power ? { label: 'Potencia', value: formatNumber(activity.avg_power, 'W') } : null,
     activity.gain_m ? { label: 'Desnivel', value: formatNumber(activity.gain_m, 'm') } : null,
+    activity.loss_m ? { label: 'Bajada', value: formatNumber(activity.loss_m, 'm') } : null,
+    activity.min_alt !== null && activity.max_alt !== null
+      ? { label: 'Altitud', value: `${formatNumber(activity.min_alt)}–${formatNumber(activity.max_alt)} m` }
+      : null,
     activity.calories ? { label: 'Calorías', value: formatNumber(activity.calories) } : null,
     activity.tss ? { label: 'Carga', value: formatNumber(activity.tss) } : null,
   ].filter((item): item is { label: string; value: string } => item !== null);
+
+  const weatherEntries = activity.weather
+    ? ([
+        ['Temperatura', activity.weather.temp_c, '°C'],
+        ['Sensación', activity.weather.feels_like_c, '°C'],
+        ['Viento', activity.weather.wind_kmh, 'km/h'],
+        ['Humedad', activity.weather.humidity, '%'],
+      ] as [string, unknown, string][])
+        .filter(([, value]) => typeof value === 'number')
+    : [];
 
   return (
     <>
@@ -112,6 +129,29 @@ export function ActivityDetailPage() {
         <Card className="mt-3">
           <SectionTitle>Zonas de FC</SectionTitle>
           <HrZonesChart zones={activity.hr_zones} />
+        </Card>
+      ) : null}
+
+      {activity.laps.length > 0 ? (
+        <Card className="mt-3">
+          <SectionTitle hint={`${activity.laps.length} vueltas`}>Vueltas</SectionTitle>
+          <LapsList laps={activity.laps} />
+        </Card>
+      ) : null}
+
+      {weatherEntries.length > 0 ? (
+        <Card className="mt-3">
+          <SectionTitle>Meteo</SectionTitle>
+          <dl className="grid grid-cols-2 gap-2">
+            {weatherEntries.map(([label, value, unit]) => (
+              <div key={label}>
+                <dt className="text-caption text-ink-faint">{label}</dt>
+                <dd className="tnum text-body text-ink">
+                  {formatNumber(value as number)} {unit}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </Card>
       ) : null}
 

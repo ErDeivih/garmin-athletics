@@ -501,6 +501,19 @@ export interface ActivityHrZone {
   label?: string;
 }
 
+export interface ActivityLap {
+  n: number;
+  distance_m: number;
+  duration_s: number;
+  pace: string | null;
+  avg_hr: number | null;
+  max_hr: number | null;
+  gain_m: number | null;
+  loss_m: number | null;
+  calories: number | null;
+  avg_speed: number;
+}
+
 export interface ActivityDetail extends ActivitySummary {
   avg_cadence: number | null;
   avg_power: number | null;
@@ -512,7 +525,39 @@ export interface ActivityDetail extends ActivitySummary {
   bbox: [number, number, number, number] | null;
   hr_zones: ActivityHrZone[] | null;
   weather: Record<string, unknown> | null;
-  laps: Record<string, unknown>[];
+  laps: ActivityLap[];
+}
+
+export interface MotionProfileResponse {
+  configured: boolean;
+  id?: string;
+  version?: number;
+  status?: string | null;
+  profile?: Record<string, unknown> | null;
+  calibration?: Record<string, unknown> | null;
+  source?: string;
+  hint?: string;
+}
+
+export interface MotionProfileSaveResult {
+  status: string;
+  id: string;
+  version: number;
+  profile_status: string;
+}
+
+export interface ActivityDetail extends ActivitySummary {
+  avg_cadence: number | null;
+  avg_power: number | null;
+  avg_speed_kmh: number | null;
+  calories: number | null;
+  loss_m: number | null;
+  min_alt: number | null;
+  max_alt: number | null;
+  bbox: [number, number, number, number] | null;
+  hr_zones: ActivityHrZone[] | null;
+  weather: Record<string, unknown> | null;
+  laps: ActivityLap[];
 }
 
 export interface ActivityStreams {

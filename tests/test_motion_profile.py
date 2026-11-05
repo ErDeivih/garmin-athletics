@@ -88,6 +88,12 @@ def run():
     assert detect.status_code == 200, detect.text
     assert detect.json()["reps"] == 5
 
+    retired = client.delete(f"{API}/strength/exercises/{bench['id']}/motion-profile/active",
+                            headers=headers)
+    assert retired.status_code == 200 and retired.json()["count"] >= 1
+    assert client.get(f"{API}/strength/exercises/{bench['id']}/motion-profile",
+                      headers=headers).json()["configured"] is False
+
     bad = dict(profile)
     bad["rep"] = {**profile["rep"], "min_duration_s": 9, "max_duration_s": 1}
     assert client.put(f"{API}/strength/exercises/{bench['id']}/motion-profile",

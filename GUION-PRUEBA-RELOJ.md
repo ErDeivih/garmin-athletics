@@ -70,3 +70,10 @@ No hay watch-app instalada todavía. Para el día del reloj:
 | D | error por serie, % detectadas | `research/IMU-CALENDARIO.md` §10.3 |
 
 Hasta que A–C estén hechas, T-30/T-31/T-42 siguen **en curso**, no cerradas.
+
+## Preparación ya hecha (2026-11-05)
+
+- El perfil IMU se configura desde **Catálogo → Configurar detección** (duración, sensibilidad, eje,
+  inicio de serie, activar/desactivar). La captura guiada desde el reloj es la parte que falta.
+- El calendario y la auto-carga de las 06:30 están implementados y probados con dobles.
+- El envío al reloj y la importación tienen endpoint y UI; solo falta la cuenta real.

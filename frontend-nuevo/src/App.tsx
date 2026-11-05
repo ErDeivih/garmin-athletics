@@ -8,6 +8,7 @@ import { AppShell } from './components/AppShell';
 import { ErrorState, LoadingBlock, PageHeader } from './components/ui';
 import { LoginPage } from './pages/LoginPage';
 import { SessionPage } from './pages/SessionPage';
+import { MotionProfilePage } from './pages/MotionProfilePage';
 import { CatalogPage } from './pages/extended/CatalogPage';
 import { ActivityDetailPage } from './pages/extended/ActivityDetailPage';
 import { UnavailablePage } from './pages/extended/UnavailablePage';
@@ -91,6 +92,7 @@ function AuthGate() {
           );
         })}
         <Route path="gimnasio/entrenar" element={<SessionPage />} />
+        <Route path="gimnasio/ejercicios/:id/deteccion" element={<MotionProfilePage />} />
         <Route path="gimnasio/catalogo" element={<CatalogPage />} />
         <Route
           path="actividades/:id"

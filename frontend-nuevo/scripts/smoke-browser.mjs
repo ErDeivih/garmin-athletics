@@ -119,6 +119,14 @@ try {
   await page.waitForTimeout(300);
   await page.setViewportSize({ width: 390, height: 1600 });
   await shot('10-catalogo');
+  // Editor de detección IMU de un ejercicio.
+  await page.getByRole('link', { name: /configurar detección/i }).first().click();
+  await page.getByRole('heading', { name: /detección de repeticiones/i }).waitFor();
+  await page.setViewportSize({ width: 390, height: 1600 });
+  await shot('18-deteccion');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('link', { name: /^catálogo$/i }).click();
+  await page.getByRole('heading', { name: 'Catálogo', exact: true }).waitFor();
   await page.getByLabel(/buscar/i).fill('');
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('link', { name: /volver a gimnasio/i }).click();
@@ -157,7 +165,9 @@ try {
   await page.getByRole('heading', { name: 'Actividades', exact: true }).waitFor();
   await shot('04-actividades');
 
-  // Detalle de actividad: elige una salida con GPS y track disponible.
+  // Detalle de actividad: filtra Carrera para asegurar una salida con GPS.
+  await page.getByRole('button', { name: 'Carrera' }).click();
+  await page.waitForTimeout(400);
   const firstActivity = page.locator('a[href^="/actividades/"]').filter({ hasText: /Carrera|Ciclismo|Fútbol/i }).first();
   if ((await firstActivity.count()) > 0) {
     await firstActivity.click();

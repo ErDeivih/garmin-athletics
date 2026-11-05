@@ -78,6 +78,12 @@ export function CatalogPage() {
                 {exercise.is_unilateral ? ' · unilateral' : ''}
               </p>
               {exercise.notes ? <p className="mt-1 text-caption text-ink-faint">{exercise.notes}</p> : null}
+              <Link
+                to={`/gimnasio/ejercicios/${exercise.id}/deteccion`}
+                className="focus-ring mt-2 inline-flex min-h-11 items-center text-caption font-semibold text-accent underline"
+              >
+                Configurar detección
+              </Link>
             </li>
           ))}
         </ul>
