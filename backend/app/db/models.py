@@ -175,6 +175,7 @@ class CalendarEvent(Base):
     start_local = Column(DateTime, nullable=False)
     duration_min = Column(Integer, nullable=False, default=60)
     weekday = Column(Integer, nullable=True)  # 0=lunes..6=domingo (recurrente semanal)
+    recurrence_until = Column(Date, nullable=True)  # última fecha que aún se repite
     template_id = Column(String(36), nullable=True, index=True)  # plantilla que se envía al reloj
     garmin_workout_id = Column(String(64), nullable=True)
     last_scheduled_date = Column(Date, nullable=True)
@@ -297,6 +298,10 @@ class SessionSet(Base):
     rest_seconds = Column(Integer, nullable=True)
     completed_at = Column(DateTime, nullable=True)
     client_set_id = Column(String(64), nullable=True, index=True)  # idempotencia del reloj (T-32)
+    detected_reps = Column(Integer, nullable=True)  # repeticiones medidas por el IMU del reloj
+    velocity_mps = Column(Float, nullable=True)  # velocidad media de ejecución
+    estimated_force_n = Column(Float, nullable=True)
+    estimated_1rm_kg = Column(Float, nullable=True)
 
 
 class DailyStat(Base):

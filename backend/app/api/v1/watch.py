@@ -1,4 +1,4 @@
-"""API de la watch-app propia de Forja (T-32).
+"""API de la watch-app propia de PULSO (T-32).
 
 La app Connect IQ pide el entreno del día y manda las series hechas. Esta
 versión usa Bearer normal; el emparejamiento por código/token de dispositivo
@@ -94,6 +94,10 @@ class WatchSetIn(BaseModel):
     weight_kg: float = Field(..., ge=0, le=1000)
     reps: int = Field(..., ge=0, le=200)
     completed_at: Optional[datetime] = None
+    detected_reps: Optional[int] = Field(None, ge=0, le=200)
+    velocity_mps: Optional[float] = Field(None, ge=0, le=10)
+    estimated_force_n: Optional[float] = Field(None, ge=0, le=10000)
+    estimated_1rm_kg: Optional[float] = Field(None, ge=0, le=1000)
 
 
 @router.post("/sets", summary="Guardar una serie hecha en el reloj (idempotente)")
@@ -145,6 +149,10 @@ async def watch_save_set(
         set_type="normal",
         completed_at=payload.completed_at,
         client_set_id=payload.client_set_id,
+        detected_reps=payload.detected_reps,
+        velocity_mps=payload.velocity_mps,
+        estimated_force_n=payload.estimated_force_n,
+        estimated_1rm_kg=payload.estimated_1rm_kg,
     )
     db.add(row)
     session.total_tonnage_kg = round((session.total_tonnage_kg or 0) + payload.weight_kg * payload.reps, 2)

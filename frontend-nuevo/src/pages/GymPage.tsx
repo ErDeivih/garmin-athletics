@@ -92,9 +92,14 @@ export function GymPage() {
         title="Gimnasio"
         description="Tu entreno de hoy, tus plantillas y tu historial."
         actions={
-          <Link className={secondaryLink} to="/gimnasio/catalogo">
-            Catálogo
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link className={secondaryLink} to="/gimnasio/biblioteca">
+              Biblioteca
+            </Link>
+            <Link className={secondaryLink} to="/gimnasio/catalogo">
+              Catálogo
+            </Link>
+          </div>
         }
       />
 

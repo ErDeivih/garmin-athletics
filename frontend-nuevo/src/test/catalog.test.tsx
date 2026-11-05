@@ -4,7 +4,7 @@ import { installFakeApi, json } from './fakeApi';
 import { renderApp } from './renderApp';
 import * as f from './fixtures';
 
-const TOKEN_KEY = 'forja.token';
+const TOKEN_KEY = 'pulso.token';
 
 const catalog = {
   total: 2,

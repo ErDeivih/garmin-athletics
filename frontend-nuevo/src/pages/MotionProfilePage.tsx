@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   useDeactivateMotionProfile,
@@ -13,57 +13,24 @@ type ProfileShape = {
   sensor?: Record<string, unknown>;
   signal?: Record<string, unknown>;
   axis?: { name?: string; mode?: string; side?: string; sign?: number };
-  rep?: {
-    expected_duration_s?: number;
-    min_duration_s?: number;
-    max_duration_s?: number;
-    min_peak_distance_s?: number;
-    prominence_mg?: number;
-    hysteresis_mg?: number;
-  };
-  set?: {
-    min_reps?: number;
-    start_after_reps?: number;
-    end_rest_s?: number;
-    auto_set_detection?: boolean;
-  };
+  rep?: Record<string, unknown>;
+  set?: Record<string, unknown>;
   side?: Record<string, unknown>;
   confidence?: Record<string, unknown>;
+  auto?: boolean;
 };
 
-const DEFAULT_PROFILE: ProfileShape = {
+const AUTO_PROFILE: ProfileShape = {
   schema_version: 1,
+  auto: true,
   sensor: { source: 'watch_accelerometer', sample_rate_hz: 25, units: 'milli_g', axes: ['x', 'y', 'z'], max_window_s: 2.0 },
-  signal: { mode: 'axis_projected', gravity_removal: 'mean_subtract', smooth_samples: 3, normalize: false },
-  axis: { name: 'z', mode: 'calibrated', side: 'watch_arm', sign: 1 },
-  rep: {
-    expected_duration_s: 2.4,
-    min_duration_s: 1.2,
-    max_duration_s: 5.0,
-    min_peak_distance_s: 0.7,
-    prominence_mg: 180,
-    hysteresis_mg: 60,
-  },
-  set: { min_reps: 3, start_after_reps: 2, end_rest_s: 8, auto_set_detection: true },
+  signal: { mode: 'auto', gravity_removal: 'mean_subtract', smooth_samples: 3, normalize: false },
+  axis: { name: 'z', mode: 'auto', side: 'watch_arm', sign: 1 },
+  rep: { min_duration_s: 0.5, max_duration_s: 8.0, min_peak_distance_s: 0.35, prominence_mg: 120 },
+  set: { min_reps: 1, auto_set_detection: true, end_rest_s: 8 },
   side: { mode: 'unilateral', counts: 'watch_arm_only', mirror_when_left: true },
-  confidence: { min_interval_ratio: 0.65, max_interval_ratio: 1.5, min_reps_before_review: 2 },
+  confidence: { min_interval_ratio: 0.55, max_interval_ratio: 1.8, min_reps_before_review: 1 },
 };
-
-function mergeProfile(base: ProfileShape, incoming?: Record<string, unknown> | null): ProfileShape {
-  if (!incoming) return base;
-  const profile = incoming as ProfileShape;
-  return {
-    ...base,
-    ...profile,
-    sensor: { ...base.sensor, ...profile.sensor },
-    signal: { ...base.signal, ...profile.signal },
-    axis: { ...base.axis, ...profile.axis },
-    rep: { ...base.rep, ...profile.rep },
-    set: { ...base.set, ...profile.set },
-    side: { ...base.side, ...profile.side },
-    confidence: { ...base.confidence, ...profile.confidence },
-  };
-}
 
 export function MotionProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -71,15 +38,8 @@ export function MotionProfilePage() {
   const motion = useMotionProfile(id);
   const save = useSaveMotionProfile(id);
   const deactivate = useDeactivateMotionProfile(id);
-
-  const [profile, setProfile] = useState<ProfileShape>(DEFAULT_PROFILE);
+  const [profile, setProfile] = useState<ProfileShape>(AUTO_PROFILE);
   const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    if (motion.data?.configured) {
-      setProfile(mergeProfile(DEFAULT_PROFILE, motion.data.profile));
-    }
-  }, [motion.data]);
 
   if (exercise.isPending || motion.isPending) {
     return <LoadingBlock label="Cargando la detección" />;
@@ -103,28 +63,20 @@ export function MotionProfilePage() {
 
   const active = motion.data?.configured ?? false;
   const rep = profile.rep ?? {};
-  const set = profile.set ?? {};
-
-  const updateRep = (patch: Partial<NonNullable<ProfileShape['rep']>>) =>
-    setProfile((current) => ({ ...current, rep: { ...current.rep, ...patch } }));
-  const updateSet = (patch: Partial<NonNullable<ProfileShape['set']>>) =>
-    setProfile((current) => ({ ...current, set: { ...current.set, ...patch } }));
-  const updateAxis = (patch: Partial<NonNullable<ProfileShape['axis']>>) =>
-    setProfile((current) => ({ ...current, axis: { ...current.axis, ...patch } }));
 
   const activate = () => {
-    const expected = Number(rep.expected_duration_s ?? 2.4);
     const next: ProfileShape = {
       ...profile,
       schema_version: 1,
+      auto: true,
       rep: {
         ...rep,
-        expected_duration_s: expected,
-        min_duration_s: Math.max(0.6, Number((expected * 0.5).toFixed(2))),
-        max_duration_s: Math.min(12, Number((expected * 2).toFixed(2))),
-        min_peak_distance_s: Math.max(0.3, Number((expected * 0.5).toFixed(2))),
+        prominence_mg: Number(rep.prominence_mg ?? 120),
+        min_peak_distance_s: Number(rep.min_peak_distance_s ?? 0.35),
+        min_duration_s: 0.5,
+        max_duration_s: 8.0,
       },
-      set: { ...set, min_reps: Number(set.min_reps ?? 3), start_after_reps: Number(set.start_after_reps ?? 2) },
+      set: { ...profile.set, min_reps: 1, auto_set_detection: true },
     };
     save.mutate(
       { profile: next as Record<string, unknown>, status: 'active' },
@@ -150,110 +102,92 @@ export function MotionProfilePage() {
       />
 
       <Card>
-        <SectionTitle hint={active ? 'Activa' : 'Sin configurar'}>Detección</SectionTitle>
+        <SectionTitle hint={active ? 'Activa' : 'Sin activar'}>Detección automática</SectionTitle>
         <p className="text-body text-ink-muted">
-          {active
-            ? 'El reloj puede contar las repeticiones de este ejercicio solo.'
-            : 'Configura el movimiento para que el reloj cuente las repeticiones y las series sin tocar el reloj.'}
+          Cuando empiezas la serie, el reloj detecta el movimiento: marca el inicio y el final de cada
+          repetición, mide la velocidad y estima la fuerza. No tienes que configurar duraciones.
         </p>
         {active ? (
-          <Button
-            variant="danger"
-            className="mt-3"
-            onClick={() => deactivate.mutate(undefined, { onSuccess: () => { setSaved(false); void motion.refetch(); } })}
-            disabled={deactivate.isPending}
-          >
-            {deactivate.isPending ? 'Desactivando…' : 'Desactivar detección'}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Button
+              variant="danger"
+              onClick={() => deactivate.mutate(undefined, { onSuccess: () => { setSaved(false); void motion.refetch(); } })}
+              disabled={deactivate.isPending}
+            >
+              {deactivate.isPending ? 'Desactivando…' : 'Desactivar'}
+            </Button>
+            <span className="text-caption text-ink-faint">La estimación se verá al terminar la serie.</span>
+          </div>
+        ) : null}
+        {!active || saved ? (
+          <Button variant="primary" className="mt-3" onClick={activate} disabled={save.isPending}>
+            {save.isPending ? 'Activando…' : 'Activar detección automática'}
           </Button>
+        ) : null}
+        {saved ? <p role="status" className="mt-2 text-caption text-success">Detección activada.</p> : null}
+        {save.isError ? (
+          <p role="alert" className="mt-2 text-caption text-danger">
+            No se pudo activar. Inténtalo otra vez.
+          </p>
         ) : null}
       </Card>
 
       <Card className="mt-3">
-        <SectionTitle hint="Se guarda en tu cuenta">Ajustes</SectionTitle>
-        <div className="flex flex-col gap-3">
-          <label className="flex flex-col gap-1 text-caption text-ink-muted">
-            Duración de una repetición (segundos)
-            <input
-              type="number"
-              min={0.5}
-              max={12}
-              step={0.1}
-              value={rep.expected_duration_s ?? 2.4}
-              onChange={(event) => updateRep({ expected_duration_s: Number(event.target.value) })}
-              className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-3 text-body text-ink"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-caption text-ink-muted">
-            Repeticiones para empezar a contar la serie
-            <input
-              type="number"
-              min={1}
-              max={10}
-              value={set.start_after_reps ?? 2}
-              onChange={(event) => updateSet({ start_after_reps: Number(event.target.value) })}
-              className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-3 text-body text-ink"
-            />
-          </label>
-          <label className="flex items-center gap-2 text-body text-ink">
-            <input
-              type="checkbox"
-              checked={set.auto_set_detection ?? true}
-              onChange={(event) => updateSet({ auto_set_detection: event.target.checked })}
-              className="size-5 accent-[var(--ga-accent)]"
-            />
-            Detectar también cuándo empieza y acaba la serie
-          </label>
-          <details className="rounded-md border border-line bg-raised p-3">
-            <summary className="cursor-pointer text-body font-semibold text-ink">Ajustes avanzados</summary>
-            <div className="mt-3 flex flex-col gap-3">
-              <label className="flex flex-col gap-1 text-caption text-ink-muted">
-                Eje del movimiento
-                <select
-                  value={profile.axis?.name ?? 'z'}
-                  onChange={(event) => updateAxis({ name: event.target.value })}
-                  className="focus-ring min-h-11 rounded-md border border-line-strong bg-surface px-3 text-body text-ink"
-                >
-                  <option value="x">X</option>
-                  <option value="y">Y</option>
-                  <option value="z">Z</option>
-                </select>
-              </label>
-              <label className="flex flex-col gap-1 text-caption text-ink-muted">
-                Sensibilidad
-                <select
-                  value={String(rep.prominence_mg ?? 180)}
-                  onChange={(event) => updateRep({ prominence_mg: Number(event.target.value) })}
-                  className="focus-ring min-h-11 rounded-md border border-line-strong bg-surface px-3 text-body text-ink"
-                >
-                  <option value="320">Baja (movimientos amplios)</option>
-                  <option value="180">Media</option>
-                  <option value="90">Alta (movimientos cortos)</option>
-                </select>
-              </label>
-            </div>
-          </details>
-          <Button variant="primary" onClick={activate} disabled={save.isPending}>
-            {save.isPending ? 'Guardando…' : 'Guardar y activar'}
-          </Button>
-          {saved ? <p role="status" className="text-caption text-success">Detección activada.</p> : null}
-          {save.isError ? (
-            <p role="alert" className="text-caption text-danger">
-              No se pudo guardar. Revisa los valores.
-            </p>
-          ) : null}
-        </div>
+        <SectionTitle>Ajuste fino</SectionTitle>
+        <details>
+          <summary className="cursor-pointer text-body font-semibold text-ink">Solo si el reloj no te cuenta bien</summary>
+          <p className="mt-2 text-caption text-ink-muted">
+            La mayoría de ejercicios funcionan con la detección automática. Cambia esto solo si faltan
+            o sobran repeticiones.
+          </p>
+          <div className="mt-3 flex flex-col gap-3">
+            <label className="flex flex-col gap-1 text-caption text-ink-muted">
+              Movimiento
+              <select
+                value={profile.axis?.name ?? 'z'}
+                onChange={(event) => setProfile((current) => ({
+                  ...current,
+                  axis: { ...current.axis, name: event.target.value },
+                }))}
+                className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-3 text-body text-ink"
+              >
+                <option value="x">Arriba y abajo</option>
+                <option value="y">Lateral</option>
+                <option value="z">Frontal</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-caption text-ink-muted">
+              Sensibilidad
+              <select
+                value={String(rep.prominence_mg ?? 120)}
+                onChange={(event) => setProfile((current) => ({
+                  ...current,
+                  rep: { ...current.rep, prominence_mg: Number(event.target.value) },
+                }))}
+                className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-3 text-body text-ink"
+              >
+                <option value="240">Suave</option>
+                <option value="120">Normal</option>
+                <option value="60">Alta</option>
+              </select>
+            </label>
+            <Button variant="secondary" onClick={activate} disabled={save.isPending}>
+              Guardar ajuste
+            </Button>
+          </div>
+        </details>
       </Card>
 
       <Card className="mt-3">
         <SectionTitle>Estado</SectionTitle>
         {active ? (
           <p className="text-body text-ink-muted">
-            Perfil activo en tu cuenta. Se usará cuando el reloj tenga la detección instalada.
+            Activa en tu cuenta. El reloj contará la serie y te dará la estimación de fuerza.
           </p>
         ) : (
           <EmptyState
             title="Conteo manual"
-            description="Mientras no haya un perfil activo, las series se marcan a mano en la sesión."
+            description="Mientras no la actives, las series se marcan a mano en la sesión."
           />
         )}
       </Card>

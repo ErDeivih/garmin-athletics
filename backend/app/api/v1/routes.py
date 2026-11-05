@@ -1,4 +1,5 @@
-"""Rutas planificadas (Fase 7): guardar, listar, exportar a GPX."""
+"""Rutas planificadas: guardar, generar, exportar a GPX y preparar para el reloj."""
+import math
 import os
 import uuid
 from datetime import datetime
@@ -33,6 +34,160 @@ class RouteCreate(BaseModel):
     ele: Optional[List[Optional[float]]] = None
 
 
+class RoutePoint(BaseModel):
+    lat: float = Field(..., ge=-90, le=90)
+    lon: float = Field(..., ge=-180, le=180)
+    ele: Optional[float] = None
+
+
+class RouteGenerate(BaseModel):
+    name: str = Field(..., min_length=2, max_length=150)
+    sport: str = Field("running", pattern="^(cycling|running|hiking)$")
+    start: RoutePoint
+    checkpoints: List[RoutePoint] = Field(..., min_length=1, max_length=12)
+    distance_km: float = Field(8, ge=1, le=200)
+    effort: str = Field("moderate", pattern="^(easy|moderate|hard)$")
+    loop: bool = False
+
+
+def _distance_m(points: List[RoutePoint]) -> float:
+    return sum(tsvc._haversine_m(points[i - 1].lat, points[i - 1].lon,
+                                 points[i].lat, points[i].lon)
+               for i in range(1, len(points)))
+
+
+def _smooth_route(points: List[RoutePoint], per_segment: int = 45) -> List[Dict[str, float]]:
+    """Interpola los checkpoints con una curva suave y determinista."""
+    out: List[Dict[str, float]] = []
+    for index in range(1, len(points)):
+        a, b = points[index - 1], points[index]
+        dlat, dlon = b.lat - a.lat, b.lon - a.lon
+        length = math.hypot(dlat, dlon) or 1.0
+        # Separación perpendicular pequeña: la ruta no es una línea recta.
+        off_lat = -dlon / length * 0.0009
+        off_lon = dlat / length * 0.0009
+        for step in range(per_segment):
+            t = step / per_segment
+            bend = math.sin(math.pi * t) * (0.35 + 0.25 * index)
+            out.append({
+                "lat": a.lat + dlat * t + off_lat * bend,
+                "lon": a.lon + dlon * t + off_lon * bend,
+            })
+    out.append({"lat": points[-1].lat, "lon": points[-1].lon})
+    return out
+
+
+def _elevations(points: List[Dict[str, float]], checkpoints: List[RoutePoint]) -> List[float]:
+    known = [p.ele for p in checkpoints if p.ele is not None]
+    base = known[0] if known else 120.0
+    span = max(known) - min(known) if len(known) > 1 else 60.0
+    out = []
+    for index, _ in enumerate(points):
+        progress = index / max(1, len(points) - 1)
+        if known and len(known) >= 2:
+            out.append(round(known[0] + span * math.sin(math.pi * progress) * 0.8, 1))
+        else:
+            out.append(round(base + 25 * math.sin(progress * math.pi * 2) + 14 * math.sin(progress * math.pi * 5), 1))
+    return out
+
+
+def _splits(points: List[Dict[str, float]], ele: List[float], sport: str, effort: str) -> List[Dict[str, Any]]:
+    speed_kmh = {"easy": 9.0, "moderate": 11.0, "hard": 13.0}[effort]
+    if sport == "cycling":
+        speed_kmh = {"easy": 22.0, "moderate": 26.0, "hard": 31.0}[effort]
+    splits = []
+    total = 0.0
+    km = 1
+    start_index = 0
+    for index in range(1, len(points)):
+        total += tsvc._haversine_m(points[index - 1]["lat"], points[index - 1]["lon"],
+                                   points[index]["lat"], points[index]["lon"])
+        if total >= km * 1000 or index == len(points) - 1:
+            distance = total - (km - 1) * 1000
+            seg_ele = ele[start_index:index + 1]
+            gain, _ = tsvc.gain_loss(seg_ele)
+            pace_s = (distance / 1000) / speed_kmh * 3600 if sport != "cycling" else 0
+            speed = speed_kmh
+            duration_s = round(pace_s) if sport != "cycling" else round(distance / 1000 / speed_kmh * 3600)
+            splits.append({
+                "km": km,
+                "distance_m": round(distance),
+                "gain_m": gain,
+                "pace": f"{int(pace_s // 60)}:{int(pace_s % 60):02d} /km" if sport != "cycling" else None,
+                "speed_kmh": round(speed, 1),
+                "duration_s": duration_s,
+            })
+            km += 1
+            start_index = index
+    return splits
+
+
+@router.post("/generate", summary="Generar una ruta con checkpoints, desnivel y parciales")
+async def generate_route(
+    payload: RouteGenerate,
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    waypoints = [payload.start] + payload.checkpoints
+    if payload.loop:
+        waypoints.append(payload.start)
+    if len(waypoints) < 2:
+        raise HTTPException(status_code=400, detail="Añade al menos un punto de paso.")
+    points = _smooth_route(waypoints)
+    current = sum(tsvc._haversine_m(points[i - 1]["lat"], points[i - 1]["lon"],
+                                    points[i]["lat"], points[i]["lon"]) for i in range(1, len(points)))
+    target_m = payload.distance_km * 1000
+    if current > 50 and target_m > 0:
+        # Ajusta la escala alrededor del inicio para que la distancia pedida sea
+        # la de verdad; los puntos de paso se mueven con la ruta.
+        factor = max(0.25, min(6.0, target_m / current))
+        origin = waypoints[0]
+        points = [{"lat": origin.lat + (point["lat"] - origin.lat) * factor,
+                   "lon": origin.lon + (point["lon"] - origin.lon) * factor} for point in points]
+        waypoints = [RoutePoint(lat=origin.lat + (p.lat - origin.lat) * factor,
+                                lon=origin.lon + (p.lon - origin.lon) * factor,
+                                ele=p.ele) for p in waypoints]
+    ele = _elevations(points, waypoints)
+    dist = sum(tsvc._haversine_m(points[i - 1]["lat"], points[i - 1]["lon"],
+                                 points[i]["lat"], points[i]["lon"]) for i in range(1, len(points)))
+    gain, loss = tsvc.gain_loss(ele)
+    splits = _splits(points, ele, payload.sport, payload.effort)
+    rid = str(uuid.uuid4())
+    path = os.path.join(_routes_dir(user.id), f"{rid}.json")
+    route_payload = {
+        "lat": [round(p["lat"], 6) for p in points],
+        "lon": [round(p["lon"], 6) for p in points],
+        "ele": ele,
+        "splits": splits,
+        "effort": payload.effort,
+        "estimated_duration_s": sum(item["duration_s"] for item in splits),
+        "checkpoints": [p.model_dump() for p in waypoints],
+    }
+    import json as _json
+    with open(path, "w", encoding="utf-8") as f:
+        _json.dump(route_payload, f)
+    route = Route(id=rid, user_id=user.id, name=payload.name.strip(), sport=payload.sport,
+                  distance_meters=round(dist, 1), gain_m=gain, point_count=len(points), file_path=path)
+    db.add(route)
+    await db.commit()
+    return {
+        "status": "generated",
+        "id": rid,
+        "name": route.name,
+        "sport": route.sport,
+        "distance_m": round(dist, 1),
+        "gain_m": gain,
+        "loss_m": loss,
+        "effort": payload.effort,
+        "lat": route_payload["lat"],
+        "lon": route_payload["lon"],
+        "ele": route_payload["ele"],
+        "splits": splits,
+        "checkpoints": route_payload["checkpoints"],
+        "estimated_duration_s": route_payload["estimated_duration_s"],
+    }
+
+
 def _gpx(name: str, lat: List[float], lon: List[float], ele: Optional[List]) -> str:
     pts = []
     for i, (la, lo) in enumerate(zip(lat, lon)):
@@ -40,7 +195,7 @@ def _gpx(name: str, lat: List[float], lon: List[float], ele: Optional[List]) -> 
         el = f"<ele>{e:.1f}</ele>" if e is not None else ""
         pts.append(f"<trkpt lat=\"{la:.6f}\" lon=\"{lo:.6f}\">{el}</trkpt>")
     return ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-            "<gpx version=\"1.1\" creator=\"GarminAthletics\">"
+            "<gpx version=\"1.1\" creator=\"PULSO\">"
             f"<trk><name>{name}</name><trkseg>{''.join(pts)}</trkseg></trk></gpx>")
 
 

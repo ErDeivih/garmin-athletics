@@ -1,9 +1,9 @@
 {
-  "name": "forja-frontend",
+  "name": "pulso-frontend",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Forja: entrenamiento de fuerza, actividades y análisis.",
+  "description": "PULSO: entrenamiento de fuerza, actividades y análisis.",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

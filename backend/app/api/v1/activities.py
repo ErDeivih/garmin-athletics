@@ -230,6 +230,7 @@ async def activity_detail(
 
     min_alt = max_alt = None
     avg_speed = act.avg_speed_kmh
+    extra: Dict[str, Any] = {}
     if avg_speed is None and act.distance_meters and act.duration_seconds:
         avg_speed = round((act.distance_meters / 1000) / (act.duration_seconds / 3600), 1)
     if act.has_track:
@@ -240,6 +241,32 @@ async def activity_detail(
             _eles = [e for e in ((_cached or {}).get("points", {}).get("ele", [])) if e is not None]
             if _eles:
                 min_alt, max_alt = round(min(_eles), 1), round(max(_eles), 1)
+            if _cached:
+                streams = _tsvc3.build_streams(_cached, 2000)
+
+                def avg(key):
+                    values = [v for v in streams.get(key, []) if isinstance(v, (int, float))]
+                    return round(sum(values) / len(values), 1) if values else None
+
+                cadence = act.avg_cadence or avg("cadence")
+                power = act.avg_power or avg("power")
+                stride = avg("stride")
+                if stride is None and cadence and avg_speed:
+                    stride = round((avg_speed * 1000 / 3600) / (cadence / 60), 2)
+                gain = act.elevation_gain_m or 0
+                extra = {
+                    "cadence": cadence,
+                    "power": power,
+                    "stride_length_m": round(stride / 100, 2) if stride and stride > 20 else stride,
+                    "vertical_oscillation_cm": avg("vert_osc"),
+                    "ground_contact_ms": avg("ground_contact"),
+                    "temperature_avg_c": avg("temp"),
+                    "respiration_avg": avg("respiration"),
+                    "sweat_loss_ml": (lambda values: round(values[-1], 1) if values else None)(
+                        [v for v in streams.get("sweat", []) if isinstance(v, (int, float))]),
+                    "elevation_per_stride_m": round(gain / (cadence * (act.duration_seconds / 60)), 3)
+                    if gain and cadence and act.duration_seconds else None,
+                }
         except Exception:
             pass
     return {
@@ -268,6 +295,12 @@ async def activity_detail(
         "hr_zones": act.hr_zones,
         "weather": act.weather,
         "laps": laps,
+        "stride_length_m": extra.get("stride_length_m"),
+        "elevation_per_stride_m": extra.get("elevation_per_stride_m"),
+        "vertical_oscillation_cm": extra.get("vertical_oscillation_cm"),
+        "ground_contact_ms": extra.get("ground_contact_ms"),
+        "temperature_avg_c": extra.get("temperature_avg_c"),
+        "sweat_loss_ml": extra.get("sweat_loss_ml"),
     }
 
 

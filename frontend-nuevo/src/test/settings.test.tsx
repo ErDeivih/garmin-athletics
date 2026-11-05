@@ -5,7 +5,7 @@ import { renderApp } from './renderApp';
 import { initTheme } from '../lib/theme';
 import * as f from './fixtures';
 
-const TOKEN_KEY = 'forja.token';
+const TOKEN_KEY = 'pulso.token';
 
 describe('ajustes y sincronización', () => {
   it('lanza una sincronización y cuenta que ha ido bien', async () => {
@@ -68,30 +68,20 @@ describe('ajustes y sincronización', () => {
     expect(localStorage.getItem(TOKEN_KEY)).toBe('test-token');
   });
 
-  it('borrar la cuenta exige la frase literal, borra y cierra la sesión', async () => {
+  it('no ofrece borrar la cuenta: los datos se conservan', async () => {
     localStorage.setItem(TOKEN_KEY, 'test-token');
-    const api = installFakeApi({
+    installFakeApi({
       'GET /api/v1/auth/me': json(f.me),
       'GET /api/v1/metrics/daily': json(f.daily),
       'GET /api/v1/alerts': json(f.alerts),
       'GET /api/v1/sync/status': json(f.syncStatus),
-      'DELETE /api/v1/auth/account': json({ status: 'deleted' }),
     });
-    const user = userEvent.setup();
     renderApp('/ajustes');
 
-    await user.click(await screen.findByRole('button', { name: /^borrar mi cuenta$/i }));
-    const confirm = screen.getByRole('button', { name: /borrar mi cuenta definitivamente/i });
-    expect(confirm).toBeDisabled();
-
-    await user.type(screen.getByLabelText(/escribe borrar mi cuenta/i), 'BORRAR MI CUENTA');
-    expect(confirm).toBeEnabled();
-    await user.click(confirm);
-
-    expect(await screen.findByRole('heading', { name: /entra en Forja/i })).toBeInTheDocument();
-    expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
-    const deleted = api.calls.find((call) => call.method === 'DELETE' && call.path === '/api/v1/auth/account');
-    expect(deleted?.headers.authorization ?? deleted?.headers.Authorization).toBe('Bearer test-token');
+    expect(await screen.findByRole('heading', { name: 'Ajustes' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /borrar mi cuenta/i })).toBeNull();
+    expect(screen.queryByText(/se borran tu biometría/i)).toBeNull();
+    expect(screen.queryByText(/datos de salud/i)).toBeNull();
   });
 
   it('el tema claro se aplica y sobrevive a recargar la app', async () => {
@@ -107,7 +97,7 @@ describe('ajustes y sincronización', () => {
 
     await user.click(await screen.findByRole('button', { name: /claro/i }));
     expect(document.documentElement.dataset.theme).toBe('light');
-    expect(localStorage.getItem('forja.theme')).toBe('light');
+    expect(localStorage.getItem('pulso.theme')).toBe('light');
 
     // Simula recargar: se desmonta la app, main.tsx vuelve a aplicar el tema y
     // se monta de nuevo con la sesión guardada.

@@ -514,20 +514,6 @@ export interface ActivityLap {
   avg_speed: number;
 }
 
-export interface ActivityDetail extends ActivitySummary {
-  avg_cadence: number | null;
-  avg_power: number | null;
-  avg_speed_kmh: number | null;
-  calories: number | null;
-  loss_m: number | null;
-  min_alt: number | null;
-  max_alt: number | null;
-  bbox: [number, number, number, number] | null;
-  hr_zones: ActivityHrZone[] | null;
-  weather: Record<string, unknown> | null;
-  laps: ActivityLap[];
-}
-
 export interface MotionProfileResponse {
   configured: boolean;
   id?: string;
@@ -558,6 +544,12 @@ export interface ActivityDetail extends ActivitySummary {
   hr_zones: ActivityHrZone[] | null;
   weather: Record<string, unknown> | null;
   laps: ActivityLap[];
+  stride_length_m?: number | null;
+  elevation_per_stride_m?: number | null;
+  vertical_oscillation_cm?: number | null;
+  ground_contact_ms?: number | null;
+  temperature_avg_c?: number | null;
+  sweat_loss_ml?: number | null;
 }
 
 export interface ActivityStreams {
@@ -569,6 +561,14 @@ export interface ActivityStreams {
   speed_ms: (number | null)[];
   hr: (number | null)[];
   pace_sec_km: (number | null)[];
+  cadence?: (number | null)[];
+  power?: (number | null)[];
+  temp?: (number | null)[];
+  vert_osc?: (number | null)[];
+  ground_contact?: (number | null)[];
+  stride?: (number | null)[];
+  respiration?: (number | null)[];
+  sweat?: (number | null)[];
 }
 
 export interface ActivitySplit {
@@ -607,6 +607,32 @@ export interface PlannedRoute {
   gain_m: number | null;
   points: number;
   created_at: string;
+}
+
+export interface RoutePoint {
+  lat: number;
+  lon: number;
+  ele?: number | null;
+}
+
+export interface RouteSplit {
+  km: number;
+  distance_m: number;
+  gain_m: number;
+  pace: string | null;
+  speed_kmh: number;
+  duration_s: number;
+}
+
+export interface RouteDetail extends PlannedRoute {
+  lat: number[];
+  lon: number[];
+  ele: (number | null)[];
+  splits?: RouteSplit[];
+  checkpoints?: RoutePoint[];
+  effort?: string;
+  loss_m?: number;
+  estimated_duration_s?: number;
 }
 
 export interface LeaderboardEntry {
@@ -685,6 +711,7 @@ export interface CalendarEvent {
   is_immovable: boolean;
   notes: string | null;
   recurring?: boolean;
+  recurrence_until?: string | null;
 }
 
 export interface CalendarDay {

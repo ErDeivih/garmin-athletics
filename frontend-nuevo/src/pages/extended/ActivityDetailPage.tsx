@@ -77,6 +77,9 @@ export function ActivityDetailPage() {
   const showsSpeed = ['cycling', 'mountain_biking', 'e_bike'].includes(sport);
   const hasElevation = Boolean(streams.data?.ele.some((value) => value !== null));
   const hasSpeed = Boolean(streams.data?.speed_ms.some((value) => (value ?? 0) > 0));
+  const hasCadence = Boolean(streams.data?.cadence?.some((value) => value !== null));
+  const hasPower = Boolean(streams.data?.power?.some((value) => value !== null));
+  const hasTemperature = Boolean(streams.data?.temp?.some((value) => value !== null));
   const stats = [
     activity.distance_m ? { label: 'Distancia', value: formatNumber(activity.distance_m / 1000, 'km') } : null,
     { label: 'Duración', value: formatMinutes(activity.duration_min) },
@@ -91,6 +94,20 @@ export function ActivityDetailPage() {
       ? { label: 'Altitud', value: `${formatNumber(activity.min_alt)}–${formatNumber(activity.max_alt)} m` }
       : null,
     activity.calories ? { label: 'Calorías', value: formatNumber(activity.calories) } : null,
+    activity.stride_length_m ? { label: 'Zancada', value: `${formatNumber(activity.stride_length_m, 'm')}` } : null,
+    activity.elevation_per_stride_m
+      ? { label: 'Desnivel/zancada', value: `${formatNumber(activity.elevation_per_stride_m, 'm')}` }
+      : null,
+    activity.vertical_oscillation_cm
+      ? { label: 'Oscilación', value: `${formatNumber(activity.vertical_oscillation_cm, 'cm')}` }
+      : null,
+    activity.ground_contact_ms
+      ? { label: 'Contacto', value: `${formatNumber(activity.ground_contact_ms, 'ms')}` }
+      : null,
+    activity.temperature_avg_c
+      ? { label: 'Temperatura media', value: `${formatNumber(activity.temperature_avg_c, '°C')}` }
+      : null,
+    activity.sweat_loss_ml ? { label: 'Sudor', value: `${formatNumber(activity.sweat_loss_ml, 'ml')}` } : null,
     activity.tss ? { label: 'Carga', value: formatNumber(activity.tss) } : null,
   ].filter((item): item is { label: string; value: string } => item !== null);
 
@@ -231,6 +248,27 @@ export function ActivityDetailPage() {
                   values={streams.data.speed_ms.map((value) => (value === null ? null : value * 3.6))}
                 />
               )}
+            </Card>
+          ) : null}
+
+          {hasCadence ? (
+            <Card>
+              <SectionTitle>Cadencia</SectionTitle>
+              <ActivityStreamChart label="Cadencia" unit="rpm" values={streams.data?.cadence ?? []} />
+            </Card>
+          ) : null}
+
+          {hasPower ? (
+            <Card>
+              <SectionTitle>Potencia</SectionTitle>
+              <ActivityStreamChart label="Potencia" unit="W" values={streams.data?.power ?? []} color="var(--ga-warn)" />
+            </Card>
+          ) : null}
+
+          {hasTemperature ? (
+            <Card>
+              <SectionTitle>Temperatura</SectionTitle>
+              <ActivityStreamChart label="Temperatura" unit="°C" values={streams.data?.temp ?? []} color="var(--ga-info)" />
             </Card>
           ) : null}
 

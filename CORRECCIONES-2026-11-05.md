@@ -3,10 +3,10 @@
 Este documento deja escritas las correcciones del lote del 5 de noviembre y lo que se ha
 aplicado. Manda `DOCTRINA-CALIDAD.md` §8 y §9.
 
-## 1. Nombre: Forja
+## 1. Nombre: PULSO
 
-- Nombre de producto: **Forja**. Paquete `forja-frontend`; título `Forja`; clave de
-  almacenamiento `forja.*`.
+- Nombre de producto: **PULSO**. Paquete `pulso-frontend`; título `PULSO`; clave de
+  almacenamiento `pulso.*`.
 - Se elimina «Garmin Athletics» de cabecera, login, `index.html`, `package.json`, título de la API y
   documentación. «Garmin» solo queda donde es la **cuenta o el reloj del usuario** (conectar la
   cuenta, enviar al reloj), nunca como nombre de la app.
@@ -95,3 +95,27 @@ pide ni lo guarda.
   IMU en seco).
 - Humo real: 16 capturas 390×844, 0 errores de consola.
 - Sin GitHub Actions; push selectivo al final de la sesión.
+
+## 7. Segundo lote de correcciones (noche del 2026-11-05)
+
+1. **Marca PULSO.** Sustituye la marca anterior en cabecera, `index.html`, `package.json`, login, Ajustes,
+   `designs/pulso-design-system`, almacenamiento local y watch-app. No quedan restos de la marca anterior en
+   archivos versionados.
+2. **Capturas.** Se borraron las anteriores y se regeneraron 18 nuevas, numeradas de `01` a `18`.
+3. **Detección automática.** El editor ya no pide duración de repetición ni inicio de serie: activa
+   un perfil automático y deja el ajuste fino plegado. La watch-app escucha el acelerómetro, detecta
+   picos, mide velocidad y estima fuerza y 1RM.
+4. **Rutas.** Generador con inicio, hasta 12 pasos, distancia objetivo, deporte, esfuerzo, perfil de
+   elevación, recorrido y ritmo por kilómetro; guarda y exporta GPX para el reloj.
+5. **Calendario.** Semana completa en una fila, modo semanal o día concreto, `recurrence_until`,
+   «Quitar desde aquí», auto-carga de hoy y próximos 7 días (`/sync-upcoming`) y job de las 06:30.
+6. **Actividades.** Se extraen y pintan cadencia, potencia, temperatura, zancada, desnivel por
+   zancada, oscilación vertical, contacto y sudor cuando el reloj los trae.
+7. **Biblioteca.** Rutas agrupadas por foco y fases (activación, bloque principal, cierre), con
+   series × reps, peso, descanso y explicación breve.
+8. **Privacidad.** Se retira la tarjeta de borrado y el texto de biometría/datos de salud; no se
+   ofrece eliminar los datos desde la app.
+9. **Investigación.** `research/RUTAS-BIBLIOTECA.md` con Strava, Komoot, Hevy y Strong.
+
+**Evidencia:** frontend **35/35** pruebas en 15 ficheros; backend **16/16** scripts; 18 capturas
+390×844 sin errores de consola; contrato ampliado con `/watch/today` y `/routes/generate`.

@@ -29,7 +29,7 @@ function NavItemLink({ item, tone }: { item: NavItem; tone: 'desktop' | 'mobile'
 function Brand() {
   return (
     <div className="flex items-baseline gap-2">
-      <span className="font-display text-title font-bold uppercase tracking-wide text-ink">Forja</span>
+      <span className="font-display text-title font-bold uppercase tracking-wide text-ink">PULSO</span>
       <span className="text-caption uppercase tracking-widest text-accent">Entrena</span>
     </div>
   );

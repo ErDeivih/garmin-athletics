@@ -1,4 +1,4 @@
-# WALL — garmin (Forja)
+# WALL — garmin (PULSO)
 
 Copiado del bloque 1 de `F:\EspacioCodigo\_flujo-dsh\MAPA-DE-OBJETIVOS.md`. Se marca aquí y se
 actualiza el estado en `ESTADO-AGENTE.md`.
@@ -16,15 +16,16 @@ crear entrenamientos de gimnasio, llevarlos al reloj y analizar todo.
   calorías, carga), zonas de FC, recorrido, FC/ritmo/altitud/velocidad, parciales, vueltas y meteo;
   las gráficas sin datos no se pintan.
 - [ ] Prueba real en el Forerunner 255 (necesita 2FA de David).
-- [ ] Watch-app Connect IQ propia (después del camino A). — **en curso**: `watch/forja-watch/`
+- [ ] Watch-app Connect IQ propia (después del camino A). — **en curso**: `watch/pulso-watch/`
   diseñada, implementada y compilada para fr255 y 4 perfiles más; backend `/watch/today` y
-  `/watch/sets` probado. Capturas del simulador pendientes del permiso de firewall.
+  `/watch/sets` probado; sensor de repeticiones y estimación de fuerza añadidos. Capturas del
+  simulador pendientes del permiso de firewall.
 
 **Terminado cuando**: creo una rutina, sale en el reloj sola el día que toca, la ejecuto sin tocar el
 reloj y el análisis está completo.
 
 ## Evidencia
 
-- Frontend: 33/33 pruebas en 13 ficheros.
-- Backend: 14/14 scripts (incluye perfil IMU en seco, auto-carga y API de la watch-app).
-- Capturas: `frontend-nuevo/screenshots/` (actividad, filtros, detección).
+- Frontend: 35/35 pruebas en 15 ficheros.
+- Backend: 16/16 scripts (incluye perfil IMU en seco, auto-carga, watch-app, rutas y calendario recurrente).
+- Capturas: `frontend-nuevo/screenshots/` — 18 capturas nuevas y numeradas (01–18).

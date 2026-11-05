@@ -66,7 +66,7 @@ const shot = async (name) => {
   // Chrome escribe primero en temporales: el disco del repo a veces devuelve
   // UNKNOWN al abrir un PNG recién creado (antivirus/escáner). Copiar después
   // con reintentos evita que el humo falle por el sistema de ficheros.
-  const tmp = join(tmpdir(), `forja-${name}-${Date.now()}.png`);
+  const tmp = join(tmpdir(), `pulso-${name}-${Date.now()}.png`);
   await page.screenshot({ path: tmp, fullPage: true });
   const target = join(shotsDir, `${name}.png`);
   for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -88,7 +88,7 @@ const shot = async (name) => {
 
 try {
   await page.goto(APP, { waitUntil: 'domcontentloaded' });
-  await page.getByRole('heading', { name: /entra en Forja/i }).waitFor();
+  await page.getByRole('heading', { name: /entra en PULSO/i }).waitFor();
   await shot('01-login');
 
   await page.getByLabel(/correo/i).fill(email);
@@ -110,6 +110,20 @@ try {
   await page.getByRole('heading', { name: 'Gimnasio', exact: true }).waitFor();
   await shot('03-gimnasio');
 
+  // Biblioteca estructurada por foco y fases (T-40).
+  await page.getByRole('link', { name: /^biblioteca$/i }).click();
+  await page.getByRole('heading', { name: 'Biblioteca', exact: true }).waitFor();
+  const firstTemplate = page.getByRole('button').filter({ hasText: /Empuje A/i }).first();
+  if ((await firstTemplate.count()) > 0) {
+    await firstTemplate.click();
+    await page.getByText(/activación/i).first().waitFor({ timeout: 10000 }).catch(() => {});
+  }
+  await page.setViewportSize({ width: 390, height: 2000 });
+  await shot('04-biblioteca');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('main').getByRole('link', { name: /^gimnasio$/i }).click();
+  await page.getByRole('heading', { name: 'Gimnasio', exact: true }).waitFor();
+
   // T-28: catálogo con dibujos inicio/fin.
   await page.getByRole('link', { name: /^catálogo$/i }).click();
   await page.getByRole('heading', { name: 'Catálogo', exact: true }).waitFor();
@@ -118,12 +132,12 @@ try {
   await page.getByLabel(/buscar/i).fill('press');
   await page.waitForTimeout(300);
   await page.setViewportSize({ width: 390, height: 1600 });
-  await shot('10-catalogo');
+  await shot('05-catalogo');
   // Editor de detección IMU de un ejercicio.
   await page.getByRole('link', { name: /configurar detección/i }).first().click();
   await page.getByRole('heading', { name: /detección de repeticiones/i }).waitFor();
   await page.setViewportSize({ width: 390, height: 1600 });
-  await shot('18-deteccion');
+  await shot('06-deteccion');
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('link', { name: /^catálogo$/i }).click();
   await page.getByRole('heading', { name: 'Catálogo', exact: true }).waitFor();
@@ -136,7 +150,7 @@ try {
   await page.getByRole('button', { name: /preparar envío/i }).click();
   await page.getByText(/ejercicios? · ~/i).waitFor({ timeout: 15000 });
   await page.setViewportSize({ width: 390, height: 1600 });
-  await shot('11-envio-reloj');
+  await shot('07-envio-reloj');
   await page.getByRole('button', { name: /^cerrar$/i }).click();
   await page.setViewportSize({ width: 390, height: 844 });
 
@@ -163,18 +177,34 @@ try {
   await page.getByRole('checkbox', { name: /mostrar todas las secciones/i }).check();
   await page.getByRole('link', { name: 'Actividades' }).click();
   await page.getByRole('heading', { name: 'Actividades', exact: true }).waitFor();
-  await shot('04-actividades');
+  await shot('10-actividades');
 
   // Detalle de actividad: filtra Carrera para asegurar una salida con GPS.
   await page.getByRole('button', { name: 'Carrera' }).click();
   await page.waitForTimeout(400);
   const firstActivity = page.locator('a[href^="/actividades/"]').filter({ hasText: /Carrera|Ciclismo|Fútbol/i }).first();
   if ((await firstActivity.count()) > 0) {
-    await firstActivity.click();
+    // Elige por API una salida con GPS real, no la primera de la lista.
+    const richId = await page.evaluate(async () => {
+      const token = window.localStorage.getItem('pulso.token');
+      const response = await fetch('/api/v1/activities/?limit=100', {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (!response.ok) return null;
+      const rows = await response.json();
+      return rows.find((row) => row.has_track && /run|carrera/i.test(row.type))?.id
+        ?? rows.find((row) => row.has_track)?.id
+        ?? null;
+    });
+    if (richId) {
+      await page.goto(`${APP}/actividades/${richId}`, { waitUntil: 'domcontentloaded' });
+    } else {
+      await firstActivity.click();
+    }
     await page.getByRole('img', { name: /recorrido de la actividad/i }).waitFor({ timeout: 15000 }).catch(() => {});
     await page.waitForTimeout(800);
     await page.setViewportSize({ width: 390, height: 2400 });
-    await shot('12-actividad');
+    await shot('11-actividad');
     await page.setViewportSize({ width: 390, height: 844 });
     await page.getByRole('main').getByRole('link', { name: /^actividades$/i }).click();
     await page.getByRole('heading', { name: 'Actividades', exact: true }).waitFor();
@@ -187,7 +217,7 @@ try {
   await page.getByRole('button', { name: /^programar$/i }).click().catch(() => {});
   await page.waitForTimeout(600);
   await page.setViewportSize({ width: 390, height: 2000 });
-  await shot('13-calendario');
+  await shot('12-calendario');
   await page.setViewportSize({ width: 390, height: 844 });
 
   // Tendencias con la ampliación de T-27 (solo visible con la bandera encendida).
@@ -195,7 +225,7 @@ try {
   await page.getByRole('heading', { name: 'Tendencias', exact: true }).waitFor();
   await page.getByText(/carga semanal|carga de entrenamiento/i).first().waitFor({ timeout: 15000 });
   await page.setViewportSize({ width: 390, height: 2600 });
-  await shot('07-tendencias');
+  await shot('13-tendencias');
   await page.setViewportSize({ width: 390, height: 844 });
 
   // Resto de pantallas ampliadas y Ajustes con la nueva densidad.
@@ -208,20 +238,27 @@ try {
     await page.getByRole('link', { name: section }).click();
     await page.getByRole('heading', { name: section, exact: true }).waitFor();
     await page.waitForTimeout(400);
-    await page.setViewportSize({ width: 390, height: 1800 });
+    if (section === 'Rutas') {
+      await page.getByRole('button', { name: /generar ruta/i }).click();
+      await page.getByText(/ritmo por kilómetro/i).first().waitFor({ timeout: 15000 }).catch(() => {});
+      await page.waitForTimeout(500);
+      await page.setViewportSize({ width: 390, height: 2800 });
+    } else {
+      await page.setViewportSize({ width: 390, height: 1800 });
+    }
     await shot(name);
     await page.setViewportSize({ width: 390, height: 844 });
   }
 
   // Escritorio con la configuración por defecto: la bandera se apaga para que
   // la captura enseñe las tres pestañas visibles reales (Hoy, Gimnasio, Ajustes).
-  await page.evaluate(() => localStorage.removeItem('forja.extended'));
+  await page.evaluate(() => localStorage.removeItem('pulso.extended'));
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(`${APP}/`, { waitUntil: 'domcontentloaded' });
   await page.getByRole('heading', { name: 'Hoy', exact: true }).waitFor();
   // Espera a que el panel resuelva las consultas (dato o vacío), no a un esqueleto.
   await page.getByText(/sin datos de hoy|carga de entrenamiento/i).first().waitFor({ timeout: 15000 });
-  await shot('05-hoy-escritorio');
+  await shot('18-hoy-escritorio');
 
   if (consoleErrors.length > 0 || pageErrors.length > 0) {
     throw new Error(`Errores en el navegador: ${[...consoleErrors, ...pageErrors].join(' | ')}`);

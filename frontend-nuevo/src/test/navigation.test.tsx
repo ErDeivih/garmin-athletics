@@ -4,7 +4,7 @@ import { installFakeApi, json } from './fakeApi';
 import { renderApp } from './renderApp';
 import * as f from './fixtures';
 
-const TOKEN_KEY = 'forja.token';
+const TOKEN_KEY = 'pulso.token';
 
 const apiConSesión = () =>
   installFakeApi({
@@ -50,7 +50,7 @@ describe('moverse por la app', () => {
 
     await user.click(await screen.findByRole('button', { name: /cerrar sesión/i }));
 
-    expect(await screen.findByRole('heading', { name: /entra en Forja/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /entra en PULSO/i })).toBeInTheDocument();
     expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
     expect(api.calls.some((call) => call.path === '/api/v1/auth/logout')).toBe(true);
   });

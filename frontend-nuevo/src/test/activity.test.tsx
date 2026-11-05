@@ -3,8 +3,8 @@ import { installFakeApi, json } from './fakeApi';
 import { renderApp } from './renderApp';
 import * as f from './fixtures';
 
-const TOKEN_KEY = 'forja.token';
-const FLAG_KEY = 'forja.extended';
+const TOKEN_KEY = 'pulso.token';
+const FLAG_KEY = 'pulso.extended';
 const today = new Date();
 const localIso = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;

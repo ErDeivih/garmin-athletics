@@ -89,7 +89,7 @@ async def _auto_push_calendar_async() -> None:
 
 
 def scheduled_calendar_auto_push():
-    """Job diario: deja en el reloj el entreno que toca hoy."""
+    """Job diario: deja en el reloj los entrenos de hoy y los próximos días."""
     logger.info("⏰ Auto-carga del entrenamiento del día en el reloj...")
     try:
         asyncio.run(_auto_push_calendar_async())

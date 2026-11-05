@@ -10,6 +10,7 @@ import { LoginPage } from './pages/LoginPage';
 import { SessionPage } from './pages/SessionPage';
 import { MotionProfilePage } from './pages/MotionProfilePage';
 import { CatalogPage } from './pages/extended/CatalogPage';
+import { LibraryPage } from './pages/extended/LibraryPage';
 import { ActivityDetailPage } from './pages/extended/ActivityDetailPage';
 import { UnavailablePage } from './pages/extended/UnavailablePage';
 
@@ -28,7 +29,7 @@ function BootScreen() {
     <div className="grid min-h-dvh place-items-center bg-bg px-4 text-ink">
       <div className="w-full max-w-sm">
         <p className="mb-6 flex items-baseline gap-2">
-          <span className="font-display text-title font-bold uppercase tracking-wide">Forja</span>
+          <span className="font-display text-title font-bold uppercase tracking-wide">PULSO</span>
           <span className="text-caption uppercase tracking-widest text-accent">Entrena</span>
         </p>
         <LoadingBlock label="Comprobando la sesión" />
@@ -94,6 +95,7 @@ function AuthGate() {
         <Route path="gimnasio/entrenar" element={<SessionPage />} />
         <Route path="gimnasio/ejercicios/:id/deteccion" element={<MotionProfilePage />} />
         <Route path="gimnasio/catalogo" element={<CatalogPage />} />
+        <Route path="gimnasio/biblioteca" element={<LibraryPage />} />
         <Route
           path="actividades/:id"
           element={

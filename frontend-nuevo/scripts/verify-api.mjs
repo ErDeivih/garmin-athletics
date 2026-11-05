@@ -307,6 +307,31 @@ if (hasKeys(calendar.body, ['from', 'to', 'days'], 'GET /calendar/')) {
   check('calendar.days es un array', Array.isArray(calendar.body.days));
 }
 
+// --- Reloj y rutas nuevas (T-32/T-35) ---
+const watchToday = await request('/api/v1/watch/today', { token });
+if (hasKeys(watchToday.body, ['exercises'], 'GET /watch/today')) {
+  check('watch/today.exercises es array', Array.isArray(watchToday.body.exercises));
+}
+
+const generatedRoute = await request('/api/v1/routes/generate', {
+  method: 'POST',
+  token,
+  body: JSON.stringify({
+    name: 'Ruta de verificación',
+    sport: 'running',
+    start: { lat: 40.4168, lon: -3.7038, ele: 650 },
+    checkpoints: [{ lat: 40.43, lon: -3.69, ele: 700 }],
+    distance_km: 5,
+    effort: 'moderate',
+    loop: false,
+  }),
+});
+if (hasKeys(generatedRoute.body, ['id', 'distance_m', 'gain_m', 'lat', 'lon', 'ele', 'splits'], 'POST /routes/generate')) {
+  check('ruta generada tiene puntos', generatedRoute.body.lat.length > 2);
+  check('ruta generada tiene ritmo por km', generatedRoute.body.splits.length >= 1);
+  check('ruta generada calcula duración', generatedRoute.body.estimated_duration_s > 0);
+}
+
 const logout = await request('/api/v1/auth/logout', { method: 'POST', token });
 check('POST /auth/logout responde 200', logout.status === 200, `estado ${logout.status}`);
 

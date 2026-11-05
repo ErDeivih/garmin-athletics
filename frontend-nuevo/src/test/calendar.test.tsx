@@ -4,8 +4,8 @@ import { installFakeApi, json } from './fakeApi';
 import { renderApp } from './renderApp';
 import * as f from './fixtures';
 
-const TOKEN_KEY = 'forja.token';
-const FLAG_KEY = 'forja.extended';
+const TOKEN_KEY = 'pulso.token';
+const FLAG_KEY = 'pulso.extended';
 
 const today = new Date();
 const localIso = (date: Date) =>
@@ -71,7 +71,7 @@ describe('calendario de entrenamientos', () => {
     await user.selectOptions(screen.getByLabelText(/plantilla/i), 't-1');
     await user.click(screen.getByRole('button', { name: /^programar$/i }));
 
-    expect(await screen.findByText(/entrenamiento programado/i)).toBeInTheDocument();
+    expect(await screen.findByText(/entrenamiento semanal guardado/i)).toBeInTheDocument();
     expect(await screen.findByText(/ · empuje a$/i)).toBeInTheDocument();
     const call = api.calls.find((item) => item.method === 'POST' && item.path === '/api/v1/calendar/events');
     const body = typeof call?.body === 'string' ? JSON.parse(call.body) : call?.body;

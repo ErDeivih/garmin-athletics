@@ -5,7 +5,7 @@ import {
   useDeleteCalendarEvent,
   usePreviewEventWorkout,
   useSendEventWorkout,
-  useSyncTodayWorkouts,
+  useSyncUpcomingWorkouts,
   useTemplates,
 } from '../../api/queries';
 import { Button, Card, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../../components/ui';
@@ -18,6 +18,13 @@ const readinessLabel = (status?: string | null) => {
   if (status === 'ROJO') return 'Descansa';
   return null;
 };
+const localIso = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+const dayShort = (iso: string) => {
+  const [year, month, day] = iso.split('-').map(Number);
+  const value = new Date(year ?? 2026, (month ?? 1) - 1, day ?? 1);
+  return `${day} ${weekdayName((value.getDay() + 6) % 7).slice(0, 1)}`;
+};
 
 export function CalendarPage() {
   const calendar = useCalendar();
@@ -26,12 +33,16 @@ export function CalendarPage() {
   const deleteEvent = useDeleteCalendarEvent();
   const preview = usePreviewEventWorkout();
   const sendEvent = useSendEventWorkout();
-  const syncToday = useSyncTodayWorkouts();
+  const syncUpcoming = useSyncUpcomingWorkouts();
 
   const [templateId, setTemplateId] = useState('');
+  const [mode, setMode] = useState<'weekly' | 'once'>('weekly');
   const [days, setDays] = useState<number[]>([todayWeekday()]);
+  const [date, setDate] = useState(localIso(new Date()));
   const [time, setTime] = useState('18:00');
+  const [until, setUntil] = useState('');
   const [previewEventId, setPreviewEventId] = useState<string | null>(null);
+  const [trimDates, setTrimDates] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
 
   if (calendar.isPending || templates.isPending) {
@@ -49,7 +60,7 @@ export function CalendarPage() {
     );
   }
 
-  const weekly = new Map<string, { id: string; title: string; weekday: number; start: string; template_id: string | null }>();
+  const weekly = new Map<string, { id: string; title: string; weekday: number; start: string; template_id: string | null; recurrence_until?: string | null }>();
   for (const day of calendar.data.days) {
     for (const event of day.events) {
       if (event.weekday !== null) {
@@ -59,13 +70,14 @@ export function CalendarPage() {
           weekday: event.weekday,
           start: event.start,
           template_id: event.template_id,
+          recurrence_until: event.recurrence_until,
         });
       }
     }
   }
   const weeklyEvents = [...weekly.values()].sort((a, b) => a.weekday - b.weekday);
   const today = todayWeekday();
-  const todayEvents = calendar.data.days.find((day) => day.date === new Date().toISOString().slice(0, 10));
+  const todayEvents = calendar.data.days.find((day) => day.date === localIso(new Date()));
   const selectedTemplate = templates.data.items.find((item) => item.id === templateId);
 
   const toggleDay = (day: number) => {
@@ -73,34 +85,44 @@ export function CalendarPage() {
   };
 
   const schedule = async () => {
-    if (!selectedTemplate || days.length === 0) return;
+    if (!selectedTemplate) return;
+    if (mode === 'weekly' && days.length === 0) return;
     setMessage(null);
-    const now = new Date();
-    const base = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    for (const weekday of days) {
-      const exists = weeklyEvents.some(
-        (event) => event.template_id === selectedTemplate.id && event.weekday === weekday,
-      );
+    const base = new Date();
+    const dates: { weekday: number | null; iso: string }[] =
+      mode === 'weekly'
+        ? days.map((weekday) => {
+            const offset = (weekday - today + 7) % 7;
+            const next = new Date(base.getFullYear(), base.getMonth(), base.getDate() + offset);
+            return { weekday, iso: localIso(next) };
+          })
+        : [{ weekday: null, iso: date }];
+
+    for (const item of dates) {
+      const exists =
+        item.weekday !== null &&
+        weeklyEvents.some((event) => event.template_id === selectedTemplate.id && event.weekday === item.weekday);
       if (exists) continue;
-      const offset = (weekday - today + 7) % 7;
-      const date = new Date(base);
-      date.setDate(base.getDate() + offset);
-      const localIso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
       try {
         await createEvent.mutateAsync({
           title: selectedTemplate.name,
           event_type: 'strength',
-          start_local: `${localIso}T${time}:00`,
+          start_local: `${item.iso}T${time}:00`,
           duration_min: 60,
-          weekday,
+          weekday: item.weekday,
           template_id: selectedTemplate.id,
+          recurrence_until: mode === 'weekly' && until ? until : null,
         });
       } catch {
         setMessage('No se pudo guardar el entrenamiento.');
         return;
       }
     }
-    setMessage('Entrenamiento programado. Se cargará en el reloj el día que toque.');
+    setMessage(
+      mode === 'weekly'
+        ? 'Entrenamiento semanal guardado. Se enviará solo al reloj los próximos días.'
+        : 'Entrenamiento guardado para ese día.',
+    );
   };
 
   const previewEvent = weeklyEvents.find((event) => event.id === previewEventId);
@@ -111,58 +133,61 @@ export function CalendarPage() {
 
       <section aria-label="Programar entrenamiento">
         <Card>
-          <SectionTitle hint="Se repite cada semana">Programar entrenamiento</SectionTitle>
+          <SectionTitle hint="Semanal o un día concreto">Programar entrenamiento</SectionTitle>
           {templates.data.items.length === 0 ? (
-            <p className="text-body text-ink-muted">
-              Todavía no hay plantillas. Crea una en Gimnasio para programarla.
-            </p>
+            <p className="text-body text-ink-muted">Todavía no hay plantillas. Crea una en Gimnasio para programarla.</p>
           ) : (
             <div className="flex flex-col gap-3">
               <label className="flex flex-col gap-1 text-caption text-ink-muted">
                 Plantilla
-                <select
-                  value={templateId}
-                  onChange={(event) => setTemplateId(event.target.value)}
-                  className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-3 text-body text-ink"
-                >
+                <select value={templateId} onChange={(event) => setTemplateId(event.target.value)} className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-3 text-body text-ink">
                   <option value="">Elige una plantilla</option>
                   {templates.data.items.map((template) => (
-                    <option key={template.id} value={template.id}>
-                      {template.name}
-                    </option>
+                    <option key={template.id} value={template.id}>{template.name}</option>
                   ))}
                 </select>
               </label>
-              <fieldset>
-                <legend className="mb-1 text-caption text-ink-muted">Días</legend>
-                <div className="flex flex-wrap gap-1.5">
-                  {WEEKDAYS.map((day) => (
-                    <button
-                      key={day}
-                      type="button"
-                      aria-pressed={days.includes(day)}
-                      onClick={() => toggleDay(day)}
-                      className={`focus-ring min-h-11 min-w-11 rounded-md border px-2 text-caption font-semibold ${
-                        days.includes(day)
-                          ? 'border-accent bg-accent-soft text-accent'
-                          : 'border-line-strong text-ink-muted'
-                      }`}
-                    >
-                      {weekdayName(day).slice(0, 3)}
-                    </button>
-                  ))}
-                </div>
-              </fieldset>
+
+              <div className="grid grid-cols-2 gap-1 rounded-md border border-line p-1">
+                <button type="button" aria-pressed={mode === 'weekly'} onClick={() => setMode('weekly')} className={`focus-ring min-h-10 rounded px-2 text-caption font-semibold ${mode === 'weekly' ? 'bg-accent-soft text-accent' : 'text-ink-muted'}`}>
+                  Se repite cada semana
+                </button>
+                <button type="button" aria-pressed={mode === 'once'} onClick={() => setMode('once')} className={`focus-ring min-h-10 rounded px-2 text-caption font-semibold ${mode === 'once' ? 'bg-accent-soft text-accent' : 'text-ink-muted'}`}>
+                  Un día concreto
+                </button>
+              </div>
+
+              {mode === 'weekly' ? (
+                <fieldset>
+                  <legend className="mb-1 text-caption text-ink-muted">Días</legend>
+                  <div className="grid grid-cols-7 gap-1">
+                    {WEEKDAYS.map((day) => (
+                      <button key={day} type="button" aria-pressed={days.includes(day)} onClick={() => toggleDay(day)} className={`focus-ring min-h-11 min-w-0 rounded-md border px-1 text-caption font-semibold ${days.includes(day) ? 'border-accent bg-accent-soft text-accent' : 'border-line-strong text-ink-muted'}`}>
+                        {weekdayName(day).slice(0, 3)}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+              ) : (
+                <label className="flex flex-col gap-1 text-caption text-ink-muted">
+                  Día
+                  <input type="date" value={date} onChange={(event) => setDate(event.target.value)} className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-3 text-body text-ink" />
+                </label>
+              )}
+
               <label className="flex flex-col gap-1 text-caption text-ink-muted">
                 Hora
-                <input
-                  type="time"
-                  value={time}
-                  onChange={(event) => setTime(event.target.value)}
-                  className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-3 text-body text-ink"
-                />
+                <input type="time" value={time} onChange={(event) => setTime(event.target.value)} className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-3 text-body text-ink" />
               </label>
-              <Button variant="primary" onClick={schedule} disabled={!templateId || days.length === 0 || createEvent.isPending}>
+
+              {mode === 'weekly' ? (
+                <label className="flex flex-col gap-1 text-caption text-ink-muted">
+                  Repetir hasta (opcional)
+                  <input type="date" value={until} onChange={(event) => setUntil(event.target.value)} className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-3 text-body text-ink" />
+                </label>
+              ) : null}
+
+              <Button variant="primary" onClick={schedule} disabled={!templateId || (mode === 'weekly' && days.length === 0) || createEvent.isPending}>
                 {createEvent.isPending ? 'Guardando…' : 'Programar'}
               </Button>
               {message ? <p role="status" className="text-caption text-success">{message}</p> : null}
@@ -180,29 +205,25 @@ export function CalendarPage() {
             {weeklyEvents.map((event) => (
               <li key={event.id} className="rounded-md border border-line bg-surface px-3 py-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-body text-ink">
-                    {weekdayName(event.weekday)} · {event.title}
-                  </span>
+                  <span className="text-body text-ink">{weekdayName(event.weekday)} · {event.title}</span>
                   <span className="text-caption text-ink-faint">{event.start.slice(11, 16)}</span>
                 </div>
-                <div className="mt-1 flex flex-wrap gap-2">
+                {event.recurrence_until ? <p className="text-caption text-ink-faint">Hasta {formatDate(event.recurrence_until)}</p> : null}
+                <div className="mt-1 flex flex-wrap items-center gap-2">
                   {event.template_id ? (
                     <>
-                      <Button
-                        variant="secondary"
-                        onClick={() => {
-                          setPreviewEventId(event.id);
-                          preview.mutate(event.id);
-                        }}
-                      >
+                      <Button variant="secondary" onClick={() => { setPreviewEventId(event.id); preview.mutate(event.id); }}>
                         Previsualizar
                       </Button>
-                      <Button
-                        variant="ghost"
-                        onClick={() => deleteEvent.mutate(event.id)}
-                        disabled={deleteEvent.isPending}
-                      >
-                        Quitar
+                      <Button variant="ghost" onClick={() => deleteEvent.mutate({ id: event.id })} disabled={deleteEvent.isPending}>
+                        Quitar todo
+                      </Button>
+                      <label className="flex items-center gap-1 text-caption text-ink-muted">
+                        Desde
+        <input type="date" value={trimDates[event.id] ?? localIso(new Date())} onChange={(inputEvent) => setTrimDates((current) => ({ ...current, [event.id]: inputEvent.target.value }))} className="focus-ring min-h-9 rounded border border-line-strong bg-raised px-1 text-caption text-ink" />
+                      </label>
+                      <Button variant="ghost" onClick={() => deleteEvent.mutate({ id: event.id, fromDate: trimDates[event.id] ?? localIso(new Date()) })} disabled={deleteEvent.isPending}>
+                        Quitar desde aquí
                       </Button>
                     </>
                   ) : null}
@@ -221,30 +242,16 @@ export function CalendarPage() {
             ) : preview.data ? (
               <div className="flex flex-col gap-2">
                 <p className="text-body text-ink">
-                  {preview.data.blocks} {preview.data.blocks === 1 ? 'ejercicio' : 'ejercicios'} · ~
-                  {Math.round(preview.data.estimated_seconds / 60)} min
+                  {preview.data.blocks} {preview.data.blocks === 1 ? 'ejercicio' : 'ejercicios'} · ~{Math.round(preview.data.estimated_seconds / 60)} min
                 </p>
                 {preview.data.unmapped_exercises.length > 0 ? (
-                  <p role="alert" className="text-caption text-danger">
-                    No se pueden enviar: {preview.data.unmapped_exercises.join(', ')}.
-                  </p>
+                  <p role="alert" className="text-caption text-danger">No se pueden enviar: {preview.data.unmapped_exercises.join(', ')}.</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="primary"
-                      onClick={() =>
-                        sendEvent.mutate(previewEvent.id, {
-                          onSuccess: () => setMessage('Enviado al reloj.'),
-                          onError: () => setMessage('No se pudo enviar.'),
-                        })
-                      }
-                      disabled={sendEvent.isPending}
-                    >
+                    <Button variant="primary" onClick={() => sendEvent.mutate(previewEvent.id, { onSuccess: () => setMessage('Enviado al reloj.'), onError: () => setMessage('No se pudo enviar.') })} disabled={sendEvent.isPending}>
                       {sendEvent.isPending ? 'Enviando…' : 'Enviar al reloj'}
                     </Button>
-                    <Button variant="secondary" onClick={() => setPreviewEventId(null)}>
-                      Cerrar
-                    </Button>
+                    <Button variant="secondary" onClick={() => setPreviewEventId(null)}>Cerrar</Button>
                   </div>
                 )}
               </div>
@@ -253,65 +260,55 @@ export function CalendarPage() {
         ) : null}
       </section>
 
-      {todayEvents?.events.length ? (
-        <Card className="mt-3">
-          <SectionTitle hint={formatDate(todayEvents.date)}>Hoy</SectionTitle>
-          <p className="mb-2 text-body text-ink-muted">Carga el entreno de hoy en el reloj antes de salir.</p>
-          <Button
-            variant="primary"
-            onClick={() =>
-              syncToday.mutate(undefined, {
-                onSuccess: (result) =>
-                  setMessage(
-                    result.sent > 0
-                      ? 'Entreno de hoy cargado en el reloj.'
-                      : result.message ?? 'No hay entrenamientos para hoy.',
-                  ),
-                onError: () => setMessage('No se pudo cargar en el reloj.'),
-              })
-            }
-            disabled={syncToday.isPending}
-          >
-            {syncToday.isPending ? 'Cargando…' : 'Cargar el de hoy en el reloj'}
-          </Button>
-        </Card>
-      ) : null}
+      <Card className="mt-3">
+        <SectionTitle hint="Automático">Auto-carga en el reloj</SectionTitle>
+        <p className="text-body text-ink-muted">
+          Cada mañana se envía solo el entreno de hoy y de los próximos días. Tú solo pulsas empezar en el reloj.
+        </p>
+        <Button
+          className="mt-2"
+          variant="secondary"
+          onClick={() => syncUpcoming.mutate(undefined, {
+            onSuccess: (result) => setMessage(result.sent > 0 ? 'Entrenos de hoy y próximos días enviados.' : result.message ?? 'No hay entrenamientos pendientes.'),
+            onError: () => setMessage('No se pudo enviar.'),
+          })}
+          disabled={syncUpcoming.isPending}
+        >
+          {syncUpcoming.isPending ? 'Enviando…' : 'Preparar los próximos 7 días'}
+        </Button>
+      </Card>
 
       <section className="mt-3" aria-label="Semana">
-        <SectionTitle hint="14 días">Tu semana</SectionTitle>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-7">
+        <SectionTitle hint="7 días">Tu semana</SectionTitle>
+        <div className="grid grid-cols-7 gap-1">
           {calendar.data.days.slice(0, 7).map((day) => (
-            <Card as="article" key={day.date} className="p-2">
-              <div className="mb-1 flex items-center justify-between gap-1">
-                <span className="text-caption font-semibold text-ink">{formatDate(day.date)}</span>
+            <Card as="article" key={day.date} className="min-w-0 p-1.5">
+              <div className="mb-1 min-w-0">
+                <span className="block truncate text-[10px] font-semibold uppercase text-ink">{dayShort(day.date)}</span>
                 {readinessLabel(day.readiness?.status) ? (
-                  <span className="text-caption text-ink-faint">{readinessLabel(day.readiness?.status)}</span>
+                  <span className="block truncate text-[9px] text-ink-faint">{readinessLabel(day.readiness?.status)}</span>
                 ) : null}
               </div>
               {day.events.length === 0 && day.activities.length === 0 ? (
-                <p className="text-caption text-ink-faint">Libre</p>
+                <p className="text-[10px] text-ink-faint">Libre</p>
               ) : (
-                <ul className="flex flex-col gap-1">
-                  {day.events.map((event) => (
-                    <li key={event.id} className="text-caption text-ink">
-                      <span className="mr-1 font-semibold text-accent">Plan</span>
-                      {event.title}
+                <ul className="flex flex-col gap-0.5">
+                  {day.events.length > 0 ? (
+                    <li className="text-[9px] font-semibold text-accent" title={day.events.map((event) => event.title).join(', ')}>
+                      {day.events.length} plan
                     </li>
-                  ))}
-                  {day.activities.slice(0, 2).map((activity) => (
-                    <li key={activity.id} className="text-caption text-ink-muted">
-                      <span className="mr-1 font-semibold text-success">Hecho</span>
-                      {activity.name}
+                  ) : null}
+                  {day.activities.length > 0 ? (
+                    <li className="text-[9px] text-ink-muted" title={day.activities.map((activity) => activity.name).join(', ')}>
+                      {day.activities.length} hecho
                     </li>
-                  ))}
-                  {day.activities.length > 2 ? (
-                    <li className="text-caption text-ink-faint">+{day.activities.length - 2} más</li>
                   ) : null}
                 </ul>
               )}
             </Card>
           ))}
         </div>
+        {todayEvents?.events.length ? <p className="mt-1 text-caption text-ink-faint">Hoy tienes plan: se envía solo al reloj.</p> : null}
       </section>
     </>
   );

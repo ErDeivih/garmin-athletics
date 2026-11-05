@@ -1,0 +1,74 @@
+/* PULSO — component styles for the design-system previews.
+   Tokens come from tokens.css (generated from tokens.json); no literal colour,
+   size or radius here except the ones the tokens do not define. */
+
+body { margin: 0; font-family: var(--font-sans); background: var(--bg); color: var(--ink); }
+
+.ga-surface { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
+.ga-raised  { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius-md); }
+
+/* Button — one component, four intents. The primary action is accent; the
+   destructive one is never the primary action of a screen. */
+.ga-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  min-height: 44px; padding: 0 var(--space-4);
+  font-family: var(--font-sans); font-size: 15px; font-weight: 600; line-height: 1;
+  border-radius: var(--radius-md); border: 1px solid transparent;
+  background: transparent; color: var(--ink); cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.ga-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ga-btn:disabled { opacity: .45; cursor: not-allowed; }
+.ga-btn--primary { background: var(--accent); color: var(--on-accent); }
+.ga-btn--primary:hover:not(:disabled) { filter: brightness(1.06); }
+.ga-btn--secondary { background: var(--raised); border-color: var(--line-strong); color: var(--ink); }
+.ga-btn--secondary:hover:not(:disabled) { border-color: var(--accent); }
+.ga-btn--ghost { color: var(--ink-muted); }
+.ga-btn--ghost:hover:not(:disabled) { background: var(--raised); color: var(--ink); }
+.ga-btn--danger { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+.ga-btn--danger:hover:not(:disabled) { filter: brightness(1.08); }
+
+/* Badge — one status word plus a dot. The word carries the meaning; the dot
+   repeats it. Colour is never the only signal. */
+.ga-badge {
+  display: inline-flex; align-items: center; gap: var(--space-1);
+  padding: 2px var(--space-2); border-radius: var(--radius-full);
+  font-size: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase;
+}
+.ga-badge__dot { width: 6px; height: 6px; border-radius: var(--radius-full); background: currentColor; }
+.ga-badge--go   { background: var(--success-soft); color: var(--success); }
+.ga-badge--warn { background: var(--warn-soft); color: var(--warn); }
+.ga-badge--stop { background: var(--danger-soft); color: var(--danger); }
+.ga-badge--info { background: var(--info-soft); color: var(--info); }
+.ga-badge--idle { background: var(--raised); color: var(--ink-muted); }
+
+/* StatCard — the unit of the day panel. Label, figure, unit, delta, footnote. */
+.ga-stat { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+.ga-stat__label { font-size: 12px; font-weight: 500; letter-spacing: .02em; text-transform: uppercase; color: var(--ink-muted); }
+.ga-stat__figure { display: flex; align-items: baseline; gap: var(--space-1); }
+.ga-stat__value { font-family: var(--font-display); font-size: 48px; line-height: 48px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink); }
+.ga-stat__unit { font-size: 12px; font-weight: 500; color: var(--ink-muted); }
+.ga-stat__delta { font-size: 12px; font-weight: 500; color: var(--ink-muted); }
+.ga-stat__delta--up { color: var(--success); }
+.ga-stat__delta--down { color: var(--danger); }
+.ga-stat__foot { font-size: 12px; line-height: 16px; color: var(--ink-faint); }
+.ga-stat--hero { border-color: var(--line-strong); background: var(--surface); }
+
+/* Field — visible label, 44px input, hint below, error without losing the label. */
+.ga-field { display: flex; flex-direction: column; gap: var(--space-2); max-width: 360px; }
+.ga-field__label { font-size: 15px; font-weight: 600; color: var(--ink); }
+.ga-field__input {
+  min-height: 44px; padding: 0 var(--space-3);
+  background: var(--raised); color: var(--ink);
+  border: 1px solid var(--line-strong); border-radius: var(--radius-md);
+  font-family: var(--font-sans); font-size: 15px;
+}
+.ga-field__input:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.ga-field__hint { font-size: 12px; line-height: 16px; color: var(--ink-faint); }
+.ga-field__error { font-size: 12px; line-height: 16px; color: var(--danger); }
+.ga-field--invalid .ga-field__input { border-color: var(--danger); }
+
+/* Layout helper for previews only. */
+.ga-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; padding: var(--space-4); }
+.ga-col { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); }
+.ga-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-4); padding: var(--space-4); }

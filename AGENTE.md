@@ -1,4 +1,4 @@
-# Ficha del agente — Forja — panel de entrenamiento y editor de gimnasio
+# Ficha del agente — PULSO — panel de entrenamiento y editor de gimnasio
 
 **Id en el panel**: `garmin`
 **Ruta**: `F:\Proyectos\garmin`
@@ -43,7 +43,7 @@ Inventariar los endpoints del backend (que hay y que devuelve), porque el fronte
 Deja `ESTADO-AGENTE.md` actualizado con este formato exacto. De ahi lo lee el panel:
 
 ```
-titulo: Forja — panel de entrenamiento y editor de gimnasio
+titulo: PULSO — panel de entrenamiento y editor de gimnasio
 estado: en-curso
 tarea: lo que estabas haciendo
 nivel: 1 | 2 | 3

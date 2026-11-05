@@ -27,6 +27,7 @@ class EventCreate(BaseModel):
     template_id: Optional[str] = Field(None, description="Plantilla de gimnasio que se cargará en el reloj")
     is_immovable: bool = Field(False, description="El GymAdvisor lo respeta (sin pierna 48h alrededor)")
     notes: Optional[str] = None
+    recurrence_until: Optional[date] = Field(None, description="Última fecha de la repetición semanal")
 
 
 class EventUpdate(BaseModel):
@@ -38,6 +39,7 @@ class EventUpdate(BaseModel):
     template_id: Optional[str] = None
     is_immovable: Optional[bool] = None
     notes: Optional[str] = None
+    recurrence_until: Optional[date] = None
 
 
 def _serialize(ev: CalendarEvent) -> Dict[str, Any]:
@@ -45,7 +47,8 @@ def _serialize(ev: CalendarEvent) -> Dict[str, Any]:
             "start": ev.start_local.isoformat(), "duration_min": ev.duration_min,
             "weekday": ev.weekday, "template_id": ev.template_id,
             "is_immovable": ev.is_immovable,
-            "notes": ev.notes}
+            "notes": ev.notes,
+            "recurrence_until": ev.recurrence_until.isoformat() if ev.recurrence_until else None}
 
 
 def _occurrences(ev: CalendarEvent, start_d: date, end_d: date) -> List[Dict[str, Any]]:
@@ -55,13 +58,16 @@ def _occurrences(ev: CalendarEvent, start_d: date, end_d: date) -> List[Dict[str
     out = []
     day = start_d
     while day <= end_d:
+        if ev.recurrence_until is not None and day > ev.recurrence_until:
+            break
         if day.weekday() == ev.weekday:
             occ = datetime.combine(day, ev.start_local.time())
             out.append({"id": ev.id, "title": ev.title, "event_type": ev.event_type,
                         "start": occ.isoformat(), "duration_min": ev.duration_min,
                         "weekday": ev.weekday, "template_id": ev.template_id,
                         "is_immovable": ev.is_immovable,
-                        "notes": ev.notes, "recurring": True})
+                        "notes": ev.notes, "recurring": True,
+                        "recurrence_until": ev.recurrence_until.isoformat() if ev.recurrence_until else None})
         day += timedelta(days=1)
     return out
 
@@ -124,7 +130,8 @@ async def create_event(
                        duration_min=payload.duration_min,
                        weekday=payload.weekday,
                        template_id=payload.template_id,
-                       is_immovable=payload.is_immovable, notes=payload.notes)
+                       is_immovable=payload.is_immovable, notes=payload.notes,
+                       recurrence_until=payload.recurrence_until)
     db.add(ev)
     await db.commit()
     return {"status": "created", "id": ev.id}
@@ -151,9 +158,10 @@ async def update_event(
     return {"status": "updated", "id": ev.id}
 
 
-@router.delete("/events/{event_id}", summary="Borrar evento")
+@router.delete("/events/{event_id}", summary="Borrar evento o detener su repetición desde una fecha")
 async def delete_event(
     event_id: str,
+    from_date: Optional[date] = Query(default=None, alias="from"),
     user: User = Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
@@ -162,6 +170,15 @@ async def delete_event(
     ev = res.scalar_one_or_none()
     if not ev:
         raise HTTPException(status_code=404, detail="Evento no encontrado.")
+    if from_date is not None and ev.weekday is not None:
+        first = _next_occurrence(ev, ev.start_local.date())
+        if from_date <= first:
+            await db.delete(ev)
+            await db.commit()
+            return {"status": "removed"}
+        ev.recurrence_until = from_date - timedelta(days=1)
+        await db.commit()
+        return {"status": "trimmed", "recurrence_until": ev.recurrence_until.isoformat()}
     await db.delete(ev)
     await db.commit()
     return {"status": "removed"}
@@ -285,6 +302,16 @@ async def send_event_workout(
         "garmin_response": sent,
         "scheduled": scheduled,
     }
+
+
+@router.post("/sync-upcoming", summary="Programar en el reloj los entrenos de los próximos días")
+async def sync_upcoming_workouts(
+    days: int = Query(default=7, ge=1, le=14),
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    from app.services.calendar_auto import auto_push_today_for_user
+    return await auto_push_today_for_user(db, user, days=days)
 
 
 @router.post("/sync-today", summary="Programar en el reloj los entrenos de hoy")

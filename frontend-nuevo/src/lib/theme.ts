@@ -1,7 +1,7 @@
 /** El tema elegido sobrevive a recargar: se lee y se aplica antes de pintar la app. */
 export type Theme = 'dark' | 'light';
 
-export const THEME_KEY = 'forja.theme';
+export const THEME_KEY = 'pulso.theme';
 
 export function readTheme(): Theme {
   try {

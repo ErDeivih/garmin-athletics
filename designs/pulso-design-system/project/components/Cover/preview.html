@@ -1,0 +1,43 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<title>PULSO</title>
+<style>
+  html, body { margin:0; height:100%; }
+  body { background:var(--bg); color:var(--ink); font-family:var(--font-sans); overflow:hidden; }
+  .cover { position:relative; width:960px; height:288px; overflow:hidden; background:var(--bg); }
+  .art { position:absolute; top:0; left:480px; width:480px; height:288px; }
+  .art svg { display:block; width:480px; height:288px; }
+  .name { position:absolute; left:40px; bottom:32px; width:440px; font-family:var(--font-display); font-size:88px; line-height:.93; font-weight:700; letter-spacing:.01em; text-transform:uppercase; color:var(--ink); margin:0; }
+  .tag { margin:12px 0 0; font-size:14px; line-height:20px; color:var(--ink-muted); }
+</style>
+</head>
+<body>
+  <div class="cover">
+    <!-- Derivation:
+      blocks: accent (152×240, radius-lg), accent-soft (248×112), success (112×64), danger (120×64), info-soft (248×32) — all at full token value.
+      arrangement: one tall brand slab left of a staggered stack, flush right edge; the name is the figure on the ground.
+      pattern: dot grid at one space-2 (8px) pitch cut out of the accent slab in bg — the README says "precise, technical, 4px grid", and the app's cards sit on a 4px scale.
+      steps and radii: x positions on space-8 steps from 480; radius-lg for the big slabs, radius-md for the small ones, space-6 gap. -->
+    <div class="art">
+      <svg viewBox="0 0 480 288" role="img" aria-label="Composición de color del sistema">
+        <rect x="32" y="24" width="152" height="240" rx="16" fill="var(--accent)"/>
+        <rect x="200" y="24" width="248" height="112" rx="16" fill="var(--accent-soft)"/>
+        <rect x="200" y="152" width="112" height="64" rx="10" fill="var(--success)"/>
+        <rect x="328" y="152" width="120" height="64" rx="10" fill="var(--danger)"/>
+        <rect x="200" y="232" width="248" height="32" rx="10" fill="var(--info-soft)"/>
+        <g fill="var(--bg)">
+          <circle cx="48" cy="40" r="3"/><circle cx="64" cy="40" r="3"/><circle cx="80" cy="40" r="3"/><circle cx="96" cy="40" r="3"/><circle cx="112" cy="40" r="3"/><circle cx="128" cy="40" r="3"/><circle cx="144" cy="40" r="3"/><circle cx="160" cy="40" r="3"/>
+          <circle cx="48" cy="56" r="3"/><circle cx="64" cy="56" r="3"/><circle cx="80" cy="56" r="3"/><circle cx="96" cy="56" r="3"/><circle cx="112" cy="56" r="3"/><circle cx="128" cy="56" r="3"/><circle cx="144" cy="56" r="3"/><circle cx="160" cy="56" r="3"/>
+          <circle cx="48" cy="72" r="3"/><circle cx="64" cy="72" r="3"/><circle cx="80" cy="72" r="3"/><circle cx="96" cy="72" r="3"/><circle cx="112" cy="72" r="3"/><circle cx="128" cy="72" r="3"/><circle cx="144" cy="72" r="3"/><circle cx="160" cy="72" r="3"/>
+          <circle cx="48" cy="88" r="3"/><circle cx="64" cy="88" r="3"/><circle cx="80" cy="88" r="3"/><circle cx="96" cy="88" r="3"/><circle cx="112" cy="88" r="3"/><circle cx="128" cy="88" r="3"/><circle cx="144" cy="88" r="3"/><circle cx="160" cy="88" r="3"/>
+        </g>
+      </svg>
+    </div>
+    <h1 class="name">Garmin<br>Athletics</h1>
+    <p class="tag">Datos y fuerza, sin fricción.</p>
+  </div>
+</body>
+</html>

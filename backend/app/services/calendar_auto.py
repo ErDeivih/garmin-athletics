@@ -10,7 +10,7 @@ eso es Nivel 3.
 """
 import logging
 import unicodedata
-from datetime import date
+from datetime import date, timedelta
 from typing import Any, Dict, List
 
 from sqlalchemy import select
@@ -32,6 +32,33 @@ def _due_today(event: CalendarEvent, today: date) -> bool:
     if event.weekday is None:
         return event.start_local.date() == today
     return event.weekday == today.weekday()
+
+
+def _next_occurrence(event: CalendarEvent, ref: date) -> date:
+    if event.weekday is None:
+        return event.start_local.date()
+    return ref + timedelta(days=(event.weekday - ref.weekday()) % 7)
+
+
+def _upcoming(event: CalendarEvent, today: date, days: int) -> List[date]:
+    """Fechas de este evento entre hoy y hoy+days que aún no se han agendado."""
+    horizon = today + timedelta(days=days - 1)
+    if event.recurrence_until is not None and today > event.recurrence_until:
+        return []
+    dates: List[date] = []
+    if event.weekday is None:
+        if today <= event.start_local.date() <= horizon:
+            dates.append(event.start_local.date())
+    else:
+        cursor = _next_occurrence(event, today)
+        while cursor <= horizon:
+            if event.recurrence_until is not None and cursor > event.recurrence_until:
+                break
+            dates.append(cursor)
+            cursor += timedelta(days=7)
+    if event.last_scheduled_date is not None:
+        dates = [d for d in dates if d > event.last_scheduled_date]
+    return dates
 
 
 async def _build_workout(db: AsyncSession, user: User, event: CalendarEvent):
@@ -68,8 +95,12 @@ async def _build_workout(db: AsyncSession, user: User, event: CalendarEvent):
     return built, None
 
 
-async def auto_push_today_for_user(db: AsyncSession, user: User) -> Dict[str, Any]:
-    """Agenda hoy los entrenos del usuario. Idempotente por evento/día."""
+async def auto_push_today_for_user(db: AsyncSession, user: User, days: int = 7) -> Dict[str, Any]:
+    """Agenda hoy y los próximos días los entrenos del usuario.
+
+    Idempotente por evento/fecha: `last_scheduled_date` guarda la última fecha
+    que ya se envió, así que un segundo pase no duplica el mismo día.
+    """
     credential = (await db.execute(select(GarminCredential).where(
         GarminCredential.user_id == user.id))).scalar_one_or_none()
     if credential is None:
@@ -80,10 +111,10 @@ async def auto_push_today_for_user(db: AsyncSession, user: User) -> Dict[str, An
         CalendarEvent.user_id == user.id,
         CalendarEvent.template_id.is_not(None),
     ))).scalars().all()
-    due = [
-        event for event in events
-        if _due_today(event, today) and event.last_scheduled_date != today
-    ]
+    due = []
+    for event in events:
+        for target in _upcoming(event, today, days):
+            due.append((event, target))
     if not due:
         return {"status": "nothing", "sent": 0, "events": []}
 
@@ -99,7 +130,7 @@ async def auto_push_today_for_user(db: AsyncSession, user: User) -> Dict[str, An
     service.authenticate()
 
     results: List[Dict[str, Any]] = []
-    for event in due:
+    for event, target in due:
         built, error = await _build_workout(db, user, event)
         if error or built is None:
             results.append({"event_id": event.id, "status": error or "no_template"})
@@ -114,10 +145,11 @@ async def auto_push_today_for_user(db: AsyncSession, user: User) -> Dict[str, An
             if workout_id is None:
                 results.append({"event_id": event.id, "status": "no_workout_id"})
                 continue
-            service.client.schedule_workout(workout_id, today.isoformat())
+            service.client.schedule_workout(workout_id, target.isoformat())
             event.garmin_workout_id = str(workout_id)
-            event.last_scheduled_date = today
-            results.append({"event_id": event.id, "status": "sent", "workout_id": workout_id})
+            event.last_scheduled_date = target
+            results.append({"event_id": event.id, "status": "sent",
+                            "workout_id": workout_id, "target_date": target.isoformat()})
         except Exception as exc:
             logger.warning("No se pudo agendar el evento %s: %s", event.id, exc)
             results.append({"event_id": event.id, "status": "error", "message": str(exc)})

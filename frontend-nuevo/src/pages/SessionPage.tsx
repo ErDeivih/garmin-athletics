@@ -36,7 +36,7 @@ interface SessionDraft {
   exercises: DraftExercise[];
 }
 
-const STORAGE_PREFIX = 'forja.session';
+const STORAGE_PREFIX = 'pulso.session';
 
 const toNumber = (value: string): number => {
   const cleaned = value.replace(',', '.').trim();

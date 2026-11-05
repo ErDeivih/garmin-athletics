@@ -3,7 +3,7 @@ import { installFakeApi, json } from './fakeApi';
 import { renderApp } from './renderApp';
 import * as f from './fixtures';
 
-const TOKEN_KEY = 'forja.token';
+const TOKEN_KEY = 'pulso.token';
 
 describe('panel de hoy', () => {
   it('sin datos biométricos no inventa un número: explica qué falta y cómo arreglarlo', async () => {

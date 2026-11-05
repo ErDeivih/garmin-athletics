@@ -1,4 +1,4 @@
-# Especificación — Forja
+# Especificación — PULSO
 
 Estado: **borrador para revisar**. Ninguna pantalla se implementa sin estar decidida aquí.
 
@@ -154,7 +154,7 @@ David ha decidido que el frontend nuevo arranca con **Hoy, Gimnasio y Ajustes** 
 - **T-30/T-31 implementadas**: builder tipado de Garmin (sportType 5, repeat groups, 1.527
   ejercicios, sin envíos parciales) e importación de series deduplicada por `activity_id`; falta la
   prueba real en el reloj y el botón de envío en la app.
-- **Correcciones del 2026-11-05**: la app pasa a llamarse **Forja** (paquete `forja-frontend`);
+- **Correcciones del 2026-11-05**: la app pasa a llamarse **PULSO** (paquete `pulso-frontend`);
   se aplica `DOCTRINA-CALIDAD.md` §8 (la interfaz no habla de cómo está hecha) y §9 (no usar la marca
   de otra empresa). Se añade el detalle de Actividad con gráficas y el calendario con entrenos
   semanales, previsualización y envío al reloj. Ver `CORRECCIONES-2026-11-05.md`.

@@ -1,4 +1,4 @@
-const TOKEN_KEY = 'forja.token';
+const TOKEN_KEY = 'pulso.token';
 
 /** El token es opaco y caduca a los 30 días; no hay refresh (INVESTIGACION.md §4.4). */
 export function readToken(): string | null {

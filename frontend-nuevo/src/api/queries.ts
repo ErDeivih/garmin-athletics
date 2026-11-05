@@ -22,6 +22,8 @@ import type {
   PerformanceSummary,
   PersonalRecord,
   PlannedRoute,
+  RouteDetail,
+  RoutePoint,
   PushWorkoutPreview,
   PushWorkoutSent,
   SessionDetail,
@@ -65,6 +67,7 @@ export const queryKeys = {
   activityTrack: (id: string) => ['activities', id, 'track'] as const,
   motionProfile: (exerciseId: string) => ['gym', 'motion-profile', exerciseId] as const,
   routes: ['routes'] as const,
+  route: (id: string) => ['routes', id] as const,
   leaderboard: ['social', 'leaderboard'] as const,
   trends: (metric: string, days: number) => ['metrics', 'trends', metric, days] as const,
   performance: ['performance', 'summary'] as const,
@@ -130,12 +133,6 @@ export function useSyncStatus() {
   return useQuery({
     queryKey: queryKeys.sync,
     queryFn: () => apiFetch<SyncStatus>('/api/v1/sync/status'),
-  });
-}
-
-export function useDeleteAccount() {
-  return useMutation({
-    mutationFn: () => apiFetch<{ status: string }>('/api/v1/auth/account', { method: 'DELETE' }),
   });
 }
 
@@ -345,6 +342,32 @@ export function useRoutes() {
   });
 }
 
+export type GeneratedRoute = RouteDetail;
+
+export function useRoute(routeId: string | null) {
+  return useQuery({
+    queryKey: queryKeys.route(routeId ?? ''),
+    queryFn: () => apiFetch<RouteDetail>(`/api/v1/routes/${routeId}`),
+    enabled: Boolean(routeId),
+  });
+}
+
+export function useGenerateRoute() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: {
+      name: string;
+      sport: string;
+      start: RoutePoint;
+      checkpoints: RoutePoint[];
+      distance_km: number;
+      effort: string;
+      loop: boolean;
+    }) => apiFetch<GeneratedRoute>('/api/v1/routes/generate', { method: 'POST', body: payload }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.routes }),
+  });
+}
+
 export function useLeaderboard() {
   return useQuery({
     queryKey: queryKeys.leaderboard,
@@ -388,8 +411,9 @@ export function useCreateCalendarEvent() {
       event_type: string;
       start_local: string;
       duration_min: number;
-      weekday: number;
+      weekday: number | null;
       template_id: string;
+      recurrence_until?: string | null;
     }) =>
       apiFetch<{ status: string; id: string }>('/api/v1/calendar/events', {
         method: 'POST',
@@ -402,8 +426,10 @@ export function useCreateCalendarEvent() {
 export function useDeleteCalendarEvent() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) =>
-      apiFetch<{ status: string }>(`/api/v1/calendar/events/${id}`, { method: 'DELETE' }),
+    mutationFn: (input: { id: string; fromDate?: string }) => {
+      const query = input.fromDate ? `?from=${input.fromDate}` : '';
+      return apiFetch<{ status: string }>(`/api/v1/calendar/events/${input.id}${query}`, { method: 'DELETE' });
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.calendar }),
   });
 }
@@ -438,6 +464,17 @@ export function useSyncTodayWorkouts() {
         '/api/v1/calendar/sync-today',
         { method: 'POST' },
       ),
+  });
+}
+
+export function useSyncUpcomingWorkouts() {
+  return useMutation({
+    mutationFn: () =>
+      apiFetch<{ status: string; sent: number; message?: string }>(
+        '/api/v1/calendar/sync-upcoming?days=7',
+        { method: 'POST' },
+      ),
+    onSuccess: () => undefined,
   });
 }
 

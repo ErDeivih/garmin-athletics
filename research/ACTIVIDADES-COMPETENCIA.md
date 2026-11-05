@@ -2,7 +2,7 @@
 
 Fecha: 2026-11-05. Autor: research-actividades. Alcance: **detalle de una actividad** (datos, gráficas,
 jerarquía, estados) y **lista de actividades**; más el inventario real de lo que nuestro backend puede
-dar hoy. App objetivo: **Forja**, móvil primero, `frontend-nuevo` (React 19 + Tailwind,
+dar hoy. App objetivo: **PULSO**, móvil primero, `frontend-nuevo` (React 19 + Tailwind,
 sin librerías de gráficas ni de mapas — `frontend-nuevo/package.json:22-28`), sobre el sistema de
 diseño de `frontend-nuevo/src/styles/tokens.generated.css`.
 

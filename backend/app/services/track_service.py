@@ -98,10 +98,22 @@ def extract_streams(details: Dict[str, Any]) -> Dict[str, List]:
             "directHeartRate": point.get("heartRate"),
             "directDistance": point.get("distanceInMeters"),
             "directPower": point.get("power"),
+            "directRunCadence": point.get("cadence"),
+            "directCadence": point.get("cadence"),
+            "directTemperature": point.get("temperature"),
+            "directVerticalOscillation": point.get("verticalOscillation"),
+            "directGroundContactTime": point.get("groundContactTime"),
+            "directStrideLength": point.get("strideLength"),
+            "directRespirationRate": point.get("respirationRate"),
+            "directSweatLoss": point.get("sweatLoss"),
         }
         return mapping.get(key)
 
-    streams: Dict[str, List] = {"lat": [], "lon": [], "ele": [], "t": [], "speed": [], "hr": [], "dist": []}
+    streams: Dict[str, List] = {
+        "lat": [], "lon": [], "ele": [], "t": [], "speed": [], "hr": [], "dist": [],
+        "cadence": [], "power": [], "temp": [], "vert_osc": [], "ground_contact": [],
+        "stride": [], "respiration": [], "sweat": [],
+    }
     # Puntos sin coordenadas fuera: los índices de streams y mapa coinciden
     # siempre (evita IndexError en actividades con huecos GPS).
     valid = [p for p in poly if p.get("lat") is not None and p.get("lon") is not None]
@@ -113,6 +125,14 @@ def extract_streams(details: Dict[str, Any]) -> Dict[str, List]:
         streams["speed"].append(p.get("speed"))
         streams["hr"].append(_val(p, "directHeartRate"))
         streams["dist"].append(_val(p, "directDistance"))
+        streams["cadence"].append(_val(p, "directRunCadence") or _val(p, "directCadence"))
+        streams["power"].append(_val(p, "directPower"))
+        streams["temp"].append(_val(p, "directTemperature"))
+        streams["vert_osc"].append(_val(p, "directVerticalOscillation"))
+        streams["ground_contact"].append(_val(p, "directGroundContactTime"))
+        streams["stride"].append(_val(p, "directStrideLength"))
+        streams["respiration"].append(_val(p, "directRespirationRate"))
+        streams["sweat"].append(_val(p, "directSweatLoss"))
     # Métricas extra de activityDetailMetrics si el polyline no trae HR
     if all(v is None for v in streams["hr"]):
         hr_idx = key_to_idx.get("directHeartRate")
@@ -159,7 +179,9 @@ def build_track(details: Dict[str, Any], max_points: int = MAX_POINTS) -> Option
 
     return {
         # Resolución COMPLETA: streams/splits/export la usan tal cual.
-        "points": {k: streams[k] for k in ("lat", "lon", "ele", "t", "speed", "hr", "dist")},
+        "points": {k: streams[k] for k in (
+            "lat", "lon", "ele", "t", "speed", "hr", "dist",
+            "cadence", "power", "temp", "vert_osc", "ground_contact", "stride", "respiration", "sweat")},
         "point_count": len(pts),
         "simplified_count": len(keep),
         "distance_m": round(dist, 1),
@@ -261,14 +283,18 @@ def build_streams(track: Dict[str, Any], max_points: int = 2000) -> Dict[str, An
     n = len(pts.get("lat", []))
     if n == 0:
         return {"count": 0, "t_s": [], "dist_m": [], "ele": [], "speed_ms": [],
-                "hr": [], "pace_sec_km": []}
+                "hr": [], "pace_sec_km": [], "cadence": [], "power": [], "temp": [],
+                "vert_osc": [], "ground_contact": [], "stride": [], "respiration": [], "sweat": []}
     idx = sorted({int(i * n / max_points) for i in range(min(n, max_points))}) if n > max_points else list(range(n))
-    lat = [pts["lat"][i] for i in idx]
-    lon = [pts["lon"][i] for i in idx]
-    ele = [pts["ele"][i] for i in idx]
-    hrs = [pts["hr"][i] for i in idx]
-    spd = [pts["speed"][i] for i in idx]
-    tms = [pts["t"][i] for i in idx]
+    def pick(key):
+        values = pts.get(key, [])
+        return [values[i] if i < len(values) else None for i in idx]
+    lat = pick("lat")
+    lon = pick("lon")
+    ele = pick("ele")
+    hrs = pick("hr")
+    spd = pick("speed")
+    tms = pick("t")
     t0 = next((t for t in tms if t), 0) or 0
     t_s = [round(((t or t0) - t0) / 1000) for t in tms]
     dist = _cumulative_dist(lat, lon)
@@ -282,7 +308,11 @@ def build_streams(track: Dict[str, Any], max_points: int = 2000) -> Dict[str, An
         pace.append(round(dt / (dd / 1000), 1) if dd > 5 and dt > 0 else None)
     return {"count": len(idx), "t_s": t_s,
             "dist_m": [round(d, 1) for d in dist], "ele": ele,
-            "speed_ms": spd, "hr": hrs, "pace_sec_km": pace}
+            "speed_ms": spd, "hr": hrs, "pace_sec_km": pace,
+            "cadence": pick("cadence"), "power": pick("power"),
+            "temp": pick("temp"), "vert_osc": pick("vert_osc"),
+            "ground_contact": pick("ground_contact"),
+            "stride": pick("stride"), "respiration": pick("respiration"), "sweat": pick("sweat")}
 
 
 def build_km_splits(track: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -328,7 +358,7 @@ def build_gpx(name: str, lat: List[float], lon: List[float],
         pts.append(f"<trkpt lat=\"{la:.6f}\" lon=\"{lo:.6f}\">{el}</trkpt>")
     safe = "".join(c for c in name if c.isalnum() or c in " -_")[:80]
     return ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-            "<gpx version=\"1.1\" creator=\"GarminAthletics\">"
+            "<gpx version=\"1.1\" creator=\"PULSO\">"
             f"<trk><name>{safe}</name><trkseg>{''.join(pts)}</trkseg></trk></gpx>")
 
 
@@ -389,7 +419,7 @@ def fetch_elevations(lat: List[float], lon: List[float],
     try:
         payload = _parse.quote(_json.dumps({"shape": shape, "range": True}))
         req = _url.Request(f"{VALHALLA_URL}/height?json={payload}",
-                           headers={"User-Agent": "GarminAthletics/1.0"})
+                           headers={"User-Agent": "PULSO/1.0"})
         with _url.urlopen(req, timeout=timeout) as resp:
             data = _json.loads(resp.read().decode("utf-8"))
         ranges = data.get("range_height") or []
