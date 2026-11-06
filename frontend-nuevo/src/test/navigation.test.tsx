@@ -36,7 +36,7 @@ describe('moverse por la app', () => {
     expect(await screen.findByText(/vinculado/i)).toBeInTheDocument();
   });
 
-  it.each([TOKEN_KEY, 'pulso.token'])('abre y cierra una sesión guardada en %s', async (clave) => {
+  it.each([TOKEN_KEY, 'carga.token', 'pulso.token'])('abre y cierra una sesión guardada en %s', async (clave) => {
     localStorage.setItem(clave, 'test-token');
     const api = installFakeApi({
       'GET /api/v1/auth/me': json(f.me),

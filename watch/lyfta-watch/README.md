@@ -45,7 +45,8 @@ Después:
 
 Compila y captura los cinco modelos (`fr255`, `fr245`, `fenix6`, `fr965`, `venu3`) en
 `screenshots/watch-<modelo>.png`. Si la pantalla del simulador está apagada, la captura sale negra:
-no es la app; hay que encenderla con el botón **LIGHT** o el menú del simulador.
+no es la app; hay que encenderla con el botón **LIGHT** o el menú del simulador. Diagnóstico:
+[SIMULADOR.md](SIMULADOR.md).
 
 ## API que usa
 

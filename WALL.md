@@ -26,7 +26,7 @@ reloj y el análisis está completo.
 
 ## Evidencia
 
-- Frontend: 38/38 pruebas en 16 ficheros.
+- Frontend: 39/39 pruebas en 16 ficheros.
 - Backend: 17/17 scripts (incluye perfil IMU en seco, auto-carga, watch-app, rutas y calendario recurrente).
 - Capturas: `frontend-nuevo/screenshots/` — 18 capturas nuevas y numeradas (01–18).
 
