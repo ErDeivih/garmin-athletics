@@ -1,4 +1,4 @@
-# DECISIONES.md — Carga
+# DECISIONES.md — Lyfta
 
 Decisiones de **Nivel 2** (las tomo yo, las dejo escritas y David las revisa cuando quiera).
 Formato: decisión · motivo · cómo se revierte.
@@ -135,7 +135,7 @@ primera pantalla del frontend nuevo (T-03) está a punto de empezar y, si cada p
 colores y tamaños, corregirlo después cuesta más que hacerlo bien una vez.
 
 **Decisión.** Antes de T-03 se construye el sistema de diseño **dark-first** con la skill
-`claude-design-system`, en `designs/carga-design-system/`:
+`claude-design-system`, en `designs/lyfta-design-system/`:
 
 - tokens de color, tipografía, espaciado y radios **en un solo fichero**;
 - **contraste AA calculado**, no estimado;
@@ -296,7 +296,7 @@ borrador vive en el navegador y D-03 que el descanso se calcula por hora absolut
 
 **Decisión.**
 - El borrador se guarda en `localStorage` bajo
-  `carga.session.<userId>.<templateId>`: cambiar de usuario o de plantilla no mezcla
+  `lyfta.session.<userId>.<templateId>`: cambiar de usuario o de plantilla no mezcla
   sesiones. Se escribe en cada cambio y se borra al terminar o descartar.
 - Cada serie guarda `weight`, `reps`, `rpe` y `completedAt`; el RPE es opcional y se añade al modelo
   como columna `rpe` (migración aditiva) y al cuerpo de `POST /strength/sessions`.
@@ -363,14 +363,14 @@ ejercicio. Es preferible negarse y explicar qué falta.
 
 ---
 
-## 2026-11-05 — D-17 · La app se llama Carga
+## 2026-11-05 — D-17 · La app se llama Lyfta
 
 **Contexto.** «Garmin» es marca registrada y `DOCTRINA-CALIDAD.md` §9 prohíbe usar el nombre de otra
-empresa como nombre de la app. David elige **Carga**.
+empresa como nombre de la app. David elige **Lyfta**.
 
 **Decisión.**
-- Nombre de producto **Carga**; paquete `carga-frontend`; título `Carga`; claves de
-  almacenamiento `carga.*`.
+- Nombre de producto **Lyfta**; paquete `lyfta-frontend`; título `Lyfta`; claves de
+  almacenamiento `lyfta.*`.
 - «Garmin» se mantiene solo para la cuenta/reloj del usuario («Vincular cuenta», «Enviar al reloj»,
   integración en Ajustes) y en el código de integración, nunca como nombre de la app.
 - El repositorio y la carpeta del monorepo no se renombran en esta sesión (sería otra operación);

@@ -8,7 +8,7 @@ Construir una plataforma personal de alto rendimiento, 100% automatizada en la i
 ## 2. Principios Inquebrantables (Leyes del Proyecto)
 1. **Automatización Pasiva Primero**: El usuario **nunca** debe introducir manualmente datos que Garmin ya registre (sueño, VFC/HRV, pulsaciones en reposo, Body Battery, GPX, zonas de frecuencia cardíaca). La ingesta debe ejecutarse en segundo plano mediante tareas desatendidas.
 2. **Cero Sesión Interactiva Excesiva**: La autenticación de Garmin usará persistencia de sesión en disco/base de datos (tokens OAuth2/cookies de `garminconnect`). La renovación de credenciales solo se solicitará si los tokens expiran y fallan los reintentos.
-3. **Métrica Unificada de Carga (Resistencia + Fútbol + Fuerza)**: Ninguna disciplina queda aislada. La fatiga global se calcula mediante el modelo Impulse-Response (Banister / Coggan):
+3. **Métrica Unificada de Lyfta (Resistencia + Fútbol + Fuerza)**: Ninguna disciplina queda aislada. La fatiga global se calcula mediante el modelo Impulse-Response (Banister / Coggan):
    - **ATL** (Acute Training Load - Fatiga 7 días).
    - **CTL** (Chronic Training Load - Forma Física 42 días).
    - **TSB** (Training Stress Balance - Frescura/Disposición = CTL - ATL).

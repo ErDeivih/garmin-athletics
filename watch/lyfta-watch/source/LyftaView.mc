@@ -3,8 +3,8 @@ using Toybox.ActivityRecording;
 using Toybox.Graphics;
 using Toybox.WatchUi;
 
-class CargaView extends WatchUi.View {
-    private var _model as CargaModel;
+class LyftaView extends WatchUi.View {
+    private var _model as LyftaModel;
     private var _state = "loading";
     private var _lastSetId = "";
     private var _session;
@@ -16,14 +16,14 @@ class CargaView extends WatchUi.View {
 
     function initialize() {
         View.initialize();
-        _model = new CargaModel();
-        _sensor = new CargaSensor();
+        _model = new LyftaModel();
+        _sensor = new LyftaSensor();
         loadWorkout();
     }
 
     function loadWorkout() as Void {
         _state = "loading";
-        var api = new CargaApi();
+        var api = new LyftaApi();
         if (api.configured()) {
             api.loadToday(method(:onToday));
         } else {
@@ -69,7 +69,7 @@ class CargaView extends WatchUi.View {
         _sensor.reset();
         _lastSetId = record["client_set_id"];
         startRecording();
-        var api = new CargaApi();
+        var api = new LyftaApi();
         if (api.configured()) {
             api.sendSet(record, method(:onSetSent));
         }
@@ -108,7 +108,7 @@ class CargaView extends WatchUi.View {
         }
         if (Toybox has :ActivityRecording) {
             _session = ActivityRecording.createSession({
-                :name => "Carga",
+                :name => "Lyfta",
                 :sport => Activity.SPORT_TRAINING,
                 :subSport => Activity.SUB_SPORT_STRENGTH_TRAINING
             });
@@ -142,18 +142,18 @@ class CargaView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
         if (_state == "loading") {
-            drawCentered(dc, "Carga", 70, Graphics.FONT_LARGE, Graphics.COLOR_WHITE);
+            drawCentered(dc, "Lyfta", 70, Graphics.FONT_LARGE, Graphics.COLOR_WHITE);
             drawCentered(dc, "Buscando entreno", 130, Graphics.FONT_SMALL, Graphics.COLOR_LT_GRAY);
         } else if (_state == "offline") {
-            drawCentered(dc, "Carga", 60, Graphics.FONT_LARGE, Graphics.COLOR_WHITE);
+            drawCentered(dc, "Lyfta", 60, Graphics.FONT_LARGE, Graphics.COLOR_WHITE);
             drawCentered(dc, "Sin conexión", 120, Graphics.FONT_MEDIUM, Graphics.COLOR_ORANGE);
             drawCentered(dc, "OK reintentar", 180, Graphics.FONT_TINY, Graphics.COLOR_LT_GRAY);
         } else if (_state == "empty") {
-            drawCentered(dc, "Carga", 60, Graphics.FONT_LARGE, Graphics.COLOR_WHITE);
+            drawCentered(dc, "Lyfta", 60, Graphics.FONT_LARGE, Graphics.COLOR_WHITE);
             drawCentered(dc, "Hoy no toca fuerza", 130, Graphics.FONT_MEDIUM, Graphics.COLOR_WHITE);
             drawCentered(dc, "ATRÁS salir", 190, Graphics.FONT_TINY, Graphics.COLOR_LT_GRAY);
         } else if (_state == "done") {
-            drawCentered(dc, "Carga", 50, Graphics.FONT_LARGE, Graphics.COLOR_WHITE);
+            drawCentered(dc, "Lyfta", 50, Graphics.FONT_LARGE, Graphics.COLOR_WHITE);
             drawCentered(dc, "Entreno terminado", 110, Graphics.FONT_MEDIUM, Graphics.COLOR_GREEN);
             drawCentered(dc, _model.done.toString() + " series", 160, Graphics.FONT_SMALL, Graphics.COLOR_WHITE);
             if (_lastOneRm > 0) {
@@ -171,7 +171,7 @@ class CargaView extends WatchUi.View {
     function drawWorkout(dc as Graphics.Dc) as Void {
         var width = dc.getWidth();
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 10, Graphics.FONT_SMALL, "Carga", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width / 2, 10, Graphics.FONT_SMALL, "Lyfta", Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, 32, Graphics.FONT_TINY, short(_model.name, 22), Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);

@@ -2,7 +2,7 @@ using Toybox.Application.Properties;
 using Toybox.Communications;
 using Toybox.Lang;
 
-class CargaApi {
+class LyftaApi {
     function baseUrl() {
         var value = Properties.getValue("apiUrl");
         return value instanceof String ? value : "";

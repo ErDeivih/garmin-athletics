@@ -69,7 +69,7 @@ function Legend() {
       {open && (
         <dl className="px-3 pb-3 space-y-1.5">
           <div><dt className="inline font-bold text-white">RIR</dt> — <dd className="inline">repeticiones en reserva: cuántas más podrías hacer. RIR 1 = casi al fallo; RIR 3 = suave.</dd></div>
-          <div><dt className="inline font-bold text-white">TSS</dt> — <dd className="inline">carga estimada de la sesión para tu fatiga (ATL/CTL). Más TSS = más cansancio mañana.</dd></div>
+          <div><dt className="inline font-bold text-white">TSS</dt> — <dd className="inline">lyfta estimada de la sesión para tu fatiga (ATL/CTL). Más TSS = más cansancio mañana.</dd></div>
           <div><dt className="inline font-bold text-white">RPE 1-10</dt> — <dd className="inline">esfuerzo percibido para registrar fútbol sin reloj.</dd></div>
           <div><dt className="inline font-bold text-white">Tonelaje</dt> — <dd className="inline">series × reps × kg sumados. Lo que mueve tu TSS de fuerza.</dd></div>
         </dl>

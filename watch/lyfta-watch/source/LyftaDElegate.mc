@@ -1,6 +1,6 @@
 using Toybox.WatchUi;
 
-class CargaDelegate extends WatchUi.BehaviorDelegate {
+class LyftaDelegate extends WatchUi.BehaviorDelegate {
     private var _view;
 
     function initialize(view) {

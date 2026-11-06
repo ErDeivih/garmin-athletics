@@ -1,4 +1,4 @@
-# frontend-nuevo — Carga
+# frontend-nuevo — Lyfta
 
 Frontend nuevo, escrito desde cero contra el backend actual (`/api/v1`). Sustituye a `frontend/` y
 `frontend_mvp/`, que quedan como referencia y **no se tocan**.
@@ -36,7 +36,7 @@ tarea T-23 del backlog.
 
 | Área | Estado |
 |---|---|
-| Sistema de diseño | `../designs/carga-design-system/` — tokens, README, componentes y contraste AA calculado. La app consume `src/styles/tokens.generated.css`. |
+| Sistema de diseño | `../designs/lyfta-design-system/` — tokens, README, componentes y contraste AA calculado. La app consume `src/styles/tokens.generated.css`. |
 | Autenticación | Login, restauración de sesión contra `/auth/me`, cierre de sesión, 401 global. |
 | Navegación | Registro de secciones: **Hoy · Gimnasio · Ajustes** visibles; el resto tras `VITE_FEATURE_EXTENDED` con interruptor en Ajustes. Barra lateral en escritorio, pestañas abajo en móvil. |
 | Hoy | Disposición con explicación breve, sueño, HRV, Body Battery, FC en reposo, estrés, frescura y avisos. **Gráfica de carga de 30 días** y **curva de Body Battery** del día, en SVG propio. **Sin datos no inventa nada**: estado vacío que explica qué falta. |
@@ -47,7 +47,7 @@ tarea T-23 del backlog.
 | **Calendario** | Programar una plantilla en varios días de la semana (se repite), ver los entrenos semanales, previsualizar el workout, enviarlo/programarlo y **cargar el de hoy en el reloj**. Distingue **Plan** de **Hecho**. |
 | Tendencias | Línea de métrica, carga ATL/CTL, barras semanales, monotonía, calendario de calor, fases de sueño apiladas, dispersión peso×reps, volumen por grupo muscular, empuje/tirón, top de ejercicios y comparativa con el periodo anterior; periodos 7/30/90/año. |
 | Ajustes | Estado de Garmin, sync manual, vinculación con contraseña de un solo uso y 2FA, tema oscuro/claro, bandera de secciones, cuenta, cierre de sesión y **borrado de cuenta** con confirmación literal (borra también el gimnasio). |
-| Secciones de bandera | Actividades, Calendario, Tendencias, Rendimiento, Rutas y Social, con datos reales de la API; vacío, carga y error en todas. El estado de "sin permiso" por pantalla es T-25. |
+| Secciones de bandera | Actividades, Calendario, Tendencias, Rendimiento, Rutas y Social, con datos reales de la API; vacío, lyfta y error en todas. El estado de "sin permiso" por pantalla es T-25. |
 | Todavía no | Sesión libre (T-13), guardar sesión como plantilla (T-17), editor de plantilla (T-05), creación/edición de ejercicios (T-06), historial por ejercicio (T-07/T-08), subnavegación de Gimnasio (T-24), ampliaciones T-18/T-19/T-20 y prueba real en el fr255 (Nivel 3). Están en `../BACKLOG.md`. |
 
 ## Pruebas y puertas

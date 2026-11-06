@@ -18,7 +18,7 @@ New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
 $results = @()
 foreach ($device in $Devices) {
-    $output = Join-Path $OutDir "carga-$device.prg"
+    $output = Join-Path $OutDir "lyfta-$device.prg"
     $log = & "$SdkPath\bin\monkeyc.bat" -d $device -f (Join-Path $root "monkey.jungle") -o $output -y $KeyPath 2>&1
     $code = $LASTEXITCODE
     $size = if (Test-Path $output) { (Get-Item $output).Length } else { 0 }

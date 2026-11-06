@@ -2,7 +2,7 @@
 
 Fecha: 2026-11-05. Autor: research-actividades. Alcance: **detalle de una actividad** (datos, gráficas,
 jerarquía, estados) y **lista de actividades**; más el inventario real de lo que nuestro backend puede
-dar hoy. App objetivo: **Carga**, móvil primero, `frontend-nuevo` (React 19 + Tailwind,
+dar hoy. App objetivo: **Lyfta**, móvil primero, `frontend-nuevo` (React 19 + Tailwind,
 sin librerías de gráficas ni de mapas — `frontend-nuevo/package.json:22-28`), sobre el sistema de
 diseño de `frontend-nuevo/src/styles/tokens.generated.css`.
 
@@ -135,13 +135,13 @@ Solo filas con fuente. "—" = no aparece en la fuente consultada (puede existir
 | Vueltas / intervalos | — | Sí (`laps`, F1) | Sí: fases de calentamiento/serie/descanso y filtro de series activas (F4) | — | Sí: vueltas de dispositivo, de usuario, detectadas, subidas, comparación (F5) | — | — | — |
 | Zonas de FC | — | Sí (Heart Rate, con Relative Effort, F1) | Sí ("intensity distribution", F4) | — | Sí (canales) | Sí (zona en vivo, F6) | — | — |
 | Zonas de potencia | — | Sí para bici (F2) | — | — | Sí (F5) | — | — | — |
-| Efecto del entrenamiento | — | *Relative Effort* (carga percibida cardiovascular, F1) | EvoLab (F4) | — | TSS / Normalized Power (F3, F5) | Strain de sesión 0–21 (F6) | — | — |
-| Carga / recuperación | — | — | Training Load (F4) | — | TSS (F5) | Strain del día + Recovery previo (F6) | — | — |
+| Efecto del entrenamiento | — | *Relative Effort* (lyfta percibida cardiovascular, F1) | EvoLab (F4) | — | TSS / Normalized Power (F3, F5) | Strain de sesión 0–21 (F6) | — | — |
+| Lyfta / recuperación | — | — | Training Load (F4) | — | TSS (F5) | Strain del día + Recovery previo (F6) | — | — |
 | Comparación con la misma ruta | — | Segmentos + "matched runs" (F1) | Comparar con actividades históricas (F4) | — | Comparación de vueltas contra una base (F5) | — | Compara con el plan, no con la ruta (F7) | — |
 | Comentario / interpretación | — | Athlete Intelligence (F1, artículo enlazado) | EvoLab / análisis (F4) | — | — | Recomendación de Strain Target (F6) | **Sí, IA** (F7) | — |
 
 **Lo que se deduce de la tabla.** (a) Nadie que no sea de ciclismo enseña potencia; (b) la temperatura
-es rara y suele venir como serie, no como cifra; (c) "efecto del entrenamiento" y "carga" son **cada
+es rara y suele venir como serie, no como cifra; (c) "efecto del entrenamiento" y "lyfta" son **cada
 app su métrica** (TSS en TrainingPeaks, Relative Effort en Strava, Strain en Whoop) — no hay estándar;
 (d) la comparación con la misma ruta **solo Strava y COROS** la resuelven, y con un modelo de datos
 propio (segmentos / actividades históricas), no con un truco de UI.
@@ -357,7 +357,7 @@ es un enlace al detalle.
 | 1 | **Cabecera** | ← Actividades · nombre · `sáb 5 nov · 18:32` · icono de deporte. Acciones en un menú `···`: *Descargar GPX*, *Guardar como ruta*, *Actualizar* | Siempre |
 | 2 | **Resumen** | Cifra héroe + 3 cifras medianas + 1 fila de apuntes (ver 6.2) | Siempre |
 | 3 | **Recorrido** | Silueta SVG del track, punto de salida y de llegada, caja 4:3 | Solo si `has_track` y `/track` responde |
-| 4 | **Carga** | Gráfica de línea FC vs tiempo + FC media/máx en la leyenda | Si `/streams` trae `hr` con al menos 2 valores |
+| 4 | **Lyfta** | Gráfica de línea FC vs tiempo + FC media/máx en la leyenda | Si `/streams` trae `hr` con al menos 2 valores |
 | 5 | **Ritmo por km** | Barras por km (de `/splits`) + mejor/peor km | Si hay `splits.length >= 2` (carrera, bici, fútbol con GPS) |
 | 6 | **Zonas de FC** | Barra apilada Z1·Z2·Z3·Z4·Z5 + tiempos y % | Si `hr_zones` tiene `secs > 0` |
 | 7 | **Vueltas** | Tabla `# · Dist · Tiempo · Ritmo · FC med · Desnivel` | Si `laps.length >= 2` |
@@ -372,12 +372,12 @@ Depende del deporte, porque un ritmo de natación en `/km` no significa nada:
 
 | Deporte | Héroe | Medianas | Apuntes |
 |---|---|---|---|
-| Carrera / trail | **Ritmo medio** (`5:32 /km`) | Distancia · Tiempo · Desnivel + | FC media · Calorías · Carga (TSS) |
-| Bici | **Velocidad media** (`28,4 km/h`) | Distancia · Tiempo · Desnivel + | FC media · Calorías · Carga (TSS) |
-| Natación | **Ritmo** (`2:05 /100 m`) | Distancia · Tiempo · Largo medio | FC media · Calorías · Carga (TSS) |
-| Fútbol / fuerza / manual | **Tiempo** | FC media · Calorías · Carga (TSS) | Distancia (si > 0) · Desnivel (si > 0) |
+| Carrera / trail | **Ritmo medio** (`5:32 /km`) | Distancia · Tiempo · Desnivel + | FC media · Calorías · Lyfta (TSS) |
+| Bici | **Velocidad media** (`28,4 km/h`) | Distancia · Tiempo · Desnivel + | FC media · Calorías · Lyfta (TSS) |
+| Natación | **Ritmo** (`2:05 /100 m`) | Distancia · Tiempo · Largo medio | FC media · Calorías · Lyfta (TSS) |
+| Fútbol / fuerza / manual | **Tiempo** | FC media · Calorías · Lyfta (TSS) | Distancia (si > 0) · Desnivel (si > 0) |
 
-- **Carga (TSS)** lleva una línea corta debajo, la única explicación permitida por §8: *"lo que te ha
+- **Lyfta (TSS)** lleva una línea corta debajo, la única explicación permitida por §8: *"lo que te ha
   costado la sesión"*. Es el caso que la propia doctrina autoriza ("cálculo se hace bien y se calla",
   pero se explica **la medida que el usuario ve**; `DOCTRINA-CALIDAD.md:116`).
 - Si falta un dato, **se omite la cifra**, no se enseña `—`. La raya solo se admite en la tabla de
@@ -441,9 +441,9 @@ nuevo):
 | "Solo con mapa GPS" (filtro) | `frontend/src/pages/Activities.tsx:119` | Jerga; si el filtro se queda, se llama "Con recorrido" |
 
 **Se quedan** (etiqueta corta + unidad): `Distancia`, `Tiempo`, `Ritmo`, `Velocidad`, `Desnivel +`,
-`FC media`, `FC máx`, `Calorías`, `Carga`, `Parciales`, `Vueltas`, `Tiempo en zonas`, `Meteo`,
+`FC media`, `FC máx`, `Calorías`, `Lyfta`, `Parciales`, `Vueltas`, `Tiempo en zonas`, `Meteo`,
 `Actualizar`, `Descargar GPX`, `Guardar como ruta`, `Volver a Actividades`. Y **una sola** frase
-explicativa, la de Carga.
+explicativa, la de Lyfta.
 
 ### 6.6 Lo que NO se propone (y por qué)
 

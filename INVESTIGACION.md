@@ -1,4 +1,4 @@
-# INVESTIGACION.md — Carga
+# INVESTIGACION.md — Lyfta
 
 **Fecha**: 2026-11-04 · **Rama**: `master` · **Nivel de autonomía**: 1 y 2 (ver `DECISIONES.md`)
 
@@ -65,7 +65,7 @@ y **enviar al dispositivo a mano**. Límites duros: 50 pasos por entreno, reps �
 25 entrenamientos en el reloj, edición solo en Connect y borrado independiente entre app y reloj.
 Estimación: 30-50 interacciones por ejercicio. **Para variar el peso o las reps por serie hay que
 salir del bloque repetido y crear otro bloque.** Es exactamente lo contrario de lo que pide el
-cuerpo en el gimnasio (subir/bajar carga entre series).
+cuerpo en el gimnasio (subir/bajar lyfta entre series).
 ([Soporte Garmin](https://support.garmin.com/en-US/?faq=wZ52AaLbLG2GC1Lxu2l4k7),
 [Lifehacker](https://au.lifehacker.com/fitness/112292/feature/how-to-do-strength-workouts-on-a-garmin-watch))
 
@@ -534,7 +534,7 @@ pantalla después cueste poco.
 | 4 | **Marcar serie en 2 toques** (el check guarda y arranca el descanso) | El gesto más repetido; contra los 8-15 toques de Garmin para corregir | UI M | 2 |
 | 5 | **Plantillas reutilizables** + "entrenar la plantilla del día" | Rutinas de verdad, no sugerencias que se pierden | backend hecho, UI M | 2 |
 | 6 | **Catálogo con filtros y ficha** | Buscar "press" y encontrarlo en 2 segundos | backend hecho, UI M | 2 |
-| 7 | **Duplicar serie y duplicar ejercicio** | Lo pide la especificación; ahorra la mitad de los toques al subir carga | UI S | 2 |
+| 7 | **Duplicar serie y duplicar ejercicio** | Lo pide la especificación; ahorra la mitad de los toques al subir lyfta | UI S | 2 |
 | 8 | **Sesión que sobrevive a recargar** | Cerrar el navegador sin perder la sesión (D-02) | UI S | 2 |
 | 9 | **Resumen al terminar**: tonelaje, PRs, comparación con la sesión anterior | Cierra el bucle y da la sensación de progreso | UI S | 2 |
 | 10 | **Historial por ejercicio con progresión** | La evolución que Garmin no da (F7) | backend hecho, UI M | 2 |

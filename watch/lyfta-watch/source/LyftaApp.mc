@@ -1,13 +1,13 @@
 using Toybox.Application;
 using Toybox.WatchUi;
 
-class CargaApp extends Application.AppBase {
+class LyftaApp extends Application.AppBase {
     function initialize() {
         AppBase.initialize();
     }
 
     function getInitialView() {
-        var view = new CargaView();
-        return [view, new CargaDelegate(view)];
+        var view = new LyftaView();
+        return [view, new LyftaDelegate(view)];
     }
 }

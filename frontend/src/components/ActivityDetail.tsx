@@ -93,7 +93,7 @@ export default function ActivityDetail({ id, onBack }: { id: string; onBack: () 
     ? colorBy === "hr" ? track.points.hr : colorBy === "ele" ? track.points.ele : track.points.speed
     : [];
   const hasColorData = colorVals.some((v) => v != null);
-  const colorLabel = colorBy === "hr" ? "carga" : colorBy === "ele" ? "altitud" : "velocidad";
+  const colorLabel = colorBy === "hr" ? "lyfta" : colorBy === "ele" ? "altitud" : "velocidad";
   const hasEle = !!track?.points?.ele?.some((e: number | null) => e != null);
   const totalZoneSecs = (detail.hr_zones ?? []).reduce((s: number, z: any) => s + (z.secs || 0), 0);
   const w = detail.weather;
@@ -151,7 +151,7 @@ export default function ActivityDetail({ id, onBack }: { id: string; onBack: () 
 
       {/* Tabs */}
       <div className="flex gap-1.5 flex-wrap">
-        {[["map", "Mapa"], ["streams", "Ritmo y carga"], ["laps", `Vueltas (${detail.laps?.length ?? 0})`], ["zones", "Zonas FC"]].map(([k, l]) => (
+        {[["map", "Mapa"], ["streams", "Ritmo y lyfta"], ["laps", `Vueltas (${detail.laps?.length ?? 0})`], ["zones", "Zonas FC"]].map(([k, l]) => (
           <button key={k} onClick={() => setTab(k as any)}
             className={cn("px-3.5 py-2 rounded-xl text-sm font-semibold border transition",
               tab === k ? "bg-gradient-to-r from-blue-500/25 to-purple-500/25 border-blue-500/50 text-white" : "border-cardborder text-gray-400 hover:text-white")}>
@@ -167,7 +167,7 @@ export default function ActivityDetail({ id, onBack }: { id: string; onBack: () 
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs text-gray-500">Colorear por:</span>
-              {[["speed", "Velocidad"], ["hr", "Carga"], ["ele", "Altitud"]].map(([v, l]) => (
+              {[["speed", "Velocidad"], ["hr", "Lyfta"], ["ele", "Altitud"]].map(([v, l]) => (
                 <button key={v} onClick={() => setColorBy(v as any)}
                   className={cn("px-2.5 py-1 rounded-full text-xs font-semibold border transition",
                     colorBy === v ? "border-blue-500/60 text-white bg-blue-500/20" : "border-cardborder text-gray-500 hover:text-white")}>
@@ -228,7 +228,7 @@ export default function ActivityDetail({ id, onBack }: { id: string; onBack: () 
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Card>
-              <CardHeader><CardTitle className="text-sm">Carga (bpm)</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-sm">Lyfta (bpm)</CardTitle></CardHeader>
               <CardContent>
                 <div className="h-[220px]">
                   <ResponsiveContainer width="100%" height="100%">

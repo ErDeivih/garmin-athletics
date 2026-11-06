@@ -5,7 +5,7 @@ La unidad del panel «Hoy»: una etiqueta, una cifra, una unidad, un delta y una
 ## Usa
 
 - `ga-stat ga-stat--hero` para la métrica héroe de la pantalla (readiness). Una por pantalla.
-- `ga-stat` para las 3-4 secundarias: sueño, HRV, Body Battery, FC en reposo, carga.
+- `ga-stat` para las 3-4 secundarias: sueño, HRV, Body Battery, FC en reposo, lyfta.
 - La cifra sale de `type.hero` con cifras tabulares; no se centra ni se parte.
 - El pie dice el contexto que hace falta para leer el número: comparación («7 d: 62»), frescura («hace 2 min») o estado («sin dato»).
 - El delta lleva signo y unidad, y su color sale de `success` o `danger`; si no hay comparación, no hay delta.

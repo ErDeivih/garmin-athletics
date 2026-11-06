@@ -1,4 +1,4 @@
-# Ficha del agente — Carga — panel de entrenamiento y editor de gimnasio
+# Ficha del agente — Lyfta — panel de entrenamiento y editor de gimnasio
 
 **Id en el panel**: `garmin`
 **Ruta**: `F:\Proyectos\garmin`
@@ -43,7 +43,7 @@ Inventariar los endpoints del backend (que hay y que devuelve), porque el fronte
 Deja `ESTADO-AGENTE.md` actualizado con este formato exacto. De ahi lo lee el panel:
 
 ```
-titulo: Carga — panel de entrenamiento y editor de gimnasio
+titulo: Lyfta — panel de entrenamiento y editor de gimnasio
 estado: en-curso
 tarea: lo que estabas haciendo
 nivel: 1 | 2 | 3
@@ -63,4 +63,4 @@ Antes de buscar una librería, una herramienta o una referencia, pregunta al cat
 python F:\Inforepositorios\consultar.py "<lo que necesitas>" -n 5 --json
 ```
 
-Devuelve los mejores candidatos con su licencia y la ruta de su ficha. Abre solo esas fichas y mira la sección 9 (cuándo no elegirlo) y la 6 (licencia). Es evidencia documental: nada se ha clonado, instalado ni ejecutado. Guía: `F:\Inforepositorios\RAG.md`. Para una palabra exacta: `& F:\Inforepositorios\scripts\Buscar-Todo.ps1 -Texto <término>`.
+Puedes hacer **varias consultas seguidas** en la misma tarea, una por necesidad (OCR, scraping, PDF, agentes…); cada consulta es independiente y tarda 2-4 s. Devuelve los mejores candidatos con su licencia y la ruta de su ficha; abre solo esas fichas y mira la sección 9 (cuándo no elegirlo) y la 6 (licencia). Si solo quieres repositorios del catálogo, añade `--tipo ficha`. Es evidencia documental: nada se ha clonado, instalado ni ejecutado, así que da **candidatos que merecen revisión, no la garantía de que algo funcione**. Guía: `F:\Inforepositorios\RAG.md`. Para una palabra exacta: `& F:\Inforepositorios\scripts\Buscar-Todo.ps1 -Texto <término>`.

@@ -3,8 +3,8 @@ import { installFakeApi, json } from './fakeApi';
 import { renderApp } from './renderApp';
 import * as f from './fixtures';
 
-const TOKEN_KEY = 'carga.token';
-const FLAG_KEY = 'carga.extended';
+const TOKEN_KEY = 'lyfta.token';
+const FLAG_KEY = 'lyfta.extended';
 const today = new Date();
 const localIso = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;

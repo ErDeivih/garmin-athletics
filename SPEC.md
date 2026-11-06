@@ -13,9 +13,9 @@ Visión extendida (Fases 7-11): convertirse en el **sistema propio completo** de
 - **HU-01**: Como usuario, quiero que la aplicación descargue cada mañana a las 07:00 mis datos de sueño, HRV, pulsaciones en reposo y Body Battery sin tener que abrir Garmin ni autenticarme manualmente.
 - **HU-02**: Como usuario, quiero que tras finalizar un entrenamiento grabado en el reloj (carrera, bici, natación o partido de fútbol), la app detecte la nueva actividad en <15 minutos y compute su carga de entrenamiento (Training Effect / EPOC).
 
-### Módulo 2: Motor de Carga Multidisciplinar (ATL / CTL / TSB)
+### Módulo 2: Motor de Lyfta Multidisciplinar (ATL / CTL / TSB)
 - **HU-03**: Como atleta, quiero ver una gráfica unificada de fatiga (ATL), condición física (CTL) y frescura/disposición (TSB) que combine automáticamente mi carrera, ciclismo, natación, fútbol y las pesas del gimnasio.
-- **HU-04**: Como jugador de fútbol, quiero registrar partidos o entrenamientos sin GPS o sin reloj asignándoles un esfuerzo percibido (RPE de 1 a 10) y duración para que se calcule su carga TRIMP/Foster y no distorsione mi fatiga semanal.
+- **HU-04**: Como jugador de fútbol, quiero registrar partidos o entrenamientos sin GPS o sin reloj asignándoles un esfuerzo percibido (RPE de 1 a 10) y duración para que se calcule su lyfta TRIMP/Foster y no distorsione mi fatiga semanal.
 
 ### Módulo 3: Asistente Adaptativo de Fuerza (Gimnasio)
 - **HU-05**: Como usuario en el gimnasio, quiero presionar "Sugerir Rutina de Hoy" y recibir una rutina personalizada (empuje, tracción, pierna o torso) donde el volumen e intensidad de las piernas se ajusten automáticamente si jugué al fútbol ayer o si mi VFC/HRV indica recuperación incompleta.
@@ -131,17 +131,17 @@ Visión extendida (Fases 7-11): convertirse en el **sistema propio completo** de
 
 ## 3. Especificación de Métricas Matemáticas
 
-### A. Carga de Entrenamiento (Training Load / TSS)
+### A. Lyfta de Entrenamiento (Training Load / TSS)
 - **Deportes Garmin (Bici, Carrera, Natación)**:
   $$TSS = \frac{t \times NGP \times IF}{FTP \times 3600} \times 100$$
   *(En ausencia de potenciómetro, se usará el EPOC / Training Effect oficial extraído de Garmin o TRIMP basado en FC).*
 
 - **Fútbol y Sesiones de Campo (Método Foster)**:
-  $$\text{Carga (Foster)} = \text{Duración (minutos)} \times \text{RPE (1-10)} \times 1.5$$
+  $$\text{Lyfta (Foster)} = \text{Duración (minutos)} \times \text{RPE (1-10)} \times 1.5$$
 
-- **Gimnasio (Carga Neuromuscular)**:
+- **Gimnasio (Lyfta Neuromuscular)**:
   $$\text{Tonelaje Total} = \sum (\text{Series} \times \text{Repeticiones} \times \text{Peso en kg})$$
-  $$\text{Carga Estimada (TSS Equivalent)} = \text{Tonelaje} \times \text{Factor de Grupo Muscular (0.015 - 0.03)}$$
+  $$\text{Lyfta Estimada (TSS Equivalent)} = \text{Tonelaje} \times \text{Factor de Grupo Muscular (0.015 - 0.03)}$$
   *(Implementación actual: factor fijo 0.02 en `FatigueEngine.calculate_strength_tss`. Evolución Fase 9: factor por foco — Legs 0.03, Push/Pull 0.02, Full 0.025, Core 0.015.)*
 
 ### B. Modelo Banister (Impulse-Response)

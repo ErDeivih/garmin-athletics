@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, '..', '..');
-const tokensPath = join(repoRoot, 'designs', 'carga-design-system', 'project', 'tokens.json');
+const tokensPath = join(repoRoot, 'designs', 'lyfta-design-system', 'project', 'tokens.json');
 const tokens = JSON.parse(readFileSync(tokensPath, 'utf8'));
 const themes = tokens.color.themes.map((theme) => theme.id);
 const first = themes[0];

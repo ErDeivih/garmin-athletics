@@ -1,6 +1,6 @@
-# Carga Watch — app Connect IQ (T-32)
+# Lyfta Watch — app Connect IQ (T-32)
 
-Watch-app propia de Carga para el Forerunner 255 y la gama compatible. **No es la app nativa de
+Watch-app propia de Lyfta para el Forerunner 255 y la gama compatible. **No es la app nativa de
 Garmin**: recibe el entreno del día, detecta el movimiento de cada serie, estima la fuerza y manda
 las series al backend, con cola offline. El diseño completo está en [DESIGN.md](DESIGN.md).
 
@@ -26,7 +26,7 @@ Compilación verificada con SDK 8.3.0, `minSdkVersion 3.3.0`:
 ## Simulador y capturas
 
 1. Abrir `simulator.exe` y elegir el modelo.
-2. `monkeydo build\carga-<modelo>.prg <modelo>`.
+2. `monkeydo build\lyfta-<modelo>.prg <modelo>`.
 3. Sin `apiUrl`/`token` configurados, la app usa una rutina de demostración para revisar las
    pantallas. Con ambos configurados en los ajustes de la app desde Garmin Connect, pide el entreno
    de hoy al backend.
@@ -57,6 +57,6 @@ Los endpoints están en `backend/app/api/v1/watch.py` y probados con `tests/test
 
 ## Privacidad y textos
 
-El reloj solo muestra «Carga», el nombre del entreno, el ejercicio, la serie, «Peso», «Objetivo ×
+El reloj solo muestra «Lyfta», el nombre del entreno, el ejercicio, la serie, «Peso», «Objetivo ×
 reps», «Reps detectadas», velocidad, fuerza estimada y «OK serie · ABAJO ejercicio / ATRÁS salir».
 No hay tokens, URLs ni detalles técnicos en pantalla.

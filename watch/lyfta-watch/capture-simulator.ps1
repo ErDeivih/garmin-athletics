@@ -25,7 +25,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Drawing;
 using System.Drawing.Imaging;
-public class CargaCapture {
+public class LyftaCapture {
  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out RECT r);
  [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr h, IntPtr d, uint f);
  [StructLayout(LayoutKind.Sequential)] public struct RECT { public int L; public int T; public int R; public int B; }
@@ -41,7 +41,7 @@ public class CargaCapture {
 Add-Type -TypeDefinition $code -ReferencedAssemblies System.Drawing
 
 foreach ($device in $Devices) {
-    $prg = Join-Path $build "carga-$device.prg"
+    $prg = Join-Path $build "lyfta-$device.prg"
     & "$SdkPath\bin\monkeyc.bat" -d $device -f (Join-Path $root "monkey.jungle") -o $prg -y $KeyPath
     if ($LASTEXITCODE -ne 0) { throw "No compila $device" }
 
@@ -53,7 +53,7 @@ foreach ($device in $Devices) {
     Start-Sleep -Seconds 5
 
     $sim = Get-Process simulator -ErrorAction Stop | Select-Object -First 1
-    [CargaCapture]::Save($sim.MainWindowHandle, (Join-Path $OutDir "watch-$device.png"))
+    [LyftaCapture]::Save($sim.MainWindowHandle, (Join-Path $OutDir "watch-$device.png"))
     Write-Host "captura: $device"
 }
 Write-Host "Capturas en $OutDir"

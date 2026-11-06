@@ -4,7 +4,7 @@ import { installFakeApi, json } from './fakeApi';
 import { renderApp } from './renderApp';
 import * as f from './fixtures';
 
-const TOKEN_KEY = 'carga.token';
+const TOKEN_KEY = 'lyfta.token';
 
 const catalog = {
   total: 2,

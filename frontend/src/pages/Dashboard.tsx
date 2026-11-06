@@ -371,11 +371,11 @@ export default function Dashboard({ onSync }: { onSync: () => void }) {
         </Card>
       </div>
 
-      {/* Carga + conexión */}
+      {/* Lyfta + conexión */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Carga fisiológica <span className="text-xs font-normal text-gray-500">· modelo Banister 30d</span></CardTitle>
+            <CardTitle>Lyfta fisiológica <span className="text-xs font-normal text-gray-500">· modelo Banister 30d</span></CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[280px] w-full">
@@ -392,7 +392,7 @@ export default function Dashboard({ onSync }: { onSync: () => void }) {
                 </LineChart>
               </ResponsiveContainer>
             </div>
-            {!load.length && <p className="text-xs text-gray-600 mt-2">Sin actividades con carga todavía — aparecerán al sincronizar.</p>}
+            {!load.length && <p className="text-xs text-gray-600 mt-2">Sin actividades con lyfta todavía — aparecerán al sincronizar.</p>}
           </CardContent>
         </Card>
         <div className="space-y-4">

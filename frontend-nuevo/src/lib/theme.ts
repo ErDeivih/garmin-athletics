@@ -1,11 +1,11 @@
 /** El tema elegido sobrevive a recargar: se lee y se aplica antes de pintar la app. */
 export type Theme = 'dark' | 'light';
 
-export const THEME_KEY = 'carga.theme';
+export const THEME_KEY = 'lyfta.theme';
 
 export function readTheme(): Theme {
   try {
-    const theme = window.localStorage.getItem(THEME_KEY) ?? window.localStorage.getItem('pulso.theme');
+    const theme = window.localStorage.getItem(THEME_KEY) ?? window.localStorage.getItem('carga.theme') ?? window.localStorage.getItem('pulso.theme');
     return theme === 'light' ? 'light' : 'dark';
   } catch {
     return 'dark';

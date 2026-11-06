@@ -50,7 +50,7 @@ interpola.
 | FC en reposo | `daily.resting_hr`, `resting_hr_7d` | día | real |
 | Body Battery | `daily.body_battery{max,min,wake,curve:[[ts_ms,valor]]}` | día, curva | real |
 | Estrés | `daily.stress_avg` | día | real |
-| Carga | `/metrics/load?days` → `series[{date,atl,ctl,tsb,tss}]` | día | real (Banister) |
+| Lyfta | `/metrics/load?days` → `series[{date,atl,ctl,tsb,tss}]` | día | real (Banister) |
 | Tendencias | `/metrics/trends?metric&days` (7 métricas) | día | real; ventana máx. 90 días |
 | Movimiento | `/metrics/stats?days` → pasos, calorías, distancia, intensidad, pisos | día | real |
 | Estado Garmin | `/metrics/training-status` → VO2max, estado, predicciones | snapshot | real pero **depende de la última sincronización** |
@@ -89,10 +89,10 @@ La pregunta manda: cada gráfica resuelve una pregunta que el atleta se hace. Si
 | 13 | 1RM estimado | línea (solo series 1-12) | ¿Cuál es mi techo estimado? | series (Epley) | Historial |
 | 14 | Empuje/tirón | barras por semana | ¿Estoy equilibrado? | series + patrón de movimiento (nuevo) | Progreso |
 | 15 | Tiempo bajo tensión | barras | ¿Cuánto tiempo trabaja el músculo? | series + tempo (nuevo campo) | Progreso |
-| 16 | Ritmo vs FC (carrera) | dispersión | ¿A qué carga corro cada ritmo? | `/activities/{id}/streams` | Actividad |
+| 16 | Ritmo vs FC (carrera) | dispersión | ¿A qué lyfta corro cada ritmo? | `/activities/{id}/streams` | Actividad |
 | 17 | Zonas + parciales de una salida | línea + barras | ¿Dónde se me fue la carrera? | `streams`, `splits` | Actividad |
 | 18 | Pasos / calorías / intensidad | líneas y barras | ¿Me muevo fuera del gimnasio? | `/metrics/stats` | Tendencias |
-| 19 | Readiness vs carga | dispersión | ¿Cómo responde mi cuerpo a la carga? | `daily` + `load` | Tendencias (avanzado) |
+| 19 | Readiness vs lyfta | dispersión | ¿Cómo responde mi cuerpo a la carga? | `daily` + `load` | Tendencias (avanzado) |
 | 20 | Comparativa periodo actual vs anterior | barras dobles | ¿Mejor o peor que el mes pasado? | `/performance/summary`, agregados | Todas |
 
 Descartadas de momento: mapa de calor corporal por músculo (necesita dibujo anatómico propio y
@@ -114,7 +114,7 @@ ingiere peso ni grasa; sería otra fuente de datos).
 | Empuje/tirón | Σ volumen empuje / Σ volumen tirón | series + patrón de movimiento | **falta el patrón** | El catálogo actual solo tiene grupo muscular; proponer columna `movement_pattern` (push/pull/legs/core) y semilla |
 | Tiempo bajo tensión | Σ reps × (excéntrica + pausa + concéntrica) | tempo por serie/ejercicio | **falta tempo** | Sin tempo no se inventa: se muestra vacío "necesita tempo" hasta que el editor lo capture |
 | RPE de sesión (carga) | RPE × duración (Foster) | RPE de la sesión | parcial: `Activity.rpe` existe en actividades; las series de gimnasio solo tienen `rir` | Proponer `rpe` por serie además de `rir` en T-04 |
-| ACWR | ATL / CTL | carga | **sí** (`training-status.acwr`) | Mostrar como referencia, nunca como diagnóstico |
+| ACWR | ATL / CTL | lyfta | **sí** (`training-status.acwr`) | Mostrar como referencia, nunca como diagnóstico |
 | Sueño de 7 días | media móvil de score/horas | biometría | **sí** (`sleep.avg_7d`) | Ya está |
 | Zonas de FC | tiempo por zona | actividades | **sí** | Ya está |
 
@@ -144,7 +144,7 @@ ingiere peso ni grasa; sería otra fuente de datos).
 | P1 | No hay agregados de gimnasio | `GET /strength/stats?from&to&group_by=muscle` (o `week` / `exercise`) con volumen, series, frecuencia y progresión; SQL con joins, paginado | 2 | sí, endpoint nuevo |
 | P2 | El ejercicio no dice si es empuje o tirón | columna `movement_pattern` nullable + semilla para los 52 + edición en ejercicios propios | 2 | sí, migración aditiva |
 | P3 | No hay tempo ni RPE por serie | `tempo` (p. ej. `"3-1-2-0"`) y `rpe` nullable en `template_exercises` y `session_sets`; el editor de T-04/T-05 los captura | 2 | sí, columnas nuevas |
-| P4 | Tendencias y carga limitadas a 90/180 días | ampliar a 365 días o agregación semanal/mensual en el mismo endpoint | 1 | sí |
+| P4 | Tendencias y lyfta limitadas a 90/180 días | ampliar a 365 días o agregación semanal/mensual en el mismo endpoint | 1 | sí |
 | P5 | Readiness inventado sin biometría | T-21: `readiness: null` + `biometrics_available` y la UI deja de pintarlo | 2 | sí |
 | P6 | Series de fuerza de Garmin no se ingieren | job/sync que llame a `get_activity_exercise_sets` y guarde las series enlazadas a la actividad | 2 | sí, con deduplicación por `activity_id` |
 | P7 | `streams` puede descargar de Garmin en cada apertura | cachear el detalle/track al sincronizar y devolver `cached: true/false` | 1 | sí |

@@ -12,7 +12,7 @@ using Toybox.System;
  *
  * Es una estimación de POC: no sustituye una medición de laboratorio.
  */
-class CargaSensor {
+class LyftaSensor {
     private var _reps = 0;
     private var _lastPeakAt = 0;
     private var _intervals = [];

@@ -1,4 +1,4 @@
-"""API de la watch-app propia de Carga (T-32).
+"""API de la watch-app propia de Lyfta (T-32).
 
 La app Connect IQ pide el entreno del día y manda las series hechas. Esta
 versión usa Bearer normal; el emparejamiento por código/token de dispositivo

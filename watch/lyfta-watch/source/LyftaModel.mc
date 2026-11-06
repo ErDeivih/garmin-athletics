@@ -1,7 +1,7 @@
 using Toybox.Application.Storage;
 using Toybox.System;
 
-class CargaModel {
+class LyftaModel {
     var workoutId = "";
     var name = "";
     var exercises = [];

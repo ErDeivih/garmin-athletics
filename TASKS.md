@@ -35,7 +35,7 @@
 
 - [x] **T-15**: Inicializar proyecto Frontend en `frontend/` con Tailwind CSS y componentes Shadcn UI.
 - [x] **T-16**: Construir el Dashboard Principal: Widgets de Sueño, HRV, Body Battery y semáforo de Readiness.
-- [x] **T-17**: Implementar la gráfica interactiva de Carga Fisiológica (curvas de ATL, CTL y TSB con Recharts).
+- [x] **T-17**: Implementar la gráfica interactiva de Lyfta Fisiológica (curvas de ATL, CTL y TSB con Recharts).
 - [x] **T-18**: Desarrollar la vista optimizada para smartphone de Registro de Gimnasio (interfaz touch-friendly para añadir pesos, repeticiones y guardar).
 - [x] **T-19**: Crear el modal de Asistente IA ("Sugerir Rutina con un Clic") con visor de ejercicios recomendados.
 

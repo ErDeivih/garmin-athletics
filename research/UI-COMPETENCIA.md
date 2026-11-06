@@ -177,7 +177,7 @@ Fitbit ganan en panel del día, no en registro.
 
 ---
 
-## 4. Qué adoptamos para Carga
+## 4. Qué adoptamos para Lyfta
 
 Todas las decisiones usan tokens existentes (`project/tokens.json`); ninguna inventa valores.
 

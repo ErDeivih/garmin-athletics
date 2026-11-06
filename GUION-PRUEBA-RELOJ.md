@@ -16,7 +16,7 @@ guarda.
 | 6 | Terminar una serie en el reloj y sincronizar | La actividad aparece en la app | Hora, modelo y captura |
 | 7 | Importar la actividad: `POST /strength/import-garmin/{id}` | `sets_imported > 0` | Apuntar `unmapped` y el `id` |
 | 8 | **Catálogo → Detección** y activar la detección automática | «Detección activada.» | Revisar el 422 |
-| 9 | Watch-app Carga en el reloj | Ejercicio, serie, peso, reps detectadas y fuerza | Ver Prueba E |
+| 9 | Watch-app Lyfta en el reloj | Ejercicio, serie, peso, reps detectadas y fuerza | Ver Prueba E |
 
 ## Antes de empezar
 
@@ -77,12 +77,12 @@ envío repetido puede duplicar el entreno.
 ## Prueba E — Watch-app propia (T-32)
 
 Depende de tener el `.prg` firmado y la instalación de desarrollador en el fr255 (Nivel 3). El
-proyecto está en `watch/carga-watch/`.
+proyecto está en `watch/lyfta-watch/`.
 
-1. Instalar `build/carga-fr255.prg` en el reloj con el flujo de desarrollador.
-2. En Garmin Connect → app Carga → Ajustes, poner la dirección del backend y el token de David.
-3. Abrir **Carga** en el reloj. Debe pedir el entreno de hoy.
-4. **Debe verse**: «Carga», el nombre del entreno, «Ejercicio 1/N», el ejercicio, «Serie 1/N»,
+1. Instalar `build/lyfta-fr255.prg` en el reloj con el flujo de desarrollador.
+2. En Garmin Connect → app Lyfta → Ajustes, poner la dirección del backend y el token de David.
+3. Abrir **Lyfta** en el reloj. Debe pedir el entreno de hoy.
+4. **Debe verse**: «Lyfta», el nombre del entreno, «Ejercicio 1/N», el ejercicio, «Serie 1/N»,
    «Peso», «Objetivo × reps», «Reps detectadas», velocidad y fuerza.
 5. Pulsar OK: la serie se guarda y avanza; el backend recibe `/watch/sets` (misma serie dos veces =
    `duplicate: true`, no dos filas).
@@ -106,7 +106,7 @@ proyecto está en `watch/carga-watch/`.
 | B | `sent`, días enviados, dos entrenos el mismo día y recorte | `ESTADO-AGENTE.md` |
 | C | `activity_id`, `sets_imported`, `unmapped` | `ESTADO-AGENTE.md` |
 | D | error por serie, % detectadas, fuerza/1RM | `research/IMU-CALENDARIO.md` §10.3 |
-| E | capturas de las pantallas de la watch-app | `watch/carga-watch/` |
+| E | capturas de las pantallas de la watch-app | `watch/lyfta-watch/` |
 | F | captura del recorrido y del perfil en el reloj | `ESTADO-AGENTE.md` |
 
 Hasta que A–C estén hechas, T-30/T-31/T-42 siguen **en curso**, no cerradas.

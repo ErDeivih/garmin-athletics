@@ -9,13 +9,14 @@ import { useSyncExternalStore } from 'react';
  * La verdad está en localStorage (o en el entorno): no se guarda una copia en
  * memoria que pueda quedar desincronizada.
  */
-const STORAGE_KEY = 'carga.extended';
-const STORAGE_KEY_ANTERIOR = 'pulso.extended';
+const STORAGE_KEY = 'lyfta.extended';
+const STORAGE_KEY_ANTERIOR = 'carga.extended';
+const STORAGE_KEY_LEGACY = 'pulso.extended';
 const listeners = new Set<() => void>();
 
 function readFlag(): boolean {
   try {
-    const stored = window.localStorage.getItem(STORAGE_KEY) ?? window.localStorage.getItem(STORAGE_KEY_ANTERIOR);
+    const stored = window.localStorage.getItem(STORAGE_KEY) ?? window.localStorage.getItem(STORAGE_KEY_ANTERIOR) ?? window.localStorage.getItem(STORAGE_KEY_LEGACY);
     if (stored === 'true') return true;
     if (stored === 'false') return false;
   } catch {
@@ -27,7 +28,7 @@ function readFlag(): boolean {
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
   const onStorage = (event: StorageEvent) => {
-    if (event.key === STORAGE_KEY || event.key === STORAGE_KEY_ANTERIOR) listener();
+    if (event.key === STORAGE_KEY || event.key === STORAGE_KEY_ANTERIOR || event.key === STORAGE_KEY_LEGACY) listener();
   };
   window.addEventListener('storage', onStorage);
   return () => {

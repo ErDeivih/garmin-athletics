@@ -1,1 +1,1 @@
-export const NOMBRE_APP = 'Carga';
+export const NOMBRE_APP = 'Lyfta';

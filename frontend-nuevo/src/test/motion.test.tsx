@@ -4,7 +4,7 @@ import { installFakeApi, json } from './fakeApi';
 import { renderApp } from './renderApp';
 import * as f from './fixtures';
 
-const TOKEN_KEY = 'carga.token';
+const TOKEN_KEY = 'lyfta.token';
 const exercise = f.templates.items[0]!.exercises[0]!.exercise;
 
 describe('editor de detección automática por ejercicio', () => {

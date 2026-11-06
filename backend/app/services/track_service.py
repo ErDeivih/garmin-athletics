@@ -358,7 +358,7 @@ def build_gpx(name: str, lat: List[float], lon: List[float],
         pts.append(f"<trkpt lat=\"{la:.6f}\" lon=\"{lo:.6f}\">{el}</trkpt>")
     safe = "".join(c for c in name if c.isalnum() or c in " -_")[:80]
     return ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-            "<gpx version=\"1.1\" creator=\"Carga\">"
+            "<gpx version=\"1.1\" creator=\"Lyfta\">"
             f"<trk><name>{safe}</name><trkseg>{''.join(pts)}</trkseg></trk></gpx>")
 
 
@@ -419,7 +419,7 @@ def fetch_elevations(lat: List[float], lon: List[float],
     try:
         payload = _parse.quote(_json.dumps({"shape": shape, "range": True}))
         req = _url.Request(f"{VALHALLA_URL}/height?json={payload}",
-                           headers={"User-Agent": "Carga/1.0"})
+                           headers={"User-Agent": "Lyfta/1.0"})
         with _url.urlopen(req, timeout=timeout) as resp:
             data = _json.loads(resp.read().decode("utf-8"))
         ranges = data.get("range_height") or []

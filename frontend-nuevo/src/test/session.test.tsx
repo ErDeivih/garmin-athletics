@@ -4,8 +4,8 @@ import { installFakeApi, json } from './fakeApi';
 import { renderApp } from './renderApp';
 import * as f from './fixtures';
 
-const TOKEN_KEY = 'carga.token';
-const DRAFT_PREFIX = 'carga.session';
+const TOKEN_KEY = 'lyfta.token';
+const DRAFT_PREFIX = 'lyfta.session';
 
 const apiSesion = () =>
   installFakeApi({

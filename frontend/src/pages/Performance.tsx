@@ -98,7 +98,7 @@ export default function Performance() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><Timer className="w-5 h-5 text-amber-400" /> Tiempo en zonas FC</CardTitle></CardHeader>          <CardContent className="space-y-2">
-            {!zones?.total_secs ? <EmptyState title="Sin zonas" hint="Faltan actividades con carga en el periodo." /> :
+            {!zones?.total_secs ? <EmptyState title="Sin zonas" hint="Faltan actividades con lyfta en el periodo." /> :
               zones.zones.map((z: any) => (
                 <div key={z.zone}>
                   <div className="flex justify-between text-xs mb-1">

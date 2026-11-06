@@ -1,4 +1,4 @@
-# Especificación — Carga
+# Especificación — Lyfta
 
 Estado: **borrador para revisar**. Ninguna pantalla se implementa sin estar decidida aquí.
 
@@ -98,7 +98,7 @@ David ha decidido que el frontend nuevo arranca con **Hoy, Gimnasio y Ajustes** 
 
 | Pantalla | Qué resuelve |
 |---|---|
-| **Hoy** | Si hoy toca entrenar o descansar y cómo está el cuerpo: readiness con sus tres componentes, sueño, HRV, Body Battery, FC en reposo, estrés, carga y avisos de la app. |
+| **Hoy** | Si hoy toca entrenar o descansar y cómo está el cuerpo: readiness con sus tres componentes, sueño, HRV, Body Battery, FC en reposo, estrés, lyfta y avisos de la app. |
 | **Gimnasio** | Hacer el entrenamiento entero sin salir de la sección: **Entrenar** (sesión en curso y sesión libre), **Rutinas** (lista y editor de plantilla), **Catálogo** (búsqueda y ficha), **Historial** (sesiones y detalle) y la **calculadora de discos** como herramienta dentro de la sesión. |
 | **Ajustes** | Vincular Garmin con 2FA, estado de sync, preferencias de unidades y descanso, interruptor de la bandera y borrar cuenta. |
 
@@ -154,7 +154,7 @@ David ha decidido que el frontend nuevo arranca con **Hoy, Gimnasio y Ajustes** 
 - **T-30/T-31 implementadas**: builder tipado de Garmin (sportType 5, repeat groups, 1.527
   ejercicios, sin envíos parciales) e importación de series deduplicada por `activity_id`; falta la
   prueba real en el reloj y el botón de envío en la app.
-- **Correcciones del 2026-11-05**: la app pasa a llamarse **Carga** (paquete `carga-frontend`);
+- **Correcciones del 2026-11-05**: la app pasa a llamarse **Lyfta** (paquete `lyfta-frontend`);
   se aplica `DOCTRINA-CALIDAD.md` §8 (la interfaz no habla de cómo está hecha) y §9 (no usar la marca
   de otra empresa). Se añade el detalle de Actividad con gráficas y el calendario con entrenos
   semanales, previsualización y envío al reloj. Ver `CORRECCIONES-2026-11-05.md`.

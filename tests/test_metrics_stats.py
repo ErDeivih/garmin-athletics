@@ -165,7 +165,7 @@ def run():
     assert with_load, "la carga de las sesiones no aparece en la serie"
     # La semana cerrada con datos debe tener monotonía definida (variación entre días).
     complete_with_load = [row for row in with_load if row["complete"]]
-    assert complete_with_load, "no hay ninguna semana completa con carga"
+    assert complete_with_load, "no hay ninguna semana completa con lyfta"
     assert any(row["monotony"] is not None for row in complete_with_load), complete_with_load
     assert any(row["strain"] is not None for row in complete_with_load)
     assert "Foster" in summary["method"]

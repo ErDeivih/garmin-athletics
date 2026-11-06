@@ -54,7 +54,7 @@ export function StatusBadge({ status }: { status?: string }) {
   );
 }
 
-/* ---------- Carga ---------- */
+/* ---------- Lyfta ---------- */
 
 export function Skeleton({ className }: { className?: string }) {
   return <div className={cn("skeleton", className)} />;

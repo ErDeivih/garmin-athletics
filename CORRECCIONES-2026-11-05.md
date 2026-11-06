@@ -3,10 +3,10 @@
 Este documento deja escritas las correcciones del lote del 5 de noviembre y lo que se ha
 aplicado. Manda `DOCTRINA-CALIDAD.md` §8 y §9.
 
-## 1. Nombre: Carga
+## 1. Nombre: Lyfta
 
-- Nombre de producto: **Carga**. Paquete `carga-frontend`; título `Carga`; clave de
-  almacenamiento `carga.*`.
+- Nombre de producto: **Lyfta**. Paquete `lyfta-frontend`; título `Lyfta`; clave de
+  almacenamiento `lyfta.*`.
 - Se elimina «Garmin Athletics» de cabecera, login, `index.html`, `package.json`, título de la API y
   documentación. «Garmin» solo queda donde es la **cuenta o el reloj del usuario** (conectar la
   cuenta, enviar al reloj), nunca como nombre de la app.
@@ -98,8 +98,8 @@ pide ni lo guarda.
 
 ## 7. Segundo lote de correcciones (noche del 2026-11-05)
 
-1. **Marca Carga.** Sustituye la marca anterior en cabecera, `index.html`, `package.json`, login, Ajustes,
-   `designs/carga-design-system`, almacenamiento local y watch-app. No quedan restos de la marca anterior en
+1. **Marca Lyfta.** Sustituye la marca anterior en cabecera, `index.html`, `package.json`, login, Ajustes,
+   `designs/lyfta-design-system`, almacenamiento local y watch-app. No quedan restos de la marca anterior en
    archivos versionados.
 2. **Capturas.** Se borraron las anteriores y se regeneraron 18 nuevas, numeradas de `01` a `18`.
 3. **Detección automática.** El editor ya no pide duración de repetición ni inicio de serie: activa
@@ -117,5 +117,5 @@ pide ni lo guarda.
    ofrece eliminar los datos desde la app.
 9. **Investigación.** `research/RUTAS-BIBLIOTECA.md` con Strava, Komoot, Hevy y Strong.
 
-**Evidencia:** frontend **36/36** pruebas en 15 ficheros; backend **17/17** scripts; 18 capturas
+**Evidencia:** frontend **38/38** pruebas en 16 ficheros; backend **17/17** scripts; 18 capturas
 390×844 sin errores de consola; contrato ampliado con `/watch/today` y `/routes/generate`.

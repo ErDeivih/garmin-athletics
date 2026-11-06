@@ -27,7 +27,7 @@ def run():
     h = {"Authorization": f"Bearer {user['access_token']}"}
     ex = client.get(f"{API}/strength/exercises?q=press de banca", headers=h).json()["items"][0]
     tpl = client.post(f"{API}/strength/templates", headers=h, json={
-        "name": "Carga", "weekday": TODAY.weekday(),
+        "name": "Lyfta", "weekday": TODAY.weekday(),
         "exercises": [{"exercise_id": ex["id"], "sets": 3, "reps": 8,
                        "weight_kg": 50, "rest_seconds": 90}]}).json()
 
