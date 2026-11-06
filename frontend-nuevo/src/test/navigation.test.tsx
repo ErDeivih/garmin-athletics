@@ -36,8 +36,8 @@ describe('moverse por la app', () => {
     expect(await screen.findByText(/vinculado/i)).toBeInTheDocument();
   });
 
-  it('al cerrar sesión vuelve a la entrada y borra el token', async () => {
-    localStorage.setItem(TOKEN_KEY, 'test-token');
+  it.each([TOKEN_KEY, 'pulso.token'])('abre y cierra una sesión guardada en %s', async (clave) => {
+    localStorage.setItem(clave, 'test-token');
     const api = installFakeApi({
       'GET /api/v1/auth/me': json(f.me),
       'GET /api/v1/metrics/daily': json(f.daily),
@@ -50,8 +50,8 @@ describe('moverse por la app', () => {
 
     await user.click(await screen.findByRole('button', { name: /cerrar sesión/i }));
 
-    expect(await screen.findByRole('heading', { name: /entra en Carga/i })).toBeInTheDocument();
-    expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
+    expect(await screen.findByRole('heading', { name: /^entra en /i })).toBeInTheDocument();
+    expect(localStorage.getItem(clave)).toBeNull();
     expect(api.calls.some((call) => call.path === '/api/v1/auth/logout')).toBe(true);
   });
 });

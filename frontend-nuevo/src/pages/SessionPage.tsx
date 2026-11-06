@@ -37,6 +37,7 @@ interface SessionDraft {
 }
 
 const STORAGE_PREFIX = 'carga.session';
+const STORAGE_PREFIX_ANTERIOR = 'pulso.session';
 
 const toNumber = (value: string): number => {
   const cleaned = value.replace(',', '.').trim();
@@ -44,11 +45,13 @@ const toNumber = (value: string): number => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-const draftKey = (userId: string, templateId: string) => `${STORAGE_PREFIX}.${userId}.${templateId}`;
+const draftKey = (userId: string, templateId: string, prefix = STORAGE_PREFIX) =>
+  `${prefix}.${userId}.${templateId}`;
 
 function readDraft(userId: string, templateId: string): SessionDraft | null {
   try {
-    const raw = window.localStorage.getItem(draftKey(userId, templateId));
+    const raw = window.localStorage.getItem(draftKey(userId, templateId))
+      ?? window.localStorage.getItem(draftKey(userId, templateId, STORAGE_PREFIX_ANTERIOR));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as SessionDraft;
     if (parsed.version !== 1 || parsed.templateId !== templateId || !Array.isArray(parsed.exercises)) return null;
@@ -69,6 +72,7 @@ function writeDraft(userId: string, draft: SessionDraft): void {
 function clearDraft(userId: string, templateId: string): void {
   try {
     window.localStorage.removeItem(draftKey(userId, templateId));
+    window.localStorage.removeItem(draftKey(userId, templateId, STORAGE_PREFIX_ANTERIOR));
   } catch {
     // nada que limpiar
   }

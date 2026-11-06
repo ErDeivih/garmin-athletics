@@ -2,12 +2,20 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { NOMBRE_APP } from './src/config/marca';
 
 // El cliente usa rutas relativas `/api/v1`; en desarrollo el proxy las manda
 // al backend real. `VITE_API_PROXY_TARGET` permite apuntar a otro puerto sin
 // tocar el código (por ejemplo, una copia de la base de datos en 8010).
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    {
+      name: 'marca',
+      transformIndexHtml: (html) => html.replaceAll('__NOMBRE_APP__', NOMBRE_APP),
+    },
+  ],
   server: {
     port: 5173,
     strictPort: true,

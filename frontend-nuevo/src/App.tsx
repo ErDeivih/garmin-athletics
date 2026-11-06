@@ -4,6 +4,7 @@ import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './auth/AuthContext';
 import { useExtendedSections } from './config/features';
 import { NAV_ITEMS } from './config/navigation';
+import { NOMBRE_APP } from './config/marca';
 import { AppShell } from './components/AppShell';
 import { ErrorState, LoadingBlock, PageHeader } from './components/ui';
 import { LoginPage } from './pages/LoginPage';
@@ -29,7 +30,7 @@ function BootScreen() {
     <div className="grid min-h-dvh place-items-center bg-bg px-4 text-ink">
       <div className="w-full max-w-sm">
         <p className="mb-6 flex items-baseline gap-2">
-          <span className="font-display text-title font-bold uppercase tracking-wide">Carga</span>
+          <span className="font-display text-title font-bold uppercase tracking-wide">{NOMBRE_APP}</span>
           <span className="text-caption uppercase tracking-widest text-accent">Entrena</span>
         </p>
         <LoadingBlock label="Comprobando la sesión" />

@@ -129,7 +129,7 @@ export function GymPage() {
       </section>
 
       <Card className="mt-3">
-        <SectionTitle hint="En pruebas">Enviar al reloj</SectionTitle>
+        <SectionTitle>Enviar al reloj</SectionTitle>
         {!todaysTemplate ? (
           <p className="text-body text-ink-muted">
             Elige una plantilla para enviarla.

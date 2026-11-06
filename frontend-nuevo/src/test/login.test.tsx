@@ -22,7 +22,7 @@ describe('entrar en la app', () => {
     const user = userEvent.setup();
     renderApp('/');
 
-    expect(await screen.findByRole('heading', { name: /entra en Carga/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /^entra en /i })).toBeInTheDocument();
 
     await user.type(screen.getByLabelText(/correo/i), 'atleta@example.com');
     await user.type(screen.getByLabelText(/contraseña/i), 'secreto123');
@@ -55,7 +55,7 @@ describe('entrar en la app', () => {
     installFakeApi({});
     renderApp('/gimnasio');
 
-    expect(await screen.findByRole('heading', { name: /entra en Carga/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /^entra en /i })).toBeInTheDocument();
   });
 
   it('si el token ha caducado, la sesión se limpia y vuelve a la entrada', async () => {
@@ -65,7 +65,7 @@ describe('entrar en la app', () => {
     });
     renderApp('/');
 
-    expect(await screen.findByRole('heading', { name: /entra en Carga/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /^entra en /i })).toBeInTheDocument();
     expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
   });
 
@@ -80,7 +80,7 @@ describe('entrar en la app', () => {
     });
     renderApp('/');
 
-    expect(await screen.findByRole('heading', { name: /entra en Carga/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /^entra en /i })).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent(/sesión ha caducado/i);
     expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
   });
@@ -113,7 +113,7 @@ describe('entrar en la app', () => {
 
     await user.click(screen.getByRole('link', { name: 'Ajustes' }));
     await user.click(await screen.findByRole('button', { name: /cerrar sesión/i }));
-    await screen.findByRole('heading', { name: /entra en Carga/i });
+    await screen.findByRole('heading', { name: /^entra en /i });
 
     await user.type(screen.getByLabelText(/correo/i), 'b@example.com');
     await user.type(screen.getByLabelText(/contraseña/i), 'secreto123');

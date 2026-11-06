@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0A0E13" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="description" content="Carga: entrenamiento de fuerza y análisis de tu actividad." />
-    <title>Carga</title>
+    <meta name="description" content="__NOMBRE_APP__: entrenamiento de fuerza y análisis de tu actividad." />
+    <title>__NOMBRE_APP__</title>
     <script>
       // Aplica el tema guardado antes de que cargue el bundle: sin destello.
       try {
-        if (window.localStorage.getItem('carga.theme') === 'light') {
+        const tema = localStorage.getItem('carga.theme') ?? localStorage.getItem('pulso.theme');
+        if (tema === 'light') {
           document.documentElement.dataset.theme = 'light';
         }
       } catch (error) {

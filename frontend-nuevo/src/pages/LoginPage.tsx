@@ -1,3 +1,4 @@
+import { NOMBRE_APP } from '../config/marca';
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
@@ -30,10 +31,10 @@ export function LoginPage() {
     <div className="grid min-h-dvh place-items-center bg-bg px-4 py-10 text-ink">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex items-baseline gap-2">
-          <span className="font-display text-title font-bold uppercase tracking-wide">Carga</span>
+          <span className="font-display text-title font-bold uppercase tracking-wide">{NOMBRE_APP}</span>
           <span className="text-caption uppercase tracking-widest text-accent">Entrena</span>
         </div>
-        <h1 className="mb-2 font-display text-title uppercase tracking-wide">Entra en Carga</h1>
+        <h1 className="mb-2 font-display text-title uppercase tracking-wide">Entra en {NOMBRE_APP}</h1>
         <p className="mb-6 text-body text-ink-muted">
           Tu entrenamiento y su análisis, en un solo sitio.
         </p>

@@ -26,6 +26,9 @@ reloj y el análisis está completo.
 
 ## Evidencia
 
-- Frontend: 35/35 pruebas en 15 ficheros.
+- Frontend: 36/36 pruebas en 15 ficheros.
 - Backend: 16/16 scripts (incluye perfil IMU en seco, auto-carga, watch-app, rutas y calendario recurrente).
 - Capturas: `frontend-nuevo/screenshots/` — 18 capturas nuevas y numeradas (01–18).
+
+- El nombre visible se configura en `frontend-nuevo/src/config/marca.ts`. La sesión, el tema, las secciones y los borradores de la versión anterior se pueden recuperar. La prueba de sesión antigua falla antes del cambio y pasa después.
+- Contrato HTTP en una base de pruebas: 140/140. Humo a 390 × 844: 17 capturas, sin errores de navegador. La cuenta de prueba no tenía una actividad real con GPS y ese detalle se verificó con la prueba específica del frontend.

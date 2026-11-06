@@ -5,7 +5,8 @@ export const THEME_KEY = 'carga.theme';
 
 export function readTheme(): Theme {
   try {
-    return window.localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark';
+    const theme = window.localStorage.getItem(THEME_KEY) ?? window.localStorage.getItem('pulso.theme');
+    return theme === 'light' ? 'light' : 'dark';
   } catch {
     return 'dark';
   }

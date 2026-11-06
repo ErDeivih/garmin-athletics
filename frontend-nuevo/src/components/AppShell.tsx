@@ -1,3 +1,4 @@
+import { NOMBRE_APP } from '../config/marca';
 import { NavLink, Outlet } from 'react-router-dom';
 import { EXTENDED_NAV, PRIMARY_NAV, type NavItem } from '../config/navigation';
 import { useExtendedSections } from '../config/features';
@@ -29,7 +30,7 @@ function NavItemLink({ item, tone }: { item: NavItem; tone: 'desktop' | 'mobile'
 function Brand() {
   return (
     <div className="flex items-baseline gap-2">
-      <span className="font-display text-title font-bold uppercase tracking-wide text-ink">Carga</span>
+      <span className="font-display text-title font-bold uppercase tracking-wide text-ink">{NOMBRE_APP}</span>
       <span className="text-caption uppercase tracking-widest text-accent">Entrena</span>
     </div>
   );

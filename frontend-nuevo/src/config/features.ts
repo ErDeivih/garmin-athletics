@@ -10,11 +10,12 @@ import { useSyncExternalStore } from 'react';
  * memoria que pueda quedar desincronizada.
  */
 const STORAGE_KEY = 'carga.extended';
+const STORAGE_KEY_ANTERIOR = 'pulso.extended';
 const listeners = new Set<() => void>();
 
 function readFlag(): boolean {
   try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
+    const stored = window.localStorage.getItem(STORAGE_KEY) ?? window.localStorage.getItem(STORAGE_KEY_ANTERIOR);
     if (stored === 'true') return true;
     if (stored === 'false') return false;
   } catch {
@@ -26,7 +27,7 @@ function readFlag(): boolean {
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
   const onStorage = (event: StorageEvent) => {
-    if (event.key === STORAGE_KEY) listener();
+    if (event.key === STORAGE_KEY || event.key === STORAGE_KEY_ANTERIOR) listener();
   };
   window.addEventListener('storage', onStorage);
   return () => {

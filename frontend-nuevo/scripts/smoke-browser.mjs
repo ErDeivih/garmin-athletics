@@ -15,7 +15,7 @@ import { chromium } from 'playwright-core';
 const APP = (process.argv[2] ?? 'http://127.0.0.1:5173').replace(/\/$/, '');
 const API = (process.argv[3] ?? 'http://127.0.0.1:8010').replace(/\/$/, '');
 const here = dirname(fileURLToPath(import.meta.url));
-const shotsDir = join(here, '..', 'screenshots');
+const shotsDir = process.env.SMOKE_SHOTS_DIR ?? join(here, '..', 'screenshots');
 mkdirSync(shotsDir, { recursive: true });
 
 const chromeCandidates = [
@@ -45,6 +45,24 @@ if (!providedEmail) {
   if (registration.status !== 201) {
     throw new Error(`No se pudo crear la cuenta de humo: ${registration.status} ${await registration.text()}`);
   }
+
+  const { access_token: token } = await registration.json();
+  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const catalogo = await fetch(`${API}/api/v1/strength/exercises?q=press`, { headers });
+  if (!catalogo.ok) throw new Error(`No se pudo consultar el catálogo: ${catalogo.status}`);
+  const ejercicio = (await catalogo.json()).items.find((item) => item.slug === 'press-banca-barra');
+  if (!ejercicio) throw new Error('Falta el press de banca en el catálogo de prueba.');
+  const plantilla = await fetch(`${API}/api/v1/strength/templates`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      name: 'Empuje A',
+      weekday: (new Date().getDay() + 6) % 7,
+      focus: 'push',
+      exercises: [{ exercise_id: ejercicio.id, sets: 4, reps: 8, weight_kg: 40, rest_seconds: 60 }],
+    }),
+  });
+  if (plantilla.status !== 201) throw new Error(`No se pudo crear la plantilla de humo: ${plantilla.status}`);
 }
 
 const browser = await chromium.launch({ executablePath, headless: true });
@@ -88,7 +106,7 @@ const shot = async (name) => {
 
 try {
   await page.goto(APP, { waitUntil: 'domcontentloaded' });
-  await page.getByRole('heading', { name: /entra en Carga/i }).waitFor();
+  await page.getByRole('heading', { name: /^entra en /i }).waitFor();
   await shot('01-login');
 
   await page.getByLabel(/correo/i).fill(email);
