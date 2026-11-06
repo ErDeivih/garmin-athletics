@@ -1,10 +1,12 @@
 param(
     [string]$SdkPath = "",
     [string]$KeyPath = "",
-    [string]$OutDir = ""
+    [string]$OutDir = "",
+    [string[]]$Devices = @("fr255", "fr245", "fenix6", "fr965", "venu3")
 )
-# Captura la watch-app en el simulador. Requiere que Windows haya permitido
-# simulator.exe en el firewall la primera vez (es un permiso local, no un secreto).
+# Compila y captura la watch-app en el simulador para cada modelo.
+# Requiere que Windows haya permitido simulator.exe en el firewall y que el
+# simulador tenga la pantalla encendida; si la captura sale negra, no es la app.
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 if (-not $SdkPath) {
@@ -15,16 +17,8 @@ if (-not $SdkPath) {
 if (-not $KeyPath -or -not (Test-Path $KeyPath)) { throw "Falta la clave .der" }
 if (-not $OutDir) { $OutDir = Join-Path $root "screenshots" }
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
-
-& "$SdkPath\bin\monkeyc.bat" -d fr255 -f (Join-Path $root "monkey.jungle") -o (Join-Path $root "build\carga-fr255.prg") -y $KeyPath
-if ($LASTEXITCODE -ne 0) { throw "No compila" }
-
-Stop-Process -Name simulator -Force -ErrorAction SilentlyContinue
-Start-Sleep -Seconds 2
-Start-Process -FilePath "$SdkPath\bin\simulator.exe" -ArgumentList "-d fr255" -WorkingDirectory "$SdkPath\bin"
-Start-Sleep -Seconds 6
-Start-Process -FilePath "$SdkPath\bin\monkeydo.bat" -ArgumentList (Join-Path $root "build\carga-fr255.prg"), "fr255" -WorkingDirectory $root
-Start-Sleep -Seconds 8
+$build = Join-Path $root "build"
+New-Item -ItemType Directory -Force -Path $build | Out-Null
 
 $code = @'
 using System;
@@ -45,13 +39,21 @@ public class CargaCapture {
 }
 '@
 Add-Type -TypeDefinition $code -ReferencedAssemblies System.Drawing
-$sim = Get-Process simulator | Select-Object -First 1
-[CargaCapture]::Save($sim.MainWindowHandle, (Join-Path $OutDir "simulador-01-entreno.png"))
 
-$ws = New-Object -ComObject WScript.Shell
-$ws.AppActivate($sim.Id) | Out-Null
-Start-Sleep -Milliseconds 500
-$ws.SendKeys("{ENTER}")
-Start-Sleep -Seconds 1
-[CargaCapture]::Save($sim.MainWindowHandle, (Join-Path $OutDir "simulador-02-hecha.png"))
+foreach ($device in $Devices) {
+    $prg = Join-Path $build "carga-$device.prg"
+    & "$SdkPath\bin\monkeyc.bat" -d $device -f (Join-Path $root "monkey.jungle") -o $prg -y $KeyPath
+    if ($LASTEXITCODE -ne 0) { throw "No compila $device" }
+
+    Stop-Process -Name simulator -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 2
+    Start-Process -FilePath "$SdkPath\bin\simulator.exe" -ArgumentList "-d", $device -WorkingDirectory "$SdkPath\bin"
+    Start-Sleep -Seconds 5
+    Start-Process -FilePath "$SdkPath\bin\monkeydo.bat" -ArgumentList $prg, $device -WorkingDirectory $root
+    Start-Sleep -Seconds 5
+
+    $sim = Get-Process simulator -ErrorAction Stop | Select-Object -First 1
+    [CargaCapture]::Save($sim.MainWindowHandle, (Join-Path $OutDir "watch-$device.png"))
+    Write-Host "captura: $device"
+}
 Write-Host "Capturas en $OutDir"

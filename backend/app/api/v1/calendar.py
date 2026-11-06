@@ -56,7 +56,8 @@ def _occurrences(ev: CalendarEvent, start_d: date, end_d: date) -> List[Dict[str
     if ev.weekday is None:
         return [_serialize(ev)] if start_d <= ev.start_local.date() <= end_d else []
     out = []
-    day = start_d
+    # Una recurrencia no puede aparecer antes de la fecha en que se creó.
+    day = max(start_d, ev.start_local.date())
     while day <= end_d:
         if ev.recurrence_until is not None and day > ev.recurrence_until:
             break
@@ -216,8 +217,11 @@ async def _build_event_workout(db: AsyncSession, user: User, event: CalendarEven
 
 
 def _next_occurrence(event: CalendarEvent, ref: date) -> date:
+    first = event.start_local.date()
     if event.weekday is None:
-        return event.start_local.date()
+        return first
+    if first > ref:
+        return first
     delta = (event.weekday - ref.weekday()) % 7
     return ref + timedelta(days=delta)
 

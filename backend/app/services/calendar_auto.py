@@ -35,8 +35,11 @@ def _due_today(event: CalendarEvent, today: date) -> bool:
 
 
 def _next_occurrence(event: CalendarEvent, ref: date) -> date:
+    first = event.start_local.date()
     if event.weekday is None:
-        return event.start_local.date()
+        return first
+    if first > ref:
+        return first
     return ref + timedelta(days=(event.weekday - ref.weekday()) % 7)
 
 

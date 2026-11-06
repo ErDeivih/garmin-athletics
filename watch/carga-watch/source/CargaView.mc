@@ -196,9 +196,9 @@ class CargaView extends WatchUi.View {
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, 132, Graphics.FONT_NUMBER_MEDIUM,
-            _model.weight().toString() + " kg", Graphics.TEXT_JUSTIFY_CENTER);
+            "Peso " + _model.weight().toString() + " kg", Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 158, Graphics.FONT_MEDIUM, "× " + _model.reps().toString(),
+        dc.drawText(width / 2, 158, Graphics.FONT_MEDIUM, "Objetivo × " + _model.reps().toString(),
             Graphics.TEXT_JUSTIFY_CENTER);
 
         var liveReps = _sensor.reps();
@@ -207,7 +207,7 @@ class CargaView extends WatchUi.View {
         var forceShown = liveReps > 0 ? _sensor.estimatedForceN(_model.weight()) : _lastForce;
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 180, Graphics.FONT_TINY, "Reps: " + repsShown.toString(),
+        dc.drawText(width / 2, 180, Graphics.FONT_TINY, "Reps detectadas: " + repsShown.toString(),
             Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, 196, Graphics.FONT_TINY, "Velocidad: " + fmt(velocityShown) + " m/s",
@@ -216,7 +216,7 @@ class CargaView extends WatchUi.View {
             Graphics.TEXT_JUSTIFY_CENTER);
 
         dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 232, Graphics.FONT_TINY, "OK guardar serie", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width / 2, 232, Graphics.FONT_TINY, "OK serie · ABAJO ejercicio", Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, 246, Graphics.FONT_TINY, "ATRÁS salir", Graphics.TEXT_JUSTIFY_CENTER);
     }
