@@ -1,4 +1,4 @@
-# frontend-nuevo — PULSO
+# frontend-nuevo — Carga
 
 Frontend nuevo, escrito desde cero contra el backend actual (`/api/v1`). Sustituye a `frontend/` y
 `frontend_mvp/`, que quedan como referencia y **no se tocan**.
@@ -36,7 +36,7 @@ tarea T-23 del backlog.
 
 | Área | Estado |
 |---|---|
-| Sistema de diseño | `../designs/pulso-design-system/` — tokens, README, componentes y contraste AA calculado. La app consume `src/styles/tokens.generated.css`. |
+| Sistema de diseño | `../designs/carga-design-system/` — tokens, README, componentes y contraste AA calculado. La app consume `src/styles/tokens.generated.css`. |
 | Autenticación | Login, restauración de sesión contra `/auth/me`, cierre de sesión, 401 global. |
 | Navegación | Registro de secciones: **Hoy · Gimnasio · Ajustes** visibles; el resto tras `VITE_FEATURE_EXTENDED` con interruptor en Ajustes. Barra lateral en escritorio, pestañas abajo en móvil. |
 | Hoy | Disposición con explicación breve, sueño, HRV, Body Battery, FC en reposo, estrés, frescura y avisos. **Gráfica de carga de 30 días** y **curva de Body Battery** del día, en SVG propio. **Sin datos no inventa nada**: estado vacío que explica qué falta. |

@@ -73,12 +73,12 @@ envío repetido puede duplicar el entreno.
 ## Prueba E — Watch-app propia (T-32)
 
 Depende de tener el `.prg` firmado y la instalación de desarrollador en el fr255 (Nivel 3). El
-proyecto está en `watch/pulso-watch/`.
+proyecto está en `watch/carga-watch/`.
 
-1. Instalar `build/pulso-fr255.prg` en el reloj con el flujo de desarrollador.
-2. En Garmin Connect → app PULSO → Ajustes, poner la dirección del backend y el token de David.
-3. Abrir **PULSO** en el reloj. Debe pedir el entreno de hoy.
-4. **Debe verse**: «PULSO», el nombre del entreno, «Ejercicio 1/N», el ejercicio, «Serie 1/N», el
+1. Instalar `build/carga-fr255.prg` en el reloj con el flujo de desarrollador.
+2. En Garmin Connect → app Carga → Ajustes, poner la dirección del backend y el token de David.
+3. Abrir **Carga** en el reloj. Debe pedir el entreno de hoy.
+4. **Debe verse**: «Carga», el nombre del entreno, «Ejercicio 1/N», el ejercicio, «Serie 1/N», el
    peso, `× reps` y «OK hecha».
 5. Pulsar OK: la serie desaparece de la pantalla y avanza; el backend recibe `/watch/sets` (misma
    serie dos veces = `duplicate: true`, no dos filas).

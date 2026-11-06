@@ -1,5 +1,5 @@
 <iq:manifest xmlns:iq="http://www.garmin.com/xml/connectiq" version="1">
-  <iq:application entry="PULSOApp" id="F04A7C00000000000000000000000001"
+  <iq:application entry="CargaApp" id="F04A7C00000000000000000000000001"
                   launcherIcon="@Drawables.LauncherIcon" minSdkVersion="3.3.0"
                   name="@Strings.AppName" type="watch-app">
     <iq:products>

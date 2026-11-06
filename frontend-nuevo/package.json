@@ -1,9 +1,9 @@
 {
-  "name": "pulso-frontend",
+  "name": "carga-frontend",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "PULSO: entrenamiento de fuerza, actividades y análisis.",
+  "description": "Carga: entrenamiento de fuerza, actividades y análisis.",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

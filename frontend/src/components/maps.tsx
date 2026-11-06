@@ -55,7 +55,7 @@ export function heatColor(t: number): string {
   return `rgb(${r},${g},${b})`;
 }
 
-/** Ruta coloreada por métrica (velocidad/pulso/altitud). Dibuja por tramos. */
+/** Ruta coloreada por métrica (velocidad/carga/altitud). Dibuja por tramos. */
 export function ColoredRoute({
   positions,
   values,

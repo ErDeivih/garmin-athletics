@@ -72,7 +72,7 @@ async def get_alerts(
         avg = sum(rhrs) / len(rhrs)
         if latest.resting_hr >= avg + 5:
             alerts.append({"type": "rhr_high", "severity": "warn",
-                           "message": f"Pulso en reposo alto ({latest.resting_hr} vs media {avg:.0f}). Posible fatiga o resfriado."})
+                           "message": f"Carga en reposo alto ({latest.resting_hr} vs media {avg:.0f}). Posible fatiga o resfriado."})
 
     # 6. Partido inamovible en 48h → recordatorio piernas
     try:
@@ -95,6 +95,6 @@ async def get_alerts(
              if (a.activity_type or "") in ("running", "cycling") and not a.avg_hr]
     if no_hr:
         alerts.append({"type": "no_hr", "severity": "info",
-                       "message": f"{len(no_hr)} sesión(es) sin pulso esta semana. Revisa la banda o el ajuste del reloj."})
+                       "message": f"{len(no_hr)} sesión(es) sin carga esta semana. Revisa la banda o el ajuste del reloj."})
 
     return {"date": today.isoformat(), "count": len(alerts), "alerts": alerts}

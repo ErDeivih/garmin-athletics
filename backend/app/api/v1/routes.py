@@ -201,7 +201,7 @@ def _gpx(name: str, lat: List[float], lon: List[float], ele: Optional[List]) -> 
         el = f"<ele>{e:.1f}</ele>" if e is not None else ""
         pts.append(f"<trkpt lat=\"{la:.6f}\" lon=\"{lo:.6f}\">{el}</trkpt>")
     return ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-            "<gpx version=\"1.1\" creator=\"PULSO\">"
+            "<gpx version=\"1.1\" creator=\"Carga\">"
             f"<trk><name>{name}</name><trkseg>{''.join(pts)}</trkseg></trk></gpx>")
 
 

@@ -1,4 +1,4 @@
-# PULSO — sistema de diseño
+# Carga — sistema de diseño
 
 Panel de disposición y registro de fuerza para un atleta. Oscuro por defecto, datos primero, una mano en el gimnasio. El sistema existe para que dos pantallas distintas parezcan la misma app: mismos tokens, mismas escalas, mismos estados.
 

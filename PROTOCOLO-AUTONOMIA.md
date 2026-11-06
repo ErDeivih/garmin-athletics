@@ -72,7 +72,7 @@ Investigación sin propuesta ejecutable es tiempo perdido. Y **si la propuesta c
 Al final de cada sesión, el agente deja en `ESTADO-AGENTE.md` del proyecto, con este formato exacto, porque de ahí lo lee el panel:
 
 ```
-titulo: PULSO — panel de entrenamiento y editor de gimnasio
+titulo: Carga — panel de entrenamiento y editor de gimnasio
 estado: en-curso
 tarea: implementando la tabla de ejercicios del editor
 nivel: 2

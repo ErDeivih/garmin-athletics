@@ -183,7 +183,7 @@ export default function Activities() {
             className="px-3 py-1.5 rounded-lg bg-white/5 border border-cardborder disabled:opacity-40 hover:bg-white/10">Antiguas →</button>
         </div>
       </div>
-      <p className="text-xs text-gray-600">Toca una actividad para ver su mapa, perfil de elevación, vueltas, zonas de pulso y meteo.</p>
+      <p className="text-xs text-gray-600">Toca una actividad para ver su mapa, perfil de elevación, vueltas, zonas de carga y meteo.</p>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 using Toybox.Application.Storage;
 using Toybox.System;
 
-class PULSOModel {
+class CargaModel {
     var workoutId = "";
     var name = "";
     var exercises = [];

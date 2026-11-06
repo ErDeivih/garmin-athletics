@@ -2,7 +2,7 @@ using Toybox.Application.Properties;
 using Toybox.Communications;
 using Toybox.Lang;
 
-class PULSOApi {
+class CargaApi {
     function baseUrl() {
         var value = Properties.getValue("apiUrl");
         return value instanceof String ? value : "";

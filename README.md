@@ -1,4 +1,4 @@
-# ⚡ PULSO - Tu centro de entrenamiento privado
+# ⚡ Carga - Tu centro de entrenamiento privado
 
 Plataforma personal de ingesta de Garmin Connect (sueño, HRV, Body Battery, FC en reposo, actividades con GPS), modelo fisiológico Banister (ATL/CTL/TSB + Readiness), mapas y planificador de rutas, gimnasio con IA, entrenos hacia el reloj y comparativas privadas con amigos.
 
@@ -35,7 +35,7 @@ cd frontend; npm install; npm run build   # dist/ lo sirve el backend
 El frontend nuevo se prueba con `npm run check` y habla con la API real. Ver
 [`frontend-nuevo/README.md`](frontend-nuevo/README.md) para el detalle de pantallas, banderas y
 pruebas de contrato. El sistema de diseño vive en
-[`designs/pulso-design-system/`](designs/pulso-design-system/).
+[`designs/carga-design-system/`](designs/carga-design-system/).
 
 Abre **`http://localhost:8000`** para el frontend viejo (usa incógnito tras actualizar, por la caché
 del bundle). El frontend nuevo se levanta aparte en `http://127.0.0.1:5173`: el backend todavía sirve
@@ -47,7 +47,7 @@ backlog.
 | Pestaña | Contenido |
 |---|---|
 | **Panel** | Readiness con anillo, Forma/Fatiga/Frescura, semana (sesiones/TSS/km/tiempo), widgets reales de Sueño (fases)/HRV/Body Battery (curva)/FC + Movimiento hoy (pasos), "Garmin dice" (VO2max, estado, predicciones), avisos, gráfica Banister 30d, últimas sesiones, conexión Garmin |
-| **Actividades** | Lista filtrable (deporte, fechas, texto) + paginación; detalle por sesión: mapa multicapa (calles/senderos/satélite) con ruta de colores (velocidad/pulso/altitud), perfil de elevación, gráficas FC/ritmo, vueltas, zonas FC, meteo, desnivel, calorías, cadencia/potencia, export GPX, "Guardar como ruta" |
+| **Actividades** | Lista filtrable (deporte, fechas, texto) + paginación; detalle por sesión: mapa multicapa (calles/senderos/satélite) con ruta de colores (velocidad/carga/altitud), perfil de elevación, gráficas FC/ritmo, vueltas, zonas FC, meteo, desnivel, calorías, cadencia/potencia, export GPX, "Guardar como ruta" |
 | **Rutas** | Planificador: clics + arrastre de puntos, capas, deshacer/invertir/ida-vuelta/bucle óptimo, lista editable, guardar, importar GPX, exportar GPX, zonas de privacidad |
 | **Gimnasio** | Asistente editable (foco + intensidad, desplegables por tipo, leyenda, regenerar), registro táctil, temporizador de descanso, vista previa para reloj, historial con tonelaje y PRs |
 | **Tendencias** | 8 métricas (sueño, HRV, FC, batería, readiness, estrés, pasos) 30/90d + media 7d + CSV |

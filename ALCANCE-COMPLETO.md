@@ -1,4 +1,4 @@
-# Alcance completo — PULSO
+# Alcance completo — Carga
 
 Escrito el 2026-11-04 por indicación de David. **Este documento amplía el alcance**: no es un panel de lectura, es una **app de entrenamiento completa** que compita con la de Garmin y la supere en lo que David usa de verdad.
 
@@ -49,7 +49,7 @@ David lo pidió explícito: **tener en el reloj los ejercicios, los pesos y las 
 ## 5. UI/UX
 
 - Investigación real de la competencia (Garmin Connect, Strava, Hevy, Strong, Fitbod, Apple Fitness, Fitbit) **con capturas**.
-- El diseño se hace sobre el **sistema de diseño** que ya existe (`designs/pulso-design-system/`).
+- El diseño se hace sobre el **sistema de diseño** que ya existe (`designs/carga-design-system/`).
 - **Móvil primero**, que es donde se usa la app en el gimnasio. Y escritorio bien resuelto para crear y analizar.
 - Estados por pantalla: vacío, cargando, error y sin permiso.
 

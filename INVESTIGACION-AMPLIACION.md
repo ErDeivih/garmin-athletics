@@ -89,7 +89,7 @@ La pregunta manda: cada gráfica resuelve una pregunta que el atleta se hace. Si
 | 13 | 1RM estimado | línea (solo series 1-12) | ¿Cuál es mi techo estimado? | series (Epley) | Historial |
 | 14 | Empuje/tirón | barras por semana | ¿Estoy equilibrado? | series + patrón de movimiento (nuevo) | Progreso |
 | 15 | Tiempo bajo tensión | barras | ¿Cuánto tiempo trabaja el músculo? | series + tempo (nuevo campo) | Progreso |
-| 16 | Ritmo vs FC (carrera) | dispersión | ¿A qué pulso corro cada ritmo? | `/activities/{id}/streams` | Actividad |
+| 16 | Ritmo vs FC (carrera) | dispersión | ¿A qué carga corro cada ritmo? | `/activities/{id}/streams` | Actividad |
 | 17 | Zonas + parciales de una salida | línea + barras | ¿Dónde se me fue la carrera? | `streams`, `splits` | Actividad |
 | 18 | Pasos / calorías / intensidad | líneas y barras | ¿Me muevo fuera del gimnasio? | `/metrics/stats` | Tendencias |
 | 19 | Readiness vs carga | dispersión | ¿Cómo responde mi cuerpo a la carga? | `daily` + `load` | Tendencias (avanzado) |

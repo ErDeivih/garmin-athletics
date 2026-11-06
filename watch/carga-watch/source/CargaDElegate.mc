@@ -1,6 +1,6 @@
 using Toybox.WatchUi;
 
-class PULSODelegate extends WatchUi.BehaviorDelegate {
+class CargaDelegate extends WatchUi.BehaviorDelegate {
     private var _view;
 
     function initialize(view) {

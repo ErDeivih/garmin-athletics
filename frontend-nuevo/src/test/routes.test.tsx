@@ -4,7 +4,7 @@ import { installFakeApi, json } from './fakeApi';
 import { renderApp } from './renderApp';
 import * as f from './fixtures';
 
-const TOKEN_KEY = 'pulso.token';
+const TOKEN_KEY = 'carga.token';
 
 const generated = {
   id: 'route-1',
@@ -33,7 +33,7 @@ const generated = {
 describe('generador de rutas', () => {
   it('genera el recorrido y enseña el perfil y el ritmo por kilómetro', async () => {
     localStorage.setItem(TOKEN_KEY, 'test-token');
-    localStorage.setItem('pulso.extended', 'true');
+    localStorage.setItem('carga.extended', 'true');
     const api = installFakeApi({
       'GET /api/v1/auth/me': json(f.me),
       'GET /api/v1/routes/': json([]),

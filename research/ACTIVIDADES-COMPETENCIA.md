@@ -2,7 +2,7 @@
 
 Fecha: 2026-11-05. Autor: research-actividades. Alcance: **detalle de una actividad** (datos, gráficas,
 jerarquía, estados) y **lista de actividades**; más el inventario real de lo que nuestro backend puede
-dar hoy. App objetivo: **PULSO**, móvil primero, `frontend-nuevo` (React 19 + Tailwind,
+dar hoy. App objetivo: **Carga**, móvil primero, `frontend-nuevo` (React 19 + Tailwind,
 sin librerías de gráficas ni de mapas — `frontend-nuevo/package.json:22-28`), sobre el sistema de
 diseño de `frontend-nuevo/src/styles/tokens.generated.css`.
 
@@ -357,7 +357,7 @@ es un enlace al detalle.
 | 1 | **Cabecera** | ← Actividades · nombre · `sáb 5 nov · 18:32` · icono de deporte. Acciones en un menú `···`: *Descargar GPX*, *Guardar como ruta*, *Actualizar* | Siempre |
 | 2 | **Resumen** | Cifra héroe + 3 cifras medianas + 1 fila de apuntes (ver 6.2) | Siempre |
 | 3 | **Recorrido** | Silueta SVG del track, punto de salida y de llegada, caja 4:3 | Solo si `has_track` y `/track` responde |
-| 4 | **Pulso** | Gráfica de línea FC vs tiempo + FC media/máx en la leyenda | Si `/streams` trae `hr` con al menos 2 valores |
+| 4 | **Carga** | Gráfica de línea FC vs tiempo + FC media/máx en la leyenda | Si `/streams` trae `hr` con al menos 2 valores |
 | 5 | **Ritmo por km** | Barras por km (de `/splits`) + mejor/peor km | Si hay `splits.length >= 2` (carrera, bici, fútbol con GPS) |
 | 6 | **Zonas de FC** | Barra apilada Z1·Z2·Z3·Z4·Z5 + tiempos y % | Si `hr_zones` tiene `secs > 0` |
 | 7 | **Vueltas** | Tabla `# · Dist · Tiempo · Ritmo · FC med · Desnivel` | Si `laps.length >= 2` |
@@ -472,10 +472,10 @@ Backend: **sin cambios** (todo está en §5.1).
 **Criterios de aceptación (observables):**
 1. Desde la lista, tocar una actividad navega a su detalle y el botón atrás devuelve a la lista en la
    misma posición de scroll.
-2. Una actividad de carrera con track enseña, en este orden: resumen, recorrido, pulso, parciales,
+2. Una actividad de carrera con track enseña, en este orden: resumen, recorrido, carga, parciales,
    zonas, vueltas, meteo.
 3. Una natación en piscina (sin track) **no dibuja** ni el recorrido ni los parciales, y **no deja
-   huecos**: el primer bloque tras el resumen es el de pulso.
+   huecos**: el primer bloque tras el resumen es el de carga.
 4. Una actividad sin detalle enriquecido (`detail_fetched_at = null`) enseña "Faltan los datos de esta
    actividad." y un botón `Actualizar` que, al terminar, rellena la pantalla sin recargar.
 5. Con la red cortada, la pantalla enseña `No se pudo cargar la actividad.` y `Reintentar` recarga.

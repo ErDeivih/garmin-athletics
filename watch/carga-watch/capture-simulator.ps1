@@ -16,14 +16,14 @@ if (-not $KeyPath -or -not (Test-Path $KeyPath)) { throw "Falta la clave .der" }
 if (-not $OutDir) { $OutDir = Join-Path $root "screenshots" }
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
-& "$SdkPath\bin\monkeyc.bat" -d fr255 -f (Join-Path $root "monkey.jungle") -o (Join-Path $root "build\pulso-fr255.prg") -y $KeyPath
+& "$SdkPath\bin\monkeyc.bat" -d fr255 -f (Join-Path $root "monkey.jungle") -o (Join-Path $root "build\carga-fr255.prg") -y $KeyPath
 if ($LASTEXITCODE -ne 0) { throw "No compila" }
 
 Stop-Process -Name simulator -Force -ErrorAction SilentlyContinue
 Start-Sleep -Seconds 2
 Start-Process -FilePath "$SdkPath\bin\simulator.exe" -ArgumentList "-d fr255" -WorkingDirectory "$SdkPath\bin"
 Start-Sleep -Seconds 6
-Start-Process -FilePath "$SdkPath\bin\monkeydo.bat" -ArgumentList (Join-Path $root "build\pulso-fr255.prg"), "fr255" -WorkingDirectory $root
+Start-Process -FilePath "$SdkPath\bin\monkeydo.bat" -ArgumentList (Join-Path $root "build\carga-fr255.prg"), "fr255" -WorkingDirectory $root
 Start-Sleep -Seconds 8
 
 $code = @'
@@ -31,7 +31,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Drawing;
 using System.Drawing.Imaging;
-public class PULSOCapture {
+public class CargaCapture {
  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out RECT r);
  [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr h, IntPtr d, uint f);
  [StructLayout(LayoutKind.Sequential)] public struct RECT { public int L; public int T; public int R; public int B; }
@@ -46,12 +46,12 @@ public class PULSOCapture {
 '@
 Add-Type -TypeDefinition $code -ReferencedAssemblies System.Drawing
 $sim = Get-Process simulator | Select-Object -First 1
-[PULSOCapture]::Save($sim.MainWindowHandle, (Join-Path $OutDir "simulador-01-entreno.png"))
+[CargaCapture]::Save($sim.MainWindowHandle, (Join-Path $OutDir "simulador-01-entreno.png"))
 
 $ws = New-Object -ComObject WScript.Shell
 $ws.AppActivate($sim.Id) | Out-Null
 Start-Sleep -Milliseconds 500
 $ws.SendKeys("{ENTER}")
 Start-Sleep -Seconds 1
-[PULSOCapture]::Save($sim.MainWindowHandle, (Join-Path $OutDir "simulador-02-hecha.png"))
+[CargaCapture]::Save($sim.MainWindowHandle, (Join-Path $OutDir "simulador-02-hecha.png"))
 Write-Host "Capturas en $OutDir"

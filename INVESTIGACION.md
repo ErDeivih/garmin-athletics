@@ -1,4 +1,4 @@
-# INVESTIGACION.md — PULSO
+# INVESTIGACION.md — Carga
 
 **Fecha**: 2026-11-04 · **Rama**: `master` · **Nivel de autonomía**: 1 y 2 (ver `DECISIONES.md`)
 

@@ -11,7 +11,7 @@ Fecha: 2026-11-05. Fuentes públicas consultadas; no se ha copiado interfaz ni d
   (correr, bici de carretera, BTT). La lección: una ruta no es una lista de coordenadas; el desnivel
   y el tipo de terreno cambian el esfuerzo. ([Komoot](https://www.komoot.es/plan))
 
-**Decisión PULSO:** el generador parte de un inicio y hasta 12 puntos de paso, calcula distancia,
+**Decisión Carga:** el generador parte de un inicio y hasta 12 puntos de paso, calcula distancia,
 desnivel y pérdida, propone un perfil de elevación y reparte el ritmo por kilómetro según deporte y
 esfuerzo. Se puede descargar en GPX para llevarlo al reloj. No se promete navegación giro a giro:
 el reloj nativo reproduce el track que recibe.
@@ -24,7 +24,7 @@ el reloj nativo reproduce el track que recibe.
   plano. ([comparativa Hevy/Strong](https://www.volm.app/blog/hevy-vs-strong),
   [Hardy](https://hardy.app/articles/hevy-vs-strong))
 
-**Decisión PULSO:** la biblioteca agrupa por foco (empuje, tirón, pierna, cuerpo completo) y muestra
+**Decisión Carga:** la biblioteca agrupa por foco (empuje, tirón, pierna, cuerpo completo) y muestra
 cada rutina en tres fases: activación, bloque principal y cierre. Cada ejercicio enseña series × reps,
 peso, descanso y una explicación breve. El objetivo es que se pueda distinguir una rutina de otra de
 un vistazo, no solo acumular plantillas.

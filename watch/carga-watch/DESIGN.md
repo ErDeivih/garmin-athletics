@@ -1,7 +1,7 @@
-# PULSO Watch — diseño de la watch-app Connect IQ (T-32)
+# Carga Watch — diseño de la watch-app Connect IQ (T-32)
 
 Basado en `INVESTIGACION-AMPLIACION.md` §3.4 (camino B) y en el WALL bloque 1. Es una app
-**propia** de PULSO, no la app nativa de Garmin: sirve para cuando el camino A (workout nativo) no
+**propia** de Carga, no la app nativa de Garmin: sirve para cuando el camino A (workout nativo) no
 llegue. No puede escribir las series dentro de la actividad nativa de Garmin; las manda a nuestro
 backend y, aparte, graba una actividad para que el reloj tenga el entreno.
 
@@ -19,7 +19,7 @@ backend y, aparte, graba una actividad para que el reloj tenga el entreno.
 
 | Pantalla | Qué enseña | Botones |
 |---|---|---|
-| **Cargando** | «PULSO» y «Buscando entreno». Si falla: «Sin conexión» y «Reintentar». | OK reintenta |
+| **Cargando** | «Carga» y «Buscando entreno». Si falla: «Sin conexión» y «Reintentar». | OK reintenta |
 | **Entreno** | Nombre del entreno, «Ejercicio 2/4», nombre del ejercicio, «Serie 1/3», **peso × reps** en grande, progreso de series. | OK = serie hecha; ABAJO = siguiente ejercicio; ATRÁS = salir |
 | **Fin** | «Entreno terminado», series hechas y cuántas quedan por enviar. | OK cierra |
 | **Sin entreno** | «Hoy no toca fuerza». | OK cierra |
@@ -59,7 +59,7 @@ se preguntará en una versión posterior.
 
 ## Cómo muestra ejercicio, serie, peso y reps
 
-- Cabecera «PULSO», nombre del entreno y contador `Ejercicio n/N`.
+- Cabecera «Carga», nombre del entreno y contador `Ejercicio n/N`.
 - Nombre del ejercicio en una línea (se recorta si no cabe; no se inventa).
 - Contador `Serie s/S`.
 - Peso y reps en el centro: `80 kg` y `× 8`.

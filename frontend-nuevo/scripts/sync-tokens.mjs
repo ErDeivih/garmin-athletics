@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* Sin fuente duplicada: los tokens viven en el sistema de diseño y de ahí salen
- *   - designs/pulso-design-system/project/tokens.css  (lo que leen las previews)
+ *   - designs/carga-design-system/project/tokens.css  (lo que leen las previews)
  *   - frontend-nuevo/src/styles/tokens.generated.css              (lo que consume la app)
  *
  * Uso:
@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const appRoot = join(here, '..');
 const repoRoot = join(appRoot, '..');
-const dsRoot = join(repoRoot, 'designs', 'pulso-design-system');
+const dsRoot = join(repoRoot, 'designs', 'carga-design-system');
 const tokensPath = join(dsRoot, 'project', 'tokens.json');
 
 const tokens = JSON.parse(readFileSync(tokensPath, 'utf8'));
@@ -30,7 +30,7 @@ const colorValue = (token, themeId) => {
 };
 
 const lines = [];
-lines.push('/* PULSO — generated from tokens.json */');
+lines.push('/* Carga — generated from tokens.json */');
 lines.push('/* No editar a mano: cambia tokens.json y ejecuta `npm run tokens`. */');
 lines.push('');
 lines.push(`:root, [data-theme="${first}"] {`);
@@ -85,7 +85,7 @@ const dsCss = lines.join('\n');
 
 // --- CSS que consume la app: variables + mapeo a Tailwind v4 (@theme inline) ---
 const app = [];
-app.push('/* PULSO — generated from tokens.json */');
+app.push('/* Carga — generated from tokens.json */');
 app.push('/* No editar a mano: cambia tokens.json y ejecuta `npm run tokens`. */');
 app.push('');
 app.push(`:root, [data-theme="${first}"] {`);

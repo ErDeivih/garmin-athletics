@@ -66,7 +66,7 @@ const shot = async (name) => {
   // Chrome escribe primero en temporales: el disco del repo a veces devuelve
   // UNKNOWN al abrir un PNG recién creado (antivirus/escáner). Copiar después
   // con reintentos evita que el humo falle por el sistema de ficheros.
-  const tmp = join(tmpdir(), `pulso-${name}-${Date.now()}.png`);
+  const tmp = join(tmpdir(), `carga-${name}-${Date.now()}.png`);
   await page.screenshot({ path: tmp, fullPage: true });
   const target = join(shotsDir, `${name}.png`);
   for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -88,7 +88,7 @@ const shot = async (name) => {
 
 try {
   await page.goto(APP, { waitUntil: 'domcontentloaded' });
-  await page.getByRole('heading', { name: /entra en PULSO/i }).waitFor();
+  await page.getByRole('heading', { name: /entra en Carga/i }).waitFor();
   await shot('01-login');
 
   await page.getByLabel(/correo/i).fill(email);
@@ -186,7 +186,7 @@ try {
   if ((await firstActivity.count()) > 0) {
     // Elige por API una salida con GPS real, no la primera de la lista.
     const richId = await page.evaluate(async () => {
-      const token = window.localStorage.getItem('pulso.token');
+      const token = window.localStorage.getItem('carga.token');
       const response = await fetch('/api/v1/activities/?limit=100', {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
@@ -252,7 +252,7 @@ try {
 
   // Escritorio con la configuración por defecto: la bandera se apaga para que
   // la captura enseñe las tres pestañas visibles reales (Hoy, Gimnasio, Ajustes).
-  await page.evaluate(() => localStorage.removeItem('pulso.extended'));
+  await page.evaluate(() => localStorage.removeItem('carga.extended'));
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(`${APP}/`, { waitUntil: 'domcontentloaded' });
   await page.getByRole('heading', { name: 'Hoy', exact: true }).waitFor();

@@ -1,4 +1,4 @@
-# WALL — garmin (PULSO)
+# WALL — garmin (Carga)
 
 Copiado del bloque 1 de `F:\EspacioCodigo\_flujo-dsh\MAPA-DE-OBJETIVOS.md`. Se marca aquí y se
 actualiza el estado en `ESTADO-AGENTE.md`.
@@ -16,7 +16,7 @@ crear entrenamientos de gimnasio, llevarlos al reloj y analizar todo.
   calorías, carga), zonas de FC, recorrido, FC/ritmo/altitud/velocidad, parciales, vueltas y meteo;
   las gráficas sin datos no se pintan.
 - [ ] Prueba real en el Forerunner 255 (necesita 2FA de David).
-- [ ] Watch-app Connect IQ propia (después del camino A). — **en curso**: `watch/pulso-watch/`
+- [ ] Watch-app Connect IQ propia (después del camino A). — **en curso**: `watch/carga-watch/`
   diseñada, implementada y compilada para fr255 y 4 perfiles más; backend `/watch/today` y
   `/watch/sets` probado; sensor de repeticiones y estimación de fuerza añadidos. Capturas del
   simulador pendientes del permiso de firewall.

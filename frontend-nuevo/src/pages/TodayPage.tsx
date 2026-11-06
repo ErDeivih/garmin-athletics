@@ -203,14 +203,14 @@ export function TodayPage() {
         />
         <StatCard
           label="FC en reposo"
-          hint="Tu pulso en calma."
+          hint="Tu carga en calma."
           value={metrics.resting_hr ?? '—'}
           unit={metrics.resting_hr === null ? 'sin dato' : 'lpm'}
           foot={`Media 7 d: ${formatNumber(metrics.resting_hr_7d, 'lpm')}`}
         />
         <StatCard
           label="Estrés"
-          hint="Cuánto ha subido tu pulso sin esfuerzo."
+          hint="Cuánto ha subido tu carga sin esfuerzo."
           value={metrics.stress_avg ?? '—'}
           unit="/ 100"
           foot="Media del día"

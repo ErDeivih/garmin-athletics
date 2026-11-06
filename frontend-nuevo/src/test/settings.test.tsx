@@ -5,7 +5,7 @@ import { renderApp } from './renderApp';
 import { initTheme } from '../lib/theme';
 import * as f from './fixtures';
 
-const TOKEN_KEY = 'pulso.token';
+const TOKEN_KEY = 'carga.token';
 
 describe('ajustes y sincronización', () => {
   it('lanza una sincronización y cuenta que ha ido bien', async () => {
@@ -97,7 +97,7 @@ describe('ajustes y sincronización', () => {
 
     await user.click(await screen.findByRole('button', { name: /claro/i }));
     expect(document.documentElement.dataset.theme).toBe('light');
-    expect(localStorage.getItem('pulso.theme')).toBe('light');
+    expect(localStorage.getItem('carga.theme')).toBe('light');
 
     // Simula recargar: se desmonta la app, main.tsx vuelve a aplicar el tema y
     // se monta de nuevo con la sesión guardada.

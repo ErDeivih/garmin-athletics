@@ -1,4 +1,4 @@
-# BACKLOG.md — PULSO
+# BACKLOG.md — Carga
 
 **Rama**: `master` · **Última revisión**: 2026-11-04
 
@@ -55,7 +55,7 @@ navegación, tema oscuro, cliente HTTP con Bearer obligatorio y `src/api/types.t
 **Criterio de aceptación**: arranca con `npm run dev`; login real contra el backend; navegación
 entre secciones; `tsc --noEmit` limpio; `frontend/` y `frontend_mvp/` intactos.
 
-**Resultado (2026-11-04).** Sistema de diseño en `designs/pulso-design-system/`
+**Resultado (2026-11-04).** Sistema de diseño en `designs/carga-design-system/`
 (escala de 4 px, AA calculado: 52 pares, 2 temas) y app con login real, navegación generada desde el
 registro de pantallas, Hoy, Gimnasio y Ajustes, más seis secciones de bandera (Actividades,
 Calendario, Tendencias, Rendimiento, Rutas, Social). Pruebas: 19 flujos en verde (Vitest + Testing
@@ -503,7 +503,7 @@ Watch-app que muestra la sesión del día (ejercicio, peso, reps), marca series 
 los botones, las manda por HTTP al backend y guarda una cola si no hay conexión. La mano del
 reloj queda para una versión posterior (no hay IMU en esta entrega).
 
-**Resultado parcial (2026-11-05).** Proyecto en `watch/pulso-watch/` con diseño, pantallas de
+**Resultado parcial (2026-11-05).** Proyecto en `watch/carga-watch/` con diseño, pantallas de
 carga/entreno/fin/sin conexión, cola en `Application.Storage`, `ActivityRecording` y cliente HTTP
 `/watch/today` + `/watch/sets`. Compila para **fr255 (104.892 B)**, fr245, fenix6, fr965 y venu3 con
 `minSdkVersion 3.3.0`. Backend `watch.py` con entreno de hoy y series idempotentes
@@ -536,10 +536,10 @@ la captura móvil es la referencia y el escritorio no es un móvil estirado.
 
 Mandato: `DOCTRINA-CALIDAD.md` §8 y §9; detalle aplicado en `CORRECCIONES-2026-11-05.md`.
 
-### T-40 · Marca PULSO y textos de la interfaz
+### T-40 · Marca Carga y textos de la interfaz
 **Nivel 1** · **Estado**: `hecha` (2026-11-05)
 
-Renombrar la app (PULSO, paquete `pulso-frontend`, título y logo) y borrar los textos de
+Renombrar la app (Carga, paquete `carga-frontend`, título y logo) y borrar los textos de
 desarrollador de todas las pantallas: tokens, sincronización interna, TSS/ATL/CTL como jerga,
 «API», «mapeo», enums, tareas y promesas futuras. Regla §8: si no ayuda a decidir o actuar, se
 borra; no se sustituye.
@@ -579,7 +579,7 @@ draft/active/retired, JSON y calibración) y API `GET/PUT /strength/exercises/{i
 periodo 2,4 s; versionado retira el activo anterior; validación 422. `tests/test_motion_profile.py`.
 **Editor en la app**: página `/gimnasio/ejercicios/:id/deteccion` con activación automática; el
 ajuste de duración/sensibilidad/eje queda plegado como caso raro. La watch-app escucha el
-acelerómetro a 25 Hz, detecta picos, mide velocidad y estima fuerza/1RM (`PULSOSensor.mc`, compila
+acelerómetro a 25 Hz, detecta picos, mide velocidad y estima fuerza/1RM (`CargaSensor.mc`, compila
 para fr255). **Pendiente**: POC real con 3 ejercicios y validar el error antes de prometer precisión.
 **Pendiente**: captura guiada desde el reloj (watch-app) y POC en el fr255.
 
@@ -653,6 +653,6 @@ ejercicio con series × reps, peso, descanso y explicación breve. Enlace desde 
 | T-27 | Tendencias: línea, barras, calor, dispersión, sueño y comparativa | 2026-11-04 | `sleep-phases` + `sets_sample`/`previous`; 25 pruebas de frontend y captura real |
 | T-28 | Ejercicios con dibujo inicio/fin + catálogo consultable | 2026-11-04 | 17 patrones SVG propios, aviso honesto sin dibujo; 27 pruebas de frontend y captura del catálogo |
 | Reloj (base T-31) | Compatibilidad de la PoC Connect IQ con fr255 y 8 perfiles más | 2026-11-04 | `watch/connectiq-poc/` + matriz en `INVESTIGACION-AMPLIACION.md` §3.1; no probado en reloj real |
-| T-40/T-41 | PULSO: marca, textos §8 y densidad móvil en todas las pantallas | 2026-11-05 | 31/31 pruebas frontend, capturas 390×844 y `CORRECCIONES-2026-11-05.md` |
+| T-40/T-41 | Carga: marca, textos §8 y densidad móvil en todas las pantallas | 2026-11-05 | 31/31 pruebas frontend, capturas 390×844 y `CORRECCIONES-2026-11-05.md` |
 | T-42/T-44 | Calendario con plantilla y envío; detalle de Actividad con gráficas | 2026-11-05 | Backend de calendario + auto-carga 06:30, `/actividades/:id`; 3 flujos nuevos; pendiente validar en fr255 |
 | T-43 (base) | Perfil de movimiento IMU y calibración en seco | 2026-11-05 | Modelo + API + `tests/test_motion_profile.py` (5/5 reps); falta editor y POC en reloj |
