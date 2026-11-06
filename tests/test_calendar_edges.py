@@ -51,9 +51,15 @@ def run():
         "title": "Tarde", "event_type": "strength",
         "start_local": f"{TODAY.isoformat()}T19:00:00", "duration_min": 45,
         "weekday": None, "template_id": tpl["id"]}).json()
+    # Día sin hueco: tres eventos solapados en la misma franja.
+    three = client.post(f"{API}/calendar/events", headers=h, json={
+        "title": "Extra", "event_type": "strength",
+        "start_local": f"{TODAY.isoformat()}T19:00:00", "duration_min": 45,
+        "weekday": None, "template_id": tpl["id"]}).json()
     cal2 = client.get(f"{API}/calendar/?{rng}", headers=h).json()
     today = next(d for d in cal2["days"] if d["date"] == TODAY.isoformat())
-    assert {e["title"] for e in today["events"]} >= {"Mañana", "Tarde"}
+    assert {e["title"] for e in today["events"]} >= {"Mañana", "Tarde", "Extra"}
+    assert len([e for e in today["events"] if e["title"] == "Extra"]) == 1
     assert client.delete(f"{API}/calendar/events/{one['id']}", headers=h).status_code == 200
     cal3 = client.get(f"{API}/calendar/?{rng}", headers=h).json()
     today3 = next(d for d in cal3["days"] if d["date"] == TODAY.isoformat())
