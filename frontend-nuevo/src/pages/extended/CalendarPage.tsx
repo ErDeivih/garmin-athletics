@@ -269,7 +269,13 @@ export function CalendarPage() {
           className="mt-2"
           variant="secondary"
           onClick={() => syncUpcoming.mutate(undefined, {
-            onSuccess: (result) => setMessage(result.sent > 0 ? 'Entrenos de hoy y próximos días enviados.' : result.message ?? 'No hay entrenamientos pendientes.'),
+            onSuccess: (result) => setMessage(
+              result.status === 'not_linked'
+                ? 'Vincula tu cuenta para enviar entrenos al reloj.'
+                : result.sent > 0
+                  ? 'Entrenos de hoy y próximos días enviados.'
+                  : result.message ?? 'No hay entrenamientos pendientes.',
+            ),
             onError: () => setMessage('No se pudo enviar.'),
           })}
           disabled={syncUpcoming.isPending}

@@ -92,6 +92,9 @@ export function RoutesPage() {
   const addCheckpoint = () =>
     setCheckpoints((current) => [...current, { lat: START.lat + 0.01 * current.length, lon: START.lon + 0.01 * current.length, ele: 680 }]);
 
+  const removeCheckpoint = (index: number) =>
+    setCheckpoints((current) => (current.length > 1 ? current.filter((_, i) => i !== index) : current));
+
   const onGenerate = () => {
     generate.mutate({
       name: name.trim(),
@@ -165,19 +168,26 @@ export function RoutesPage() {
           <fieldset className="flex flex-col gap-2">
             <legend className="text-caption text-ink-muted">Puntos de paso</legend>
             {checkpoints.map((point, index) => (
-              <div key={index} className="grid grid-cols-2 gap-2">
+              <div key={index} className="grid grid-cols-3 gap-2">
                 <label className="flex flex-col gap-1 text-caption text-ink-muted">
                   Latitud {index + 1}
-                  <input type="number" step="0.0001" value={point.lat} onChange={(event) => updateCheckpoint(index, { lat: Number(event.target.value) })} className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-3 text-body text-ink" />
+                  <input type="number" step="0.0001" value={point.lat} onChange={(event) => updateCheckpoint(index, { lat: Number(event.target.value) })} className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-2 text-body text-ink" />
                 </label>
                 <label className="flex flex-col gap-1 text-caption text-ink-muted">
                   Longitud {index + 1}
-                  <input type="number" step="0.0001" value={point.lon} onChange={(event) => updateCheckpoint(index, { lon: Number(event.target.value) })} className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-3 text-body text-ink" />
+                  <input type="number" step="0.0001" value={point.lon} onChange={(event) => updateCheckpoint(index, { lon: Number(event.target.value) })} className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-2 text-body text-ink" />
+                </label>
+                <label className="flex flex-col gap-1 text-caption text-ink-muted">
+                  Altitud {index + 1}
+                  <input type="number" step="10" value={point.ele ?? 680} onChange={(event) => updateCheckpoint(index, { ele: Number(event.target.value) })} className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-2 text-body text-ink" />
                 </label>
               </div>
             ))}
             <div className="flex flex-wrap gap-2">
               <Button variant="secondary" onClick={addCheckpoint}>Añadir paso</Button>
+              <Button variant="ghost" onClick={() => removeCheckpoint(checkpoints.length - 1)} disabled={checkpoints.length <= 1}>
+                Quitar último paso
+              </Button>
               <Button variant="primary" onClick={onGenerate} disabled={generate.isPending || name.trim().length < 2}>
                 {generate.isPending ? 'Generando…' : 'Generar ruta'}
               </Button>

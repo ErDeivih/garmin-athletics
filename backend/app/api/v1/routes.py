@@ -80,15 +80,19 @@ def _smooth_route(points: List[RoutePoint], per_segment: int = 45) -> List[Dict[
 def _elevations(points: List[Dict[str, float]], checkpoints: List[RoutePoint]) -> List[float]:
     known = [p.ele for p in checkpoints if p.ele is not None]
     base = known[0] if known else 120.0
-    span = max(known) - min(known) if len(known) > 1 else 60.0
-    out = []
-    for index, _ in enumerate(points):
-        progress = index / max(1, len(points) - 1)
-        if known and len(known) >= 2:
-            out.append(round(known[0] + span * math.sin(math.pi * progress) * 0.8, 1))
-        else:
-            out.append(round(base + 25 * math.sin(progress * math.pi * 2) + 14 * math.sin(progress * math.pi * 5), 1))
-    return out
+    if len(known) >= 2:
+        # Respeta la altitud de cada checkpoint y rellena entre ellos.
+        out = []
+        n = len(points) - 1
+        for index in range(len(points)):
+            position = index / max(1, n) * (len(known) - 1)
+            left = min(len(known) - 2, int(position))
+            fraction = position - left
+            out.append(round(known[left] * (1 - fraction) + known[left + 1] * fraction, 1))
+        return out
+    return [round(base + 25 * math.sin(index / max(1, len(points) - 1) * math.pi * 2)
+                  + 14 * math.sin(index / max(1, len(points) - 1) * math.pi * 5), 1)
+            for index in range(len(points))]
 
 
 def _splits(points: List[Dict[str, float]], ele: List[float], sport: str, effort: str) -> List[Dict[str, Any]]:
@@ -106,8 +110,10 @@ def _splits(points: List[Dict[str, float]], ele: List[float], sport: str, effort
             distance = total - (km - 1) * 1000
             seg_ele = ele[start_index:index + 1]
             gain, _ = tsvc.gain_loss(seg_ele)
-            pace_s = (distance / 1000) / speed_kmh * 3600 if sport != "cycling" else 0
             speed = speed_kmh
+            # El ritmo baja en los kilómetros con desnivel positivo.
+            slope_factor = 1.0 + min(0.6, gain / 100.0 * 0.035)
+            pace_s = (distance / 1000) / speed_kmh * 3600 * slope_factor if sport != "cycling" else 0
             duration_s = round(pace_s) if sport != "cycling" else round(distance / 1000 / speed_kmh * 3600)
             splits.append({
                 "km": km,
