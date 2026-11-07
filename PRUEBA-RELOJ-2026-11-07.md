@@ -10,7 +10,7 @@ sesión ni se ha hecho logout.
 | 1. Login Garmin Connect | **OK**, sin 2FA | `LOGIN_OK`; cuenta y dispositivo visibles |
 | 2. Código de 6 dígitos | **No hizo falta** | Los tokens guardados fueron aceptados y refrescados |
 | 3. Subir entreno del calendario | **OK** | `workoutId=1753715348`, `scheduled` para 2026-11-07 |
-| 4. Enviar el workout al reloj | **OK** | `push_workout_to_device` → mensaje `218604643433`, `messageStatus=new`, Forerunner 255 |
+| 4. Enviar el workout al reloj | **OK, entregado** | `218604643433` salió `new`; el reloj sincronizó a las 11:38 y la cola quedó vacía |
 | 5. Recuperar las series | **Pendiente** | No hay todavía una actividad de fuerza nueva en Garmin |
 
 ## Qué se hizo
@@ -30,7 +30,7 @@ sesión ni se ha hecho logout.
 - Dispositivo: `Forerunner 255`, id `3498989127`.
 - Workout: `Empuje A`, id `1753715348`, `sportTypeId=5` (fuerza), duración estimada 1524 s.
 - Programación: `calendarDate=2026-11-07`, `workoutScheduleId=1832673792`.
-- Push al dispositivo: `messageId=218604643433`, `messageType=workouts`, `messageStatus=new`.
+- Push al dispositivo: `messageId=218604643433`, `messageType=workouts`; entregado al sincronizar a las 11:38 (la cola de mensajes pasó de 4 a 0).
 - Garmin confirma el evento en `get_scheduled_workouts(2026, 11)`.
 
 ## Importación preparada
@@ -61,21 +61,16 @@ Comprobado en Garmin (solo lecturas):
   `workoutScheduleId=1832673792`, fecha `2026-11-07`, `workoutId=1753715348`.
 - **El dispositivo es el suyo**: `deviceId=3498989127`, `Forerunner 255`,
   `lastUsedDeviceApplicationKey=forerunner255Asia`. No hay otro reloj en la cuenta.
-- **El mensaje NO se ha entregado**: `/device-service/devicemessage/messages` devuelve cuatro
-  mensajes con estado **`new`**, incluido el nuestro:
-  - `messageId=218604643433`, tipo `workouts`, `messageStatus=new`, `Empuje A`.
-  - Además hay un mensaje `schedules` (`218604519066`) y otro `workouts` de calendario
-    (`218604519069`), también `new`.
-- **Última subida del reloj**: `lastUsedDeviceUploadTime=1794000402000` → **2026-11-06 22:26
-  (hora local)**. Los mensajes se crearon a las **01:06** del 07/11. El reloj lleva desde antes de
-  esa hora sin sincronizar.
+- **Entrega resuelta**: a las **11:38** el reloj sincronizó (`lastUsedDeviceUploadTime=1794047905000`)
+  y la cola de mensajes pasó de **4 a 0**. El mensaje `218604643433` (`workouts`, `Empuje A`) quedó
+  entregado, junto con el `schedules` y el workout de calendario.
+- **Antes de sincronizar**: los cuatro mensajes estaban en `new` y la última subida del reloj era del
+  **2026-11-06 22:26**; por eso no aparecía. El formato y el dispositivo siempre fueron correctos.
 
-**Causa**: no es el formato ni el dispositivo. Los mensajes están en cola para el fr255 correcto y
-el workout está en la cuenta; el reloj no se ha conectado a Garmin Connect desde antes del envío.
+**Causa**: el reloj no había sincronizado desde antes del envío; no era el workout.
 
-**Solución**: abrir **Garmin Connect en el móvil**, con el reloj cerca y por Bluetooth, y
-**arrastrar hacia abajo para sincronizar**. Al terminar deben pasar de `new` a entregados. Después,
-en el reloj: **Entrenamiento → Entrenamientos** (o el calendario de hoy) y abrir **Empuje A**.
+**Solución aplicada**: David sincronizó Garmin Connect. La cola quedó vacía y el reloj subió datos.
+Abrir en el reloj **Entrenamiento → Entrenamientos** (o el calendario de hoy) y ejecutar **Empuje A**.
 
 Si tras sincronizar sigue sin aparecer, no se toca de nuevo el workout: se revisa el estado de los
 mensajes y, como alternativa, se usa el mismo `workoutId` desde Garmin Connect → Entrenamientos
