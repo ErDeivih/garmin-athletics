@@ -10,6 +10,7 @@ import { ErrorState, LoadingBlock, PageHeader } from './components/ui';
 import { LoginPage } from './pages/LoginPage';
 import { SessionPage } from './pages/SessionPage';
 import { MotionProfilePage } from './pages/MotionProfilePage';
+import { PlanEditorPage } from './pages/PlanEditorPage';
 import { SessionEditPage } from './pages/SessionEditPage';
 import { CatalogPage } from './pages/extended/CatalogPage';
 import { LibraryPage } from './pages/extended/LibraryPage';
@@ -97,6 +98,7 @@ function AuthGate() {
         <Route path="gimnasio/entrenar" element={<SessionPage />} />
         <Route path="gimnasio/ejercicios/:id/deteccion" element={<MotionProfilePage />} />
         <Route path="gimnasio/sesiones/:id" element={<SessionEditPage />} />
+        <Route path="gimnasio/plantillas/:id" element={<PlanEditorPage />} />
         <Route path="gimnasio/catalogo" element={<CatalogPage />} />
         <Route path="gimnasio/biblioteca" element={<LibraryPage />} />
         <Route

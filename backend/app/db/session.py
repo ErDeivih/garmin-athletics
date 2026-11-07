@@ -22,6 +22,7 @@ async def _run_sqlite_migrations(conn) -> None:
 
     table_columns = {
         "strength_logs": [("user_id", "VARCHAR(36)")],
+        "template_exercises": [("set_targets", "JSON")],
         "session_sets": [("rpe", "INTEGER"), ("client_set_id", "VARCHAR(64)"),
                          ("detected_reps", "INTEGER"), ("velocity_mps", "FLOAT"),
                          ("estimated_force_n", "FLOAT"), ("estimated_1rm_kg", "FLOAT"),

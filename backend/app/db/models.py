@@ -245,6 +245,7 @@ class TemplateExercise(Base):
     weight_kg = Column(Float, nullable=False, default=0.0)
     rest_seconds = Column(Integer, nullable=False, default=120)
     notes = Column(Text, nullable=True)
+    set_targets = Column(JSON, nullable=True)  # [{set_number, reps, weight_kg}]
 
 
 class WorkoutSession(Base):

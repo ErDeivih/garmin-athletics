@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarCheck } from 'lucide-react';
 import { usePushWorkout, useSessions, useTemplate, useTemplates } from '../api/queries';
@@ -18,13 +17,10 @@ export function GymPage() {
   const todaysTemplate = templates.data?.items.find((template) => template.weekday === today) ?? null;
   const template = useTemplate(todaysTemplate?.id ?? null);
   const push = usePushWorkout();
-  const [sendOpen, setSendOpen] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
 
-  const startPreview = () => {
+  const startSend = () => {
     if (!template.data) return;
-    setSendOpen(true);
-    setConfirmed(false);
+    push.reset();
     push.mutate({
       routineName: template.data.name,
       exercises: template.data.exercises.flatMap((item) =>
@@ -35,25 +31,7 @@ export function GymPage() {
               reps: item.reps,
               weight_kg: item.weight_kg,
               rest_seconds: item.rest_seconds,
-            }]
-          : [],
-      ),
-      dryRun: true,
-    });
-  };
-
-  const sendForReal = () => {
-    if (!template.data) return;
-    push.mutate({
-      routineName: template.data.name,
-      exercises: template.data.exercises.flatMap((item) =>
-        item.exercise
-          ? [{
-              name: item.exercise.name,
-              sets: item.sets,
-              reps: item.reps,
-              weight_kg: item.weight_kg,
-              rest_seconds: item.rest_seconds,
+              set_targets: item.set_targets,
             }]
           : [],
       ),
@@ -131,113 +109,39 @@ export function GymPage() {
       <Card className="mt-3">
         <SectionTitle>Enviar al reloj</SectionTitle>
         {!todaysTemplate ? (
-          <p className="text-body text-ink-muted">
-            Elige una plantilla para enviarla.
-          </p>
+          <p className="text-body text-ink-muted">Elige un entreno para enviarlo.</p>
         ) : template.isPending ? (
           <p role="status" className="text-body text-ink-muted">Cargando…</p>
-        ) : template.isError ? (
-          <p role="alert" className="text-body text-danger">No se pudo cargar la plantilla.</p>
+        ) : template.isError || !template.data ? (
+          <p role="alert" className="text-body text-danger">No se pudo cargar el entreno.</p>
         ) : (
-          <div className="flex flex-col gap-2">
-            <p className="text-body text-ink-muted">
-              Prepara «{todaysTemplate.name}» antes de enviarlo a tu reloj.
-            </p>
-            {!sendOpen && push.data === undefined ? (
-              <div>
-                <Button onClick={startPreview}>Preparar envío</Button>
-              </div>
-            ) : null}
-
-            {push.data?.status === 'dry_run' ? (
-              <div className="rounded-md border border-line bg-raised p-3">
-                <p className="text-body text-ink">
-                  {push.data.blocks} {push.data.blocks === 1 ? 'ejercicio' : 'ejercicios'} · ~
-                  {Math.round(push.data.estimated_seconds / 60)} min
-                </p>
-                {push.data.unmapped_exercises.length > 0 ? (
-                  <div className="mt-2 flex flex-col gap-2">
-                    <p role="alert" className="text-caption text-danger">
-                      No se pueden enviar: {push.data.unmapped_exercises.join(', ')}.
-                    </p>
-                    <Button
-                      variant="secondary"
-                      onClick={() => {
-                        setSendOpen(false);
-                        setConfirmed(false);
-                        push.reset();
-                      }}
-                    >
-                      Cerrar
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="mt-2 flex flex-col gap-2">
-                    <label className="flex items-start gap-2 text-caption text-ink-muted">
-                      <input
-                        type="checkbox"
-                        checked={confirmed}
-                        onChange={(event) => setConfirmed(event.target.checked)}
-                        className="mt-0.5 size-4 accent-[var(--ga-accent)]"
-                      />
-                      Lo revisaré en el reloj.
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      <Button onClick={sendForReal} disabled={!confirmed || push.isPending}>
-                        {push.isPending ? 'Enviando…' : 'Enviar al reloj'}
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        onClick={() => {
-                          setSendOpen(false);
-                          setConfirmed(false);
-                          push.reset();
-                        }}
-                      >
-                        Cerrar
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : null}
-
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-body text-ink">
+                {template.data.exercises.length} ejercicios · {template.data.total_sets} series
+              </p>
+              <Link to={`/gimnasio/plantillas/${template.data.id}`} className="text-body font-semibold text-accent underline">
+                Editar pesos
+              </Link>
+            </div>
+            <Button onClick={startSend} disabled={push.isPending} className="min-h-12 w-full">
+              {push.isPending ? 'Enviando…' : 'Enviar al reloj'}
+            </Button>
             {push.data?.status === 'sent' ? (
-              <div role="status" className="rounded-md border border-line bg-raised p-3">
-                <p className="text-body text-ink">Enviado. Compruébalo en el reloj.</p>
-                <Button
-                  className="mt-2"
-                  variant="secondary"
-                  onClick={() => {
-                    setSendOpen(false);
-                    setConfirmed(false);
-                    push.reset();
-                  }}
-                >
-                  Cerrar
-                </Button>
+              <div role="status" className="rounded-md border border-success/40 bg-success/10 p-3">
+                <p className="text-body font-semibold text-ink">Enviado al reloj</p>
+                <p className="text-caption text-ink-muted">Si no aparece, acerca el reloj y sincroniza.</p>
               </div>
             ) : null}
-
             {push.isError ? (
-              <div className="flex flex-col gap-2">
-                <p role="alert" className="text-body text-danger">
-                  No se pudo enviar. Inténtalo otra vez.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Button onClick={startPreview}>Reintentar</Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      setSendOpen(false);
-                      setConfirmed(false);
-                      push.reset();
-                    }}
-                  >
-                    Cerrar
-                  </Button>
-                </div>
+              <div role="alert" className="rounded-md border border-danger/40 bg-danger/10 p-3">
+                <p className="text-body font-semibold text-ink">No se pudo enviar</p>
+                <p className="text-caption text-ink-muted">Acerca el reloj, sincroniza y vuelve a intentarlo.</p>
+                <Button variant="secondary" className="mt-2" onClick={startSend}>Reintentar</Button>
               </div>
+            ) : null}
+            {!push.data && !push.isError && !push.isPending ? (
+              <p className="text-caption text-ink-muted">Tú decides cuándo; el reloj solo muestra el objetivo.</p>
             ) : null}
           </div>
         )}
@@ -266,6 +170,9 @@ export function GymPage() {
                     <span className="tnum font-display text-title text-ink">
                       {formatNumber(template.estimated_tonnage_kg, 'kg')}
                     </span>
+                    <Link className={secondaryLink} to={`/gimnasio/plantillas/${template.id}`}>
+                      Pesos
+                    </Link>
                     <Link className={secondaryLink} to={`/gimnasio/entrenar?template=${template.id}`}>
                       Empezar
                     </Link>

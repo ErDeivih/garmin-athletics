@@ -345,6 +345,7 @@ export interface TemplateExercise {
   weight_kg: number;
   rest_seconds: number;
   notes: string | null;
+  set_targets: { set_number: number; reps: number; weight_kg: number }[];
 }
 
 export interface WorkoutTemplate {

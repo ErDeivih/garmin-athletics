@@ -79,6 +79,7 @@ class TemplateExerciseIn(BaseModel):
     weight_kg: float = Field(0.0, ge=0, le=2000)
     rest_seconds: int = Field(120, ge=0, le=1800)
     notes: Optional[str] = None
+    set_targets: Optional[List[Dict[str, Any]]] = None
 
 
 class TemplateIn(BaseModel):
@@ -189,6 +190,41 @@ def _tonnage(sets: List[SessionSet]) -> float:
     return round(sum((s.weight_kg or 0) * (s.reps or 0) for s in sets if not s.is_warmup), 2)
 
 
+def _normalize_set_targets(raw, sets: int, reps: int, weight_kg: float) -> List[Dict[str, Any]]:
+    """Objetivo por serie. Si falta, usa el peso/reps de la plantilla o la última marca."""
+    count = max(1, int(sets or 1))
+    items = raw if isinstance(raw, list) else []
+    targets: List[Dict[str, Any]] = []
+    for index in range(count):
+        item = items[index] if index < len(items) and isinstance(items[index], dict) else {}
+        target_weight = item.get("weight_kg", weight_kg)
+        target_reps = item.get("reps", reps)
+        targets.append({
+            "set_number": index + 1,
+            "weight_kg": max(0.0, float(target_weight or 0)),
+            "reps": max(0, int(target_reps or 0)),
+        })
+    return targets
+
+
+async def _last_weight_for_exercise(db: AsyncSession, user_id: Optional[str],
+                                    exercise_id: str) -> Optional[float]:
+    """Última serie registrada de ese ejercicio, para no pedir pesos si no hay objetivo."""
+    if not user_id:
+        return None
+    result = await db.execute(
+        select(SessionSet.weight_kg)
+        .join(WorkoutSession, SessionSet.session_id == WorkoutSession.id)
+        .where(WorkoutSession.user_id == user_id,
+               SessionSet.exercise_id == exercise_id,
+               SessionSet.weight_kg > 0)
+        .order_by(WorkoutSession.started_at.desc(), SessionSet.set_number.desc())
+        .limit(1)
+    )
+    weight = result.scalar_one_or_none()
+    return float(weight) if weight is not None else None
+
+
 async def _load_accessible_exercises(db: AsyncSession, user: Optional[User],
                                      ids: List[str]) -> Dict[str, Exercise]:
     """Devuelve {id: Exercise} y falla con 404 nombrando los que no existen o no son visibles."""
@@ -231,7 +267,14 @@ async def _template_out(db: AsyncSession, tpl: WorkoutTemplate) -> Dict[str, Any
     for r in rows:
         ex = ex_map.get(r.exercise_id)
         total_sets += r.sets
-        tonnage += (r.weight_kg or 0) * (r.reps or 0) * (r.sets or 0)
+        targets = _normalize_set_targets(r.set_targets, r.sets, r.reps, r.weight_kg)
+        if any(t["weight_kg"] <= 0 for t in targets):
+            last_weight = await _last_weight_for_exercise(db, tpl.user_id, r.exercise_id)
+            if last_weight is not None:
+                for target in targets:
+                    if target["weight_kg"] <= 0:
+                        target["weight_kg"] = last_weight
+        tonnage += sum(t["weight_kg"] * t["reps"] for t in targets)
         items.append({
             "id": r.id,
             "position": r.position,
@@ -241,6 +284,7 @@ async def _template_out(db: AsyncSession, tpl: WorkoutTemplate) -> Dict[str, Any
             "weight_kg": r.weight_kg,
             "rest_seconds": r.rest_seconds,
             "notes": r.notes,
+            "set_targets": targets,
         })
     return {
         "id": tpl.id,
@@ -872,10 +916,12 @@ async def _validate_template_exercises(db: AsyncSession, user: User,
 async def _write_template_exercises(db: AsyncSession, template_id: str,
                                     items: List[TemplateExerciseIn]) -> None:
     for pos, item in enumerate(items):
+        targets = _normalize_set_targets(item.set_targets, item.sets, item.reps, item.weight_kg)
         db.add(TemplateExercise(
             id=str(uuid.uuid4()), template_id=template_id, exercise_id=item.exercise_id,
             position=pos, sets=item.sets, reps=item.reps, weight_kg=item.weight_kg,
             rest_seconds=item.rest_seconds, notes=item.notes,
+            set_targets=targets,
         ))
 
 

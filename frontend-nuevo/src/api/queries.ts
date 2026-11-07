@@ -165,6 +165,33 @@ export function useTemplate(templateId: string | null) {
   });
 }
 
+export function useUpdateTemplate(templateId: string | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: {
+      name: string;
+      weekday: number | null;
+      focus: string | null;
+      notes: string | null;
+      exercises: {
+        exercise_id: string;
+        sets: number;
+        reps: number;
+        weight_kg: number;
+        rest_seconds: number;
+        set_targets: { set_number: number; reps: number; weight_kg: number }[];
+      }[];
+    }) => apiFetch<WorkoutTemplate>(`/api/v1/strength/templates/${templateId}`, {
+      method: 'PUT',
+      body: payload,
+    }),
+    onSuccess: (data) => {
+      queryClient.setQueryData([...queryKeys.templates, data.id], data);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.templates });
+    },
+  });
+}
+
 export function useSessions(limit = 5) {
   return useQuery({
     queryKey: [...queryKeys.sessions, limit],
@@ -228,7 +255,7 @@ export function usePushWorkout() {
   return useMutation({
     mutationFn: (input: {
       routineName: string;
-      exercises: { name: string; sets: number; reps: number; weight_kg: number; rest_seconds: number }[];
+      exercises: { name: string; sets: number; reps: number; weight_kg: number; rest_seconds: number; set_targets?: { set_number: number; reps: number; weight_kg: number }[] }[];
       dryRun: boolean;
       pushToDevice?: boolean;
     }) =>

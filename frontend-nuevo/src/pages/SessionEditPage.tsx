@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { Minus, Plus } from 'lucide-react';
 import { useSession, useUpdateSession } from '../api/queries';
 import type { SessionInput, SessionSetInput } from '../api/types';
 import { Button, Card, ErrorState, LoadingBlock, PageHeader } from '../components/ui';
-import { formatDate } from '../lib/format';
+import { formatDate, formatNumber } from '../lib/format';
 
 type EditableSet = SessionSetInput & { id: string; exerciseName: string };
 
@@ -45,8 +46,13 @@ export function SessionEditPage() {
     );
   }
 
-  const save = () => {
-    const payload: SessionInput = {
+  const changeWeight = (index: number, delta: number) => {
+    setSets((current) => current.map((row, i) =>
+      i === index ? { ...row, weight_kg: Math.max(0, Math.round((row.weight_kg + delta) * 10) / 10) } : row));
+    setSaved(false);
+  };
+
+  const save = () => {    const payload: SessionInput = {
       name: session.data.name,
       template_id: session.data.template_id,
       started_at: session.data.started_at,
@@ -78,11 +84,11 @@ export function SessionEditPage() {
       />
       <Card>
         <p className="mb-3 text-body text-ink-muted">
-          Ajusta el peso que realmente usaste en cada serie. El total y las marcas se recalculan al guardar.
+          Ajusta el peso real con − o +. El total y las marcas se recalculan al guardar.
         </p>
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           {sets.map((item, index) => (
-            <div key={item.id} className="grid grid-cols-[1fr_6rem_5rem] items-end gap-2 border-t border-line pt-2">
+            <div key={item.id} className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2">
               <div>
                 <span className="text-body text-ink">{item.exerciseName}</span>
                 <span className="ml-2 text-caption text-ink-faint">Serie {item.set_number}</span>
@@ -92,30 +98,28 @@ export function SessionEditPage() {
                   </span>
                 ) : null}
               </div>
-              <label className="flex flex-col gap-1 text-caption text-ink-muted">
-                Peso (kg)
-                <input
-                  type="number"
-                  min={0}
-                  step="0.5"
-                  value={item.weight_kg}
-                  onChange={(event) => setSets((current) => current.map((row, i) =>
-                    i === index ? { ...row, weight_kg: Number(event.target.value) } : row))}
-                  className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-2 text-body text-ink"
-                />
-              </label>
-              <label className="flex flex-col gap-1 text-caption text-ink-muted">
-                Reps
-                <input
-                  type="number"
-                  min={0}
-                  step="1"
-                  value={item.reps}
-                  onChange={(event) => setSets((current) => current.map((row, i) =>
-                    i === index ? { ...row, reps: Number(event.target.value) } : row))}
-                  className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-2 text-body text-ink"
-                />
-              </label>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  className="size-11 p-0"
+                  aria-label={`Bajar peso serie ${item.set_number} de ${item.exerciseName}`}
+                  onClick={() => changeWeight(index, -2.5)}
+                >
+                  <Minus aria-hidden="true" className="size-5" />
+                </Button>
+                <span className="tnum min-w-20 text-center font-display text-title text-ink">
+                  {formatNumber(item.weight_kg, 'kg')}
+                </span>
+                <Button
+                  variant="secondary"
+                  className="size-11 p-0"
+                  aria-label={`Subir peso serie ${item.set_number} de ${item.exerciseName}`}
+                  onClick={() => changeWeight(index, 2.5)}
+                >
+                  <Plus aria-hidden="true" className="size-5" />
+                </Button>
+                <span className="text-caption text-ink-faint">× {item.reps}</span>
+              </div>
             </div>
           ))}
           <div className="flex items-center gap-3">

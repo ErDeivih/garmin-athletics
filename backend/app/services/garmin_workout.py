@@ -13,7 +13,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from garminconnect.exercises import EXERCISES
 from garminconnect.workout import (
-    StrengthWorkout, WorkoutSegment, create_strength_set,
+    StrengthWorkout, WorkoutSegment, create_strength_exercise_step,
+    create_strength_rest_step, create_strength_set,
 )
 
 # El catálogo de la librería tiene 1.527 ejercicios con (categoría, ejercicio).
@@ -96,24 +97,54 @@ def build_strength_workout(
         reps = int(exercise.get("reps", 10) or 10)
         weight = float(exercise.get("weight_kg", 0) or 0)
         rest = int(exercise.get("rest_seconds", DEFAULT_REST_SECONDS) or DEFAULT_REST_SECONDS)
-        block = create_strength_set(
-            category,
-            step_order=order,
-            sets=sets,
-            reps=reps,
-            rest_seconds=rest,
-            exercise_name=exercise_name,
-            weight_kg=weight if weight > 0 else None,
-        )
-        steps.append(block)
+        targets = exercise.get("set_targets")
+        normalized_targets = []
+        if isinstance(targets, list) and len(targets) > 0:
+            for index in range(sets):
+                target = targets[index] if index < len(targets) and isinstance(targets[index], dict) else {}
+                normalized_targets.append({
+                    "reps": int(target.get("reps", reps) or reps),
+                    "weight_kg": float(target.get("weight_kg", weight) or 0),
+                })
+        if not normalized_targets:
+            normalized_targets = [{"reps": reps, "weight_kg": weight} for _ in range(sets)]
+        same_targets = len({(t["reps"], t["weight_kg"]) for t in normalized_targets}) <= 1
+        if same_targets:
+            block = create_strength_set(
+                category,
+                step_order=order,
+                sets=sets,
+                reps=reps,
+                rest_seconds=rest,
+                exercise_name=exercise_name,
+                weight_kg=weight if weight > 0 else None,
+            )
+            steps.append(block)
+            order += 3
+        else:
+            # Cada serie con su peso: pasos independientes, no un RepeatGroup
+            # con un único peso para todas.
+            for target in normalized_targets:
+                target_weight = target["weight_kg"]
+                steps.append(create_strength_exercise_step(
+                    category,
+                    step_order=order,
+                    reps=target["reps"],
+                    exercise_name=exercise_name,
+                    weight_kg=target_weight if target_weight > 0 else None,
+                ))
+                order += 1
+                steps.append(create_strength_rest_step(rest, order))
+                order += 1
+                total_seconds += target["reps"] * 3 + rest
+        if same_targets:
+            total_seconds += sets * (reps * 3 + rest)
         mapping.append({
             "name": name,
             "enum": enum or "",
             "category": category,
             "exercise": exercise_name,
         })
-        order += 3
-        total_seconds += sets * (reps * 3 + rest)
 
     workout = StrengthWorkout(
         workoutName=routine_name[:60],

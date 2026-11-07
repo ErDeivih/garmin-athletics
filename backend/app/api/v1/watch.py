@@ -50,7 +50,7 @@ async def _template_payload(db: AsyncSession, template: WorkoutTemplate) -> Dict
                 "reps": row.reps,
                 "weight_kg": row.weight_kg,
                 "rest_seconds": row.rest_seconds,
-                "targets": [
+                "targets": row.set_targets if row.set_targets else [
                     {"set_number": index + 1, "reps": row.reps, "weight_kg": row.weight_kg}
                     for index in range(row.sets)
                 ],

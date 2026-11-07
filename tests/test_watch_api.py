@@ -37,6 +37,7 @@ def run():
         "exercises": [{"exercise_id": exercise["id"], "sets": 3, "reps": 8,
                        "weight_kg": 60, "rest_seconds": 120}]}).json()
     assert template["id"]
+    assert template["exercises"][0]["set_targets"][0]["weight_kg"] == 60
 
     today = client.get(f"{API}/watch/today", headers=h)
     assert today.status_code == 200, today.text

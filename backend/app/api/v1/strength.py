@@ -22,6 +22,7 @@ class ExerciseLogItem(BaseModel):
     weight_kg: float = Field(..., ge=0.0, example=80.0)
     rir: Optional[int] = Field(2, ge=0, le=5)
     rest_seconds: int = Field(120, ge=0, le=1800)
+    set_targets: Optional[List[Dict[str, Any]]] = None
 
 class SaveStrengthLogRequest(BaseModel):
     workout_date: date = Field(default_factory=date.today)

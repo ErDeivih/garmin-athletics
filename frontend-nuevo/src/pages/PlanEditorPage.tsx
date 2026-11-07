@@ -1,0 +1,155 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { Minus, Plus } from 'lucide-react';
+import { useLastMarks, useTemplate, useUpdateTemplate } from '../api/queries';
+import { Button, Card, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../components/ui';
+import { formatNumber } from '../lib/format';
+
+type Target = { set_number: number; reps: number; weight_kg: number };
+type DraftExercise = {
+  exercise_id: string;
+  name: string;
+  sets: number;
+  reps: number;
+  weight_kg: number;
+  rest_seconds: number;
+  targets: Target[];
+};
+
+const STEP = 2.5;
+
+export function PlanEditorPage() {
+  const { id } = useParams<{ id: string }>();
+  const template = useTemplate(id ?? null);
+  const update = useUpdateTemplate(id ?? null);
+  const [draft, setDraft] = useState<DraftExercise[] | null>(null);
+  const [savedAt, setSavedAt] = useState<string | null>(null);
+  const first = useRef(true);
+  const lastPayload = useRef('');
+
+  const exerciseIds = template.data?.exercises.map((item) => item.exercise?.id ?? '') ?? [];
+  const marks = useLastMarks(exerciseIds);
+
+  useEffect(() => {
+    if (!template.data) return;
+    const markMap = marks.data?.marks ?? {};
+    setDraft(template.data.exercises.map((item) => {
+      const existing = item.set_targets?.length ? item.set_targets : [];
+      const lastWeight = item.exercise ? markMap[item.exercise.id]?.weight_kg : undefined;
+      return {
+        exercise_id: item.exercise?.id ?? '',
+        name: item.exercise?.name ?? 'Ejercicio',
+        sets: item.sets,
+        reps: item.reps,
+        weight_kg: item.weight_kg,
+        rest_seconds: item.rest_seconds,
+        targets: Array.from({ length: item.sets }, (_, index) => ({
+          set_number: index + 1,
+          reps: existing[index]?.reps ?? item.reps,
+          weight_kg: existing[index]?.weight_kg ?? lastWeight ?? item.weight_kg ?? 0,
+        })),
+      };
+    }));
+  }, [template.data, marks.data]);
+
+  const payload = useMemo(() => {
+    if (!template.data || !draft) return null;
+    return {
+      name: template.data.name,
+      weekday: template.data.weekday,
+      focus: template.data.focus,
+      notes: template.data.notes,
+      exercises: draft.map((item) => ({
+        exercise_id: item.exercise_id,
+        sets: item.sets,
+        reps: item.reps,
+        weight_kg: item.targets[0]?.weight_kg ?? item.weight_kg,
+        rest_seconds: item.rest_seconds,
+        set_targets: item.targets,
+      })),
+    };
+  }, [template.data, draft]);
+
+  useEffect(() => {
+    if (!payload) return;
+    const serialized = JSON.stringify(payload);
+    if (first.current) {
+      first.current = false;
+      lastPayload.current = serialized;
+      return;
+    }
+    if (serialized === lastPayload.current) return;
+    lastPayload.current = serialized;
+    const timer = window.setTimeout(() => {
+      update.mutate(payload, { onSuccess: () => setSavedAt(new Date().toLocaleTimeString()) });
+    }, 450);
+    return () => window.clearTimeout(timer);
+  }, [payload]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const changeWeight = (exerciseIndex: number, setIndex: number, delta: number) => {
+    setDraft((current) => current?.map((item, index) => {
+      if (index !== exerciseIndex) return item;
+      return {
+        ...item,
+        targets: item.targets.map((target, targetIndex) =>
+          targetIndex === setIndex
+            ? { ...target, weight_kg: Math.max(0, Math.round((target.weight_kg + delta) * 10) / 10) }
+            : target),
+      };
+    }) ?? null);
+  };
+
+  if (template.isPending) return <LoadingBlock label="Cargando el plan" />;
+  if (template.isError || !template.data) {
+    return <><PageHeader title="Editar plan" /><ErrorState message="No se pudo cargar el plan." onRetry={() => void template.refetch()} /></>;
+  }
+
+  return (
+    <>
+      <PageHeader
+        title="Editar pesos"
+        description={`${template.data.name} · toca − o + en cada serie`}
+        actions={<Link to="/gimnasio" className="text-body font-semibold text-accent underline">Gimnasio</Link>}
+      />
+      <p className="mb-3 text-caption text-ink-muted">
+        {update.isPending ? 'Guardando…' : savedAt ? `Guardado a las ${savedAt}` : 'Los cambios se guardan solos.'}
+      </p>
+      <div className="flex flex-col gap-3">
+        {(draft ?? []).map((exercise, exerciseIndex) => (
+          <Card key={exercise.exercise_id} as="section">
+            <SectionTitle hint={`${exercise.sets} × ${exercise.reps}`}>{exercise.name}</SectionTitle>
+            <div className="flex flex-col gap-2">
+              {exercise.targets.map((target, setIndex) => (
+                <div key={target.set_number} className="flex items-center justify-between gap-3 rounded-md border border-line bg-raised px-3 py-2">
+                  <span className="text-body text-ink">Serie {target.set_number}</span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="secondary"
+                      className="size-11 p-0"
+                      aria-label={`Bajar peso serie ${target.set_number} de ${exercise.name}`}
+                      onClick={() => changeWeight(exerciseIndex, setIndex, -STEP)}
+                    >
+                      <Minus aria-hidden="true" className="size-5" />
+                    </Button>
+                    <span className="tnum min-w-20 text-center font-display text-title text-ink">
+                      {formatNumber(target.weight_kg, 'kg')}
+                    </span>
+                    <Button
+                      variant="secondary"
+                      className="size-11 p-0"
+                      aria-label={`Subir peso serie ${target.set_number} de ${exercise.name}`}
+                      onClick={() => changeWeight(exerciseIndex, setIndex, STEP)}
+                    >
+                      <Plus aria-hidden="true" className="size-5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        ))}
+      </div>
+      {update.isError ? <p role="alert" className="mt-3 text-body text-danger">No se pudo guardar. Prueba otra vez.</p> : null}
+    </>
+  );
+}
