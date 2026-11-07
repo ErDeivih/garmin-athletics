@@ -299,6 +299,9 @@ export function GymPage() {
                   <span>{formatNumber(session.total_tonnage_kg, 'kg')}</span>
                   <span>{session.sets_count} series</span>
                   <span>{formatMinutes(session.duration_min)}</span>
+                  <Link to={`/gimnasio/sesiones/${session.id}`} className="font-semibold text-accent underline">
+                    Corregir pesos
+                  </Link>
                 </span>
               </li>
             ))}

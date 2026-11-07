@@ -44,6 +44,8 @@ def run():
     assert body["name"] == "Empuje reloj"
     assert body["workout_id"].startswith("template:") or body["workout_id"].startswith("event:")
     assert body["exercises"][0]["sets"] == 3 and body["exercises"][0]["weight_kg"] == 60
+    targets = body["exercises"][0]["targets"]
+    assert len(targets) == 3 and all(t["weight_kg"] == 60 and t["reps"] == 8 for t in targets)
 
     payload = {
         "client_set_id": "set-watch-0001",

@@ -13,6 +13,7 @@ class LyftaView extends WatchUi.View {
     private var _lastVelocity = 0.0;
     private var _lastForce = 0.0;
     private var _lastOneRm = 0.0;
+    private var _autoBusy = false;
 
     function initialize() {
         View.initialize();
@@ -37,6 +38,9 @@ class LyftaView extends WatchUi.View {
         if (code == 200 && data instanceof Dictionary) {
             _model.loadFromDictionary(data);
             _state = _model.hasWorkout() ? "workout" : "empty";
+            if (_state == "workout") {
+                startSensor();
+            }
         } else {
             _state = "offline";
         }
@@ -54,12 +58,17 @@ class LyftaView extends WatchUi.View {
     }
 
     function markSet() as Void {
+        if (_autoBusy) {
+            return;
+        }
+        _autoBusy = true;
         var detected = _sensor.reps();
         var velocity = _sensor.averageVelocityMps();
         var force = _sensor.estimatedForceN(_model.weight());
         var oneRm = _sensor.estimatedOneRepMaxKg(_model.weight(), _model.reps());
         var record = _model.markSet(detected, velocity, force, oneRm);
         if (record == null) {
+            _autoBusy = false;
             return;
         }
         _lastReps = detected;
@@ -74,7 +83,27 @@ class LyftaView extends WatchUi.View {
             api.sendSet(record, method(:onSetSent));
         }
         _state = _model.finished ? "done" : "workout";
+        if (_state == "workout") {
+            startSensor();
+        } else {
+            _sensor.stop();
+        }
+        _autoBusy = false;
         WatchUi.requestUpdate();
+    }
+
+    function startSensor() as Void {
+        if (_state != "workout" || _autoBusy) {
+            return;
+        }
+        _sensor.start(_model.reps(), method(:onSetFinished));
+    }
+
+    function onSetFinished() as Void {
+        if (_state != "workout" || _autoBusy) {
+            return;
+        }
+        markSet();
     }
 
     function onSetSent(code, data) as Void {
@@ -87,6 +116,8 @@ class LyftaView extends WatchUi.View {
     function onNext() as Void {
         if (_state == "workout") {
             _model.goNextExercise();
+            _sensor.reset();
+            startSensor();
             WatchUi.requestUpdate();
         }
     }
@@ -128,7 +159,7 @@ class LyftaView extends WatchUi.View {
 
     function onShow() as Void {
         if (_state == "workout") {
-            _sensor.start();
+            startSensor();
         }
         WatchUi.requestUpdate();
     }
@@ -216,7 +247,7 @@ class LyftaView extends WatchUi.View {
             Graphics.TEXT_JUSTIFY_CENTER);
 
         dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 232, Graphics.FONT_TINY, "OK serie · ABAJO ejercicio", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width / 2, 232, Graphics.FONT_TINY, "AUTO · no pulses nada", Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, 246, Graphics.FONT_TINY, "ATRÁS salir", Graphics.TEXT_JUSTIFY_CENTER);
     }

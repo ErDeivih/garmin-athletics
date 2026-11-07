@@ -50,6 +50,10 @@ async def _template_payload(db: AsyncSession, template: WorkoutTemplate) -> Dict
                 "reps": row.reps,
                 "weight_kg": row.weight_kg,
                 "rest_seconds": row.rest_seconds,
+                "targets": [
+                    {"set_number": index + 1, "reps": row.reps, "weight_kg": row.weight_kg}
+                    for index in range(row.sets)
+                ],
             }
             for row in rows
         ],

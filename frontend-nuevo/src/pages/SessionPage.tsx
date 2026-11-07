@@ -166,10 +166,15 @@ function SessionSummary({ session }: { session: SessionDetail }) {
         title="Sesión terminada"
         description={session.name ?? 'Sesión de fuerza'}
         actions={
-          <Link to="/gimnasio" className="focus-ring inline-flex min-h-11 items-center rounded-md bg-accent px-4 text-body font-semibold text-on-accent">
-            <ChevronLeft aria-hidden="true" className="size-4" />
-            Volver a Gimnasio
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link to={`/gimnasio/sesiones/${session.id}`} className="focus-ring inline-flex min-h-11 items-center rounded-md border border-line-strong px-3 text-body font-semibold text-ink">
+              Editar pesos reales
+            </Link>
+            <Link to="/gimnasio" className="focus-ring inline-flex min-h-11 items-center rounded-md bg-accent px-4 text-body font-semibold text-on-accent">
+              <ChevronLeft aria-hidden="true" className="size-4" />
+              Volver a Gimnasio
+            </Link>
+          </div>
         }
       />
       <section aria-label="Resumen" className="grid grid-cols-2 gap-3">

@@ -181,6 +181,21 @@ export function useSession(sessionId: string | null) {
   });
 }
 
+export function useUpdateSession(sessionId: string | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: SessionInput) =>
+      apiFetch<SessionDetail>(`/api/v1/strength/sessions/${sessionId}`, {
+        method: 'PUT',
+        body: payload,
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sessions });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.session(sessionId ?? '') });
+    },
+  });
+}
+
 /** Última marca por ejercicio: lo que T-04 precarga en la sesión. */
 export function useLastMarks(exerciseIds: string[]) {
   const ids = [...new Set(exerciseIds)].filter(Boolean);

@@ -61,12 +61,32 @@ class LyftaModel {
         return ex == null ? 0 : number(ex, "sets", 3);
     }
 
+    function currentTarget() {
+        var ex = currentExercise();
+        if (ex == null) {
+            return null;
+        }
+        var targets = ex["targets"];
+        if (targets instanceof Array && setIndex >= 0 && setIndex < targets.size()) {
+            return targets[setIndex];
+        }
+        return null;
+    }
+
     function weight() {
+        var target = currentTarget();
+        if (target != null) {
+            return number(target, "weight_kg", 0);
+        }
         var ex = currentExercise();
         return ex == null ? 0 : number(ex, "weight_kg", 0);
     }
 
     function reps() {
+        var target = currentTarget();
+        if (target != null) {
+            return number(target, "reps", 0);
+        }
         var ex = currentExercise();
         return ex == null ? 0 : number(ex, "reps", 0);
     }

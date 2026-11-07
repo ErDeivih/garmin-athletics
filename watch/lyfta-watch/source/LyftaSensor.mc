@@ -3,30 +3,35 @@ using Toybox.Sensor;
 using Toybox.System;
 
 /**
- * Detector de repeticiones por movimiento de la muñeca.
+ * Detección automática de una serie por movimiento de la muñeca.
  *
- * No pide duración de repetición ni inicio de serie: al abrir el entreno
- * escucha el acelerómetro a 25 Hz, detecta el pico de cada repetición y mide
- * el tiempo entre picos. Con ese tiempo estima la velocidad de ejecución y,
- * junto al peso de la serie, una fuerza aproximada y un 1RM estimado.
- *
- * Es una estimación de POC: no sustituye una medición de laboratorio.
+ * No pide pulsar nada para cerrar la serie: cuando hay un mínimo de
+ * repeticiones y el brazo deja de moverse durante ~1,8 s, avisa a la vista
+ * para guardar la serie y preparar la siguiente. Cuenta picos con umbral
+ * relativo (amplitud) y un recorrido mínimo, no un valor absoluto fijo.
  */
 class LyftaSensor {
     private var _reps = 0;
     private var _lastPeakAt = 0;
+    private var _lastLow = 0.0;
+    private var _baseline = 0.0;
     private var _intervals = [];
     private var _active = false;
-    private var _threshold = 1250.0;
+    private var _finished = false;
+    private var _armed = true;
+    private var _targetReps = 0;
+    private var _callback = null;
 
     function initialize() {
     }
 
-    function start() {
+    function start(targetReps, callback) {
         if (_active) {
-            return;
+            stop();
         }
         reset();
+        _targetReps = targetReps;
+        _callback = callback;
         var options = {:period => 1, :accelerometer => {:enabled => true, :sampleRate => 25}};
         try {
             Sensor.registerSensorDataListener(method(:onData), options);
@@ -50,10 +55,17 @@ class LyftaSensor {
     function reset() {
         _reps = 0;
         _lastPeakAt = 0;
+        _lastLow = 0.0;
+        _baseline = 0.0;
         _intervals = [];
+        _finished = false;
+        _armed = true;
     }
 
     function onData(sensorData as Sensor.SensorData) as Void {
+        if (_finished) {
+            return;
+        }
         var data = sensorData.accelerometerData;
         if (data == null) {
             return;
@@ -63,20 +75,45 @@ class LyftaSensor {
         var z = lastValue(data.z);
         var magnitude = Math.sqrt(x * x + y * y + z * z);
         var now = System.getTimer();
-        if (magnitude < _threshold) {
+
+        if (_baseline == 0.0) {
+            _baseline = magnitude;
+            _lastLow = magnitude;
             return;
         }
-        if (_lastPeakAt > 0 && now - _lastPeakAt < 320) {
-            return;
+        // Línea base lenta: se adapta a la gravedad y a la posición del brazo.
+        _baseline = _baseline * 0.92 + magnitude * 0.08;
+
+        var highThreshold = _baseline + 650.0;
+        var lowThreshold = _baseline + 260.0;
+        var travel = magnitude - _lastLow;
+
+        if (magnitude > highThreshold && _armed && travel > 320.0 &&
+                (_lastPeakAt == 0 || now - _lastPeakAt > 380)) {
+            if (_lastPeakAt > 0) {
+                var interval = now - _lastPeakAt;
+                if (interval > 350 && interval < 5000) {
+                    _intervals.add(interval);
+                }
+            }
+            _lastPeakAt = now;
+            _reps += 1;
+            _armed = false;
+        } else if (magnitude < lowThreshold) {
+            _armed = true;
+            _lastLow = magnitude;
         }
-        if (_lastPeakAt > 0) {
-            var interval = now - _lastPeakAt;
-            if (interval < 5000) {
-                _intervals.add(interval);
+
+        if (_reps > 0) {
+            var quiet = now - _lastPeakAt;
+            var reachedTarget = _targetReps > 0 && _reps >= _targetReps;
+            if ((reachedTarget && quiet > 900) || quiet > 1900) {
+                _finished = true;
+                if (_callback != null) {
+                    _callback.invoke();
+                }
             }
         }
-        _lastPeakAt = now;
-        _reps += 1;
     }
 
     function lastValue(value) {
