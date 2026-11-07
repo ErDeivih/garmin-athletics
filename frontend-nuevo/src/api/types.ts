@@ -401,6 +401,7 @@ export interface SessionSet {
   set_type: 'normal' | 'warmup' | 'drop' | 'failure';
   rest_seconds: number | null;
   completed_at: string | null;
+  needs_review?: boolean;
 }
 
 export interface SessionExercise {
@@ -431,6 +432,7 @@ export interface SessionSetInput {
   set_type?: 'normal' | 'warmup' | 'drop' | 'failure';
   rest_seconds?: number | null;
   completed_at?: string | null;
+  needs_review?: boolean;
 }
 
 export interface SessionInput {

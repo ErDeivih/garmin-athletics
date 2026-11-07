@@ -302,6 +302,7 @@ class SessionSet(Base):
     velocity_mps = Column(Float, nullable=True)  # velocidad media de ejecución
     estimated_force_n = Column(Float, nullable=True)
     estimated_1rm_kg = Column(Float, nullable=True)
+    needs_review = Column(Boolean, default=False)  # ciclo dudoso: revisar en el móvil
 
 
 class DailyStat(Base):

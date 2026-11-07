@@ -1,35 +1,29 @@
-# Diagnóstico del simulador (pantalla negra)
+# Simulador y captura
 
-Fecha: 2026-11-06. Entorno: Connect IQ SDK 8.3.0 en Windows, Forerunner 255.
+## Causa de la pantalla negra
 
-## Qué se probó
+Confirmado por Codex en el Forerunner 255: Connect IQ llama a `onUpdate(dc)`, no a
+`draw(dc)`. La app tenía `draw`; por eso el simulador pintaba una esfera negra aunque el
+workout sí estuviera cargado. Se cambió a `onUpdate` en
+`source/LyftaView.mc` y la app compila para los cinco modelos.
 
-1. Se compiló Lyfta para fr255 y se lanzó con `monkeydo`.
-2. Se compiló una **app mínima de prueba** (`TEST`) que solo pinta `TEST` en blanco sobre
-   negro y se lanzó de la misma forma.
-3. Se capturó la ventana del simulador con `PrintWindow` y con captura de pantalla.
-4. Se repitió con el simulador reiniciado y el dispositivo fr255.
+## Captura
 
-## Resultado
+`capture-simulator.ps1` ya no espera un tiempo fijo. Ahora:
 
-- El simulador arranca, reconoce el Forerunner 255 y carga la app (la memoria del simulador
-  cambia al pasar de la esfera a la app).
-- La pantalla se queda **negra también con la app mínima `TEST`**. No hay diálogo de error de
-  Monkey C ni excepción de la app.
-- El estado inferior del simulador muestra la luz de fondo en **Off**, pero pulsar el botón
-  LIGHT o el área de la esfera no cambia la captura.
-- `monkeydo` no devuelve error; no hay prompt de firewall pendiente en esta ejecución.
+- espera a que exista la ventana del simulador;
+- considera que hay **primer fotograma** solo si `PrintWindow` devuelve éxito y la zona
+  central tiene píxeles de texto (no el splash azul ni el marco gris);
+- captura en bucle hasta encontrar ese fotograma;
+- comprueba por separado el código de salida de `monkeydo` y el resultado de la captura;
+- devuelve error si algún modelo no produce un fotograma válido.
 
-## Conclusión
+La captura del fr255 se ha intentado; el simulador de esta máquina sigue apagando la
+pantalla (`Off`) y no entrega un fotograma de la app nueva. No se incluyen imágenes
+negras ni capturas antiguas como si fueran la pantalla actual.
 
-La pantalla negra **no es de la watch-app**: una app mínima que solo dibuja una palabra también
-sale negra. Es un problema de la ventana/representación del simulador en esta máquina (pantalla
-apagada o captura de la superficie), no del código de Lyfta.
+## Maquetación fr255
 
-## Siguiente paso
-
-- Abrir el simulador manualmente, encender la pantalla con LIGHT y ejecutar
-  `capture-simulator.ps1 -KeyPath <clave.der>`. El script recorre los cinco modelos.
-- Si sigue negra, reiniciar el simulador y probar sin `monkeydo` (File → Open) para separar
-  el fallo de la app del fallo de la conexión.
-- No se han incluido capturas negras como si fueran pantallas de la app.
+La pantalla se ha compactado para 260×260: fuente de peso con glifos normales (no la
+fuente numérica), `Peso (kg)` y objetivo separados, y los textos inferiores dentro del
+círculo. La captura física queda pendiente de que el simulador encienda la pantalla.

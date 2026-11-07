@@ -24,7 +24,8 @@ async def _run_sqlite_migrations(conn) -> None:
         "strength_logs": [("user_id", "VARCHAR(36)")],
         "session_sets": [("rpe", "INTEGER"), ("client_set_id", "VARCHAR(64)"),
                          ("detected_reps", "INTEGER"), ("velocity_mps", "FLOAT"),
-                         ("estimated_force_n", "FLOAT"), ("estimated_1rm_kg", "FLOAT")],
+                         ("estimated_force_n", "FLOAT"), ("estimated_1rm_kg", "FLOAT"),
+                         ("needs_review", "BOOLEAN DEFAULT 0")],
         "calendar_events": [
             ("template_id", "VARCHAR(36)"),
             ("garmin_workout_id", "VARCHAR(64)"),

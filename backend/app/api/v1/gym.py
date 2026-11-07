@@ -100,6 +100,7 @@ class SetIn(BaseModel):
     set_type: str = "normal"
     rest_seconds: Optional[int] = Field(None, ge=0, le=3600)
     completed_at: Optional[datetime] = None
+    needs_review: bool = False
 
 
 class SessionIn(BaseModel):
@@ -179,6 +180,7 @@ def _set_out(s: SessionSet) -> Dict[str, Any]:
         "set_type": s.set_type,
         "rest_seconds": s.rest_seconds,
         "completed_at": s.completed_at.isoformat() if s.completed_at else None,
+        "needs_review": bool(s.needs_review),
     }
 
 
@@ -1061,6 +1063,7 @@ async def create_session(
             rpe=item.rpe,
             is_warmup=(item.is_warmup or stype == "warmup"), set_type=stype,
             rest_seconds=item.rest_seconds, completed_at=item.completed_at,
+            needs_review=item.needs_review,
         )
         sets.append(row)
         db.add(row)
@@ -1175,6 +1178,7 @@ async def update_session(
             rpe=item.rpe,
             is_warmup=(item.is_warmup or stype == "warmup"), set_type=stype,
             rest_seconds=item.rest_seconds, completed_at=item.completed_at,
+            needs_review=item.needs_review,
         )
         new_sets.append(row)
         db.add(row)

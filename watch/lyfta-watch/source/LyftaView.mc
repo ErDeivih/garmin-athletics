@@ -14,6 +14,7 @@ class LyftaView extends WatchUi.View {
     private var _lastForce = 0.0;
     private var _lastOneRm = 0.0;
     private var _autoBusy = false;
+    private var _recordingError = false;
 
     function initialize() {
         View.initialize();
@@ -50,7 +51,7 @@ class LyftaView extends WatchUi.View {
     function onSelect() as Void {
         if (_state == "workout") {
             markSet();
-        } else if (_state == "offline") {
+        } else if (_state == "offline" || _state == "sensor_error") {
             loadWorkout();
         } else if (_state == "done" || _state == "empty") {
             WatchUi.popView(WatchUi.SLIDE_RIGHT);
@@ -65,8 +66,9 @@ class LyftaView extends WatchUi.View {
         var detected = _sensor.reps();
         var velocity = _sensor.averageVelocityMps();
         var force = _sensor.estimatedForceN(_model.weight());
-        var oneRm = _sensor.estimatedOneRepMaxKg(_model.weight(), _model.reps());
-        var record = _model.markSet(detected, velocity, force, oneRm);
+        var oneRm = _sensor.estimatedOneRepMaxKg(_model.weight());
+        var reliable = _sensor.isReliable();
+        var record = _model.markSet(detected, velocity, force, oneRm, reliable);
         if (record == null) {
             _autoBusy = false;
             return;
@@ -96,7 +98,15 @@ class LyftaView extends WatchUi.View {
         if (_state != "workout" || _autoBusy) {
             return;
         }
-        _sensor.start(_model.reps(), method(:onSetFinished));
+        startRecording();
+        if (_recordingError) {
+            _state = "sensor_error";
+            WatchUi.requestUpdate();
+            return;
+        }
+        var ex = _model.currentExercise();
+        var exerciseName = ex == null ? "" : _model.text(ex, "name", "");
+        _sensor.start(_model.reps(), exerciseName, method(:onSetFinished));
     }
 
     function onSetFinished() as Void {
@@ -137,15 +147,25 @@ class LyftaView extends WatchUi.View {
         if (_session != null) {
             return;
         }
+        _recordingError = false;
         if (Toybox has :ActivityRecording) {
-            _session = ActivityRecording.createSession({
-                :name => "Lyfta",
-                :sport => Activity.SPORT_TRAINING,
-                :subSport => Activity.SUB_SPORT_STRENGTH_TRAINING
-            });
-            if (_session != null) {
-                _session.start();
+            try {
+                _session = ActivityRecording.createSession({
+                    :name => "Lyfta",
+                    :sport => Activity.SPORT_TRAINING,
+                    :subSport => Activity.SUB_SPORT_STRENGTH_TRAINING
+                });
+                if (_session != null) {
+                    _session.start();
+                } else {
+                    _recordingError = true;
+                }
+            } catch (e) {
+                _session = null;
+                _recordingError = true;
             }
+        } else {
+            _recordingError = true;
         }
     }
 
@@ -169,7 +189,7 @@ class LyftaView extends WatchUi.View {
         saveRecording();
     }
 
-    function draw(dc as Graphics.Dc) as Void {
+    function onUpdate(dc as Graphics.Dc) as Void {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
         if (_state == "loading") {
@@ -177,12 +197,12 @@ class LyftaView extends WatchUi.View {
             drawCentered(dc, "Buscando entreno", 130, Graphics.FONT_SMALL, Graphics.COLOR_LT_GRAY);
         } else if (_state == "offline") {
             drawCentered(dc, "Lyfta", 60, Graphics.FONT_LARGE, Graphics.COLOR_WHITE);
-            drawCentered(dc, "Sin conexión", 120, Graphics.FONT_MEDIUM, Graphics.COLOR_ORANGE);
-            drawCentered(dc, "OK reintentar", 180, Graphics.FONT_TINY, Graphics.COLOR_LT_GRAY);
+            drawCentered(dc, "Sin conexion", 120, Graphics.FONT_MEDIUM, Graphics.COLOR_ORANGE);
+            drawCentered(dc, "ATRAS reintentar", 180, Graphics.FONT_TINY, Graphics.COLOR_LT_GRAY);
         } else if (_state == "empty") {
             drawCentered(dc, "Lyfta", 60, Graphics.FONT_LARGE, Graphics.COLOR_WHITE);
             drawCentered(dc, "Hoy no toca fuerza", 130, Graphics.FONT_MEDIUM, Graphics.COLOR_WHITE);
-            drawCentered(dc, "ATRÁS salir", 190, Graphics.FONT_TINY, Graphics.COLOR_LT_GRAY);
+            drawCentered(dc, "ATRAS salir", 190, Graphics.FONT_TINY, Graphics.COLOR_LT_GRAY);
         } else if (_state == "done") {
             drawCentered(dc, "Lyfta", 50, Graphics.FONT_LARGE, Graphics.COLOR_WHITE);
             drawCentered(dc, "Entreno terminado", 110, Graphics.FONT_MEDIUM, Graphics.COLOR_GREEN);
@@ -225,11 +245,13 @@ class LyftaView extends WatchUi.View {
             "Serie " + (_model.setIndex + 1).toString() + "/" + _model.currentSets().toString(),
             Graphics.TEXT_JUSTIFY_CENTER);
 
+        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(width / 2, 106, Graphics.FONT_TINY, "Peso (kg)", Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 132, Graphics.FONT_NUMBER_MEDIUM,
-            "Peso " + _model.weight().toString() + " kg", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width / 2, 114, Graphics.FONT_MEDIUM, fmt(_model.weight()),
+            Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 158, Graphics.FONT_MEDIUM, "Objetivo × " + _model.reps().toString(),
+        dc.drawText(width / 2, 150, Graphics.FONT_SMALL, "Objetivo x " + _model.reps().toString(),
             Graphics.TEXT_JUSTIFY_CENTER);
 
         var liveReps = _sensor.reps();
@@ -238,22 +260,33 @@ class LyftaView extends WatchUi.View {
         var forceShown = liveReps > 0 ? _sensor.estimatedForceN(_model.weight()) : _lastForce;
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 180, Graphics.FONT_TINY, "Reps detectadas: " + repsShown.toString(),
+        dc.drawText(width / 2, 170, Graphics.FONT_TINY, "Reps: " + repsShown.toString(),
             Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 196, Graphics.FONT_TINY, "Velocidad: " + fmt(velocityShown) + " m/s",
+        dc.drawText(width / 2, 184, Graphics.FONT_TINY, "Vel: " + fmt(velocityShown) + " m/s",
             Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(width / 2, 212, Graphics.FONT_TINY, "Fuerza ~ " + Math.round(forceShown).toString() + " N",
+        dc.drawText(width / 2, 198, Graphics.FONT_TINY, "Fuerza: " + Math.round(forceShown).toString() + " N",
             Graphics.TEXT_JUSTIFY_CENTER);
 
+        var height = dc.getHeight();
         dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 232, Graphics.FONT_TINY, "AUTO · no pulses nada", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width / 2, height - 42, Graphics.FONT_TINY, "AUTO - no pulses nada", Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 246, Graphics.FONT_TINY, "ATRÁS salir", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width / 2, height - 24, Graphics.FONT_TINY, "ATRAS salir", Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     function fmt(value) {
-        return (Math.round(value * 10) / 10.0).toString();
+        var text = (Math.round(value * 10) / 10.0).toString();
+        var dot = text.find(".");
+        if (dot == null || dot < 0) {
+            return text;
+        }
+        var whole = text.substring(0, dot);
+        var decimal = text.substring(dot + 1, dot + 2);
+        if (decimal == "0") {
+            return whole;
+        }
+        return whole + "." + decimal;
     }
 
     function drawCentered(dc as Graphics.Dc, text, y, font, color) as Void {
@@ -262,6 +295,6 @@ class LyftaView extends WatchUi.View {
     }
 
     function short(value, limit) {
-        return value.length() > limit ? value.substring(0, limit - 1) + "…" : value;
+        return value.length() > limit ? value.substring(0, limit - 1) + "..." : value;
     }
 }

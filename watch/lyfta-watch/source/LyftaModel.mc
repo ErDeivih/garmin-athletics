@@ -95,12 +95,13 @@ class LyftaModel {
         return exercises.size();
     }
 
-    function markSet(detectedReps, velocity, force, oneRm) {
+    function markSet(detectedReps, velocity, force, oneRm, reliable) {
         var ex = currentExercise();
         if (ex == null) {
             return null;
         }
         var counted = detectedReps > 0 ? detectedReps : reps();
+        var needsReview = !reliable;
         var record = {
             "client_set_id" => System.getTimer().toString() + "-" + exerciseIndex.toString() + "-" + setIndex.toString(),
             "workout_id" => workoutId,
@@ -111,7 +112,9 @@ class LyftaModel {
             "detected_reps" => detectedReps,
             "velocity_mps" => velocity,
             "estimated_force_n" => force,
-            "estimated_1rm_kg" => oneRm
+            "estimated_1rm_kg" => oneRm,
+            "needs_review" => needsReview,
+            "reps_reliable" => !needsReview
         };
         done += 1;
         setIndex += 1;

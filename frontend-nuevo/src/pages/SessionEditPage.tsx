@@ -30,6 +30,7 @@ export function SessionEditPage() {
         set_type: item.set_type,
         rest_seconds: item.rest_seconds,
         completed_at: item.completed_at,
+        needs_review: item.needs_review,
       })),
     ));
   }, [session.data]);
@@ -62,6 +63,7 @@ export function SessionEditPage() {
         set_type: item.set_type,
         rest_seconds: item.rest_seconds,
         completed_at: item.completed_at,
+        needs_review: item.needs_review,
       })),
     };
     update.mutate(payload, { onSuccess: () => setSaved(true) });
@@ -84,6 +86,11 @@ export function SessionEditPage() {
               <div>
                 <span className="text-body text-ink">{item.exerciseName}</span>
                 <span className="ml-2 text-caption text-ink-faint">Serie {item.set_number}</span>
+                {item.needs_review ? (
+                  <span className="ml-2 rounded-sm border border-warning px-1.5 py-0.5 text-caption text-warning">
+                    Revisar
+                  </span>
+                ) : null}
               </div>
               <label className="flex flex-col gap-1 text-caption text-ink-muted">
                 Peso (kg)

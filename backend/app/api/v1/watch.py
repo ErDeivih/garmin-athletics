@@ -102,6 +102,7 @@ class WatchSetIn(BaseModel):
     velocity_mps: Optional[float] = Field(None, ge=0, le=10)
     estimated_force_n: Optional[float] = Field(None, ge=0, le=10000)
     estimated_1rm_kg: Optional[float] = Field(None, ge=0, le=1000)
+    needs_review: bool = False
 
 
 @router.post("/sets", summary="Guardar una serie hecha en el reloj (idempotente)")
@@ -157,6 +158,7 @@ async def watch_save_set(
         velocity_mps=payload.velocity_mps,
         estimated_force_n=payload.estimated_force_n,
         estimated_1rm_kg=payload.estimated_1rm_kg,
+        needs_review=payload.needs_review,
     )
     db.add(row)
     session.total_tonnage_kg = round((session.total_tonnage_kg or 0) + payload.weight_kg * payload.reps, 2)
