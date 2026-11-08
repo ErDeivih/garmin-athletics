@@ -32,6 +32,13 @@ inferior sigue en **Off**. `monkeydo` está conectado y el binario nuevo contien
 `onUpdate`, pero la superficie no se repinta. No se puede afirmar que exista un frame
 nuevo; por tanto no hay captura válida y el script termina con error.
 
+## Evidencia del bloqueo
+
+- `screenshots/simulador-bloqueo.png`: ventana congelada con el estado `Off`.
+- `screenshots/captura-error.log`: salida de `capture-simulator.ps1` con
+  `capture=False`, `nonBlack=False` y `exit=1`. El script no guarda un PNG cuando no
+  hay frame válido.
+
 ## Siguiente intento
 
 - Abrir el simulador manualmente, usar **File > Save Screen Capture** y comprobar si

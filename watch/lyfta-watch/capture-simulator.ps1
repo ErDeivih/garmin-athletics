@@ -43,7 +43,7 @@ public class LyftaCapture {
        g.ReleaseHdc(d);
        if (!printed) return false;
      }
-     int samples = 0, dark = 0, light = 0;
+     int samples = 0, dark = 0, light = 0, marker = 0;
      // La ventana incluye menu y marco gris; el frame real esta en el centro.
      for (int y = 110; y < bmp.Height - 25; y += 5) {
        for (int x = 25; x < bmp.Width - 25; x += 5) {
@@ -51,10 +51,11 @@ public class LyftaCapture {
          samples++;
          if (c.R < 35 && c.G < 35 && c.B < 35) dark++;
          if (c.R > 215 && c.G > 215 && c.B > 215) light++;
+         if (c.R > 180 && c.B > 180 && c.G < 80) marker++;
        }
      }
-     nonBlack = samples > 0 && dark > samples / 30 && light > samples / 80 && light > 20;
-     bmp.Save(path, ImageFormat.Png);
+     nonBlack = samples > 0 && dark > samples / 30 && light > samples / 80 && light > 20 && marker > 2;
+     if (nonBlack) bmp.Save(path, ImageFormat.Png);
      return nonBlack;
    }
  }
@@ -93,6 +94,7 @@ foreach ($device in $Devices) {
 
     $monkey = Start-Process -FilePath "$SdkPath\bin\monkeydo.bat" -ArgumentList @($prg, $device) -WorkingDirectory $root -PassThru -WindowStyle Hidden
     $capturePath = Join-Path $OutDir "watch-$device.png"
+    Remove-Item $capturePath -Force -ErrorAction SilentlyContinue
     $captured = $false
     $nonBlack = $false
     for ($i = 0; $i -lt 80; $i++) {
@@ -112,10 +114,10 @@ foreach ($device in $Devices) {
     }
     $monkeyExit = if ($monkey.HasExited) { $monkey.ExitCode } else { "running" }
     if (-not $monkey.HasExited) { Stop-Process -Id $monkey.Id -Force -ErrorAction SilentlyContinue }
-    Write-Host "CAPTURE $device capture=$captured nonBlack=$nonBlack monkeydo=$monkeyExit file=$capturePath"
+    Write-Host "CAPTURE $device capture=$captured nonBlack=$nonBlack monkeydo=$monkeyExit file=$(if($captured){$capturePath}else{"(sin frame valido)"})"
     $results += [pscustomobject]@{ device=$device; compile=$compileExit; monkeydo=$monkeyExit; capture=$captured; file=$(if($captured){$capturePath}else{$null}) }
 }
 Stop-Process -Name simulator -Force -ErrorAction SilentlyContinue
 $results | Format-Table -AutoSize
-if (($results | Where-Object { -not $_.capture }).Count -gt 0) { exit 1 }
+if (@($results | Where-Object { -not $_.capture }).Count -gt 0) { exit 1 }
 exit 0

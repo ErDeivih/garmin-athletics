@@ -217,6 +217,9 @@ class LyftaView extends WatchUi.View {
         } else {
             drawWorkout(dc);
         }
+        // Marca de versión para que la captura no acepte un frame antiguo.
+        dc.setColor(0xFF00FF, Graphics.COLOR_TRANSPARENT);
+        dc.fillRectangle(4, 4, 3, 3);
     }
 
     function drawWorkout(dc as Graphics.Dc) as Void {
