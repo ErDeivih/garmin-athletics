@@ -28,7 +28,7 @@ reloj y el análisis está completo.
 
 - Frontend: 41/41 pruebas en 18 ficheros.
 - Backend: 19/19 scripts (incluye perfil IMU en seco, auto-carga, watch-app, rutas y calendario recurrente).
-- Capturas: `frontend-nuevo/screenshots/` — 21 capturas nuevas y numeradas (01–21).
-- Gimnasio móvil: pesos por serie con − / + al planificar y después, envío desde Lyfta con estado y edición posterior; guardado automático y última marca como respaldo.
+- Capturas: `frontend-nuevo/screenshots/` — 24 capturas nuevas y numeradas (01–24).
+- Regresión visual: `npm run visual` compara planificador, envío y sesión con `pixelmatch` (4 pantallas, 0 píxeles distintos en la última pasada).\n- Gimnasio móvil: pesos por serie con − / + al planificar y después, envío desde Lyfta con estado y edición posterior; guardado automático y última marca como respaldo.
 - El nombre visible se configura en `frontend-nuevo/src/config/marca.ts`. La sesión, el tema, las secciones y los borradores de la versión anterior se pueden recuperar. La prueba de sesión antigua falla antes del cambio y pasa después.
 - Contrato HTTP en una base de pruebas: 140/140. Humo a 390 × 844: 20 capturas de este pase, sin errores de navegador. La cuenta nueva no tenía actividad GPS; el detalle de actividad se cubre con la prueba específica y la captura existente.

@@ -38,4 +38,4 @@ logs/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-tmp/
+tmp/frontend-nuevo/screenshots/visual/
