@@ -19,6 +19,8 @@ describe('biblioteca de entrenamientos', () => {
     renderApp('/gimnasio/biblioteca');
 
     expect(await screen.findByRole('heading', { name: 'Biblioteca' })).toBeInTheDocument();
+    const empuje = screen.getByRole('button', { name: /^empuje$/i });
+    expect(empuje).toBeInTheDocument();
     await user.click(await screen.findByRole('button', { name: /empuje a/i }));
 
     expect(await screen.findByText(/bloque principal/i)).toBeInTheDocument();
