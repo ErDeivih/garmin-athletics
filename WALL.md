@@ -27,7 +27,7 @@ reloj y el análisis está completo.
 ## Evidencia
 
 - Frontend: 41/41 pruebas en 18 ficheros.
-- Backend: 18/18 scripts (incluye perfil IMU en seco, auto-carga, watch-app, rutas y calendario recurrente).
+- Backend: 19/19 scripts (incluye perfil IMU en seco, auto-carga, watch-app, rutas y calendario recurrente).
 - Capturas: `frontend-nuevo/screenshots/` — 18 capturas nuevas y numeradas (01–18).
 
 - El nombre visible se configura en `frontend-nuevo/src/config/marca.ts`. La sesión, el tema, las secciones y los borradores de la versión anterior se pueden recuperar. La prueba de sesión antigua falla antes del cambio y pasa después.

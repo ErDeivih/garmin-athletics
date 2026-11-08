@@ -1,123 +1,103 @@
-# Guion de prueba con el reloj real (fr255)
+# Guion de prueba con el reloj real (Forerunner 255)
 
-El día que David pueda dar el 2FA y el reloj, esta es la única lista que hay que seguir. No promete
-que funcione: comprueba y deja evidencia. El 2FA lo introduce David; el agente no lo pide ni lo
-guarda.
+Lista de una pasada para cuando David tenga el reloj y el móvil delante. El 2FA lo
+introduce David; el agente no lo pide ni lo guarda. No se activan GitHub Actions.
 
-## Checklist de una pasada
+## Checklist
 
 | # | Acción | Debe verse | Si falla |
 |---|---|---|---|
-| 1 | Backend con la cuenta real y **Ajustes → Vincular cuenta** (correo, contraseña, 2FA) | «Vinculado» | Apuntar el mensaje, sin contraseña ni código |
-| 2 | **Gimnasio → Preparar envío → Enviar al reloj** | «Enviado. Compruébalo en el reloj.» | Apuntar el `detail` del backend |
-| 3 | Abrir el entreno en el reloj y pulsar **Empezar** | Ejercicios, series, peso y repeticiones | Captura del reloj y qué pantalla falta |
-| 4 | **Calendario → Programar entrenamiento** (semanal) → **Preparar los próximos 7 días** | Entrenos de hoy y próximos días enviados | Apuntar `sent` y el error |
-| 5 | Repetir el paso 4 el mismo día | `sent: 0`, sin duplicar | Comprobar que no hay dos entrenos |
-| 6 | Terminar una serie en el reloj y sincronizar | La actividad aparece en la app | Hora, modelo y captura |
-| 7 | Importar la actividad: `POST /strength/import-garmin/{id}` | `sets_imported > 0` | Apuntar `unmapped` y el `id` |
-| 8 | **Catálogo → Detección** y activar la detección automática | «Detección activada.» | Revisar el 422 |
-| 9 | Watch-app Lyfta en el reloj | Ejercicio, serie, peso, reps detectadas y fuerza | Ver Prueba E |
+| 1 | Backend con la cuenta real y **Ajustes → Vincular cuenta** | «Vinculado» | Apuntar el mensaje, sin contraseña ni código |
+| 2 | **Gimnasio → Editar pesos** y ajustar una serie con − / + | El peso cambia y se guarda solo | Apuntar la serie y el plan |
+| 3 | **Gimnasio → Enviar al reloj** | «Enviado al reloj» | Apuntar el texto y si el reloj está sincronizado |
+| 4 | Abrir el entreno en el reloj | Ejercicio, serie, peso objetivo y reps; no pide escribir peso | Captura y pantalla exacta |
+| 5 | Pulsar **Empezar** y hacer una serie | La serie se guarda y avanza sin pulsar OK | Hora, modelo y qué se vio |
+| 6 | Sincronizar el reloj | La actividad aparece en Lyfta / Garmin | Esperar y sincronizar; apuntar hora |
+| 7 | Importar o comprobar la actividad | Series con peso y reps en el historial | `sets_imported`, `unmapped`, id |
+| 8 | **Gimnasio → Últimas sesiones → Corregir pesos** | Cambiar una serie con − / + y guardar | Captura del error |
+| 9 | **Calendario → Preparar los próximos 7 días** | `sent > 0`, sin duplicados | Apuntar `sent` y el error |
 
 ## Antes de empezar
 
-- Backend levantado contra la **cuenta real** de David (no la copia), con sus tokens.
-- Reloj **Forerunner 255** cargado y emparejado con Garmin Connect; abrir la app de Garmin Connect
-  una vez.
-- Una plantilla con 2–3 ejercicios, series, pesos, reps y descansos reales.
-- Una actividad con GPS ya sincronizada, para comprobar el detalle y las vueltas.
-- Una ruta generada en **Rutas** y descargada en GPX, para llevarla al reloj.
-- El guion no necesita GitHub Actions.
+- Backend real con los tokens de David; no cerrar la sesión de Garmin.
+- Reloj **Forerunner 255** cargado y emparejado. Abrir Garmin Connect una vez y
+  arrastrar hacia abajo para sincronizar si el entrenamiento no aparece.
+- Una plantilla con 2–3 ejercicios, series, pesos y descansos.
+- La app abierta en el móvil; no hace falta crear el entrenamiento en Garmin Connect.
 
-## Prueba A — Enviar un entrenamiento al reloj (T-31)
+## Prueba A — Del móvil al reloj (T-31)
 
-1. **Ajustes → Vincular cuenta**. Correo, contraseña y código 2FA. Debe quedar «Vinculado».
-2. **Gimnasio → Enviar al reloj → Preparar envío**.
-   Debe verse `N ejercicios · ~N min` y ningún aviso de «No se pueden enviar».
-3. Marcar «Lo revisaré en el reloj» y pulsar **Enviar al reloj**.
-4. **Backend**: `status: sent`, `workoutId` y `pushed_to_device`; ni 502 ni 400.
-5. **Reloj**: el entreno en el calendario de hoy, con ejercicios, series, peso y repeticiones. Si no
-   aparece, apuntar qué muestra exactamente.
-6. Pulsar **Empezar** y completar una serie. Debe registrarse en el reloj y en Garmin Connect.
-
-**Si falla**: anotar el `detail` (sin secretos), la hora y el modelo. No reintentar en bucle: un
-envío repetido puede duplicar el entreno.
+1. **Gimnasio → Editar pesos**. Cada serie tiene su peso; se cambia con **−** y **+**.
+   Si no hay peso, se usa la última serie registrada de ese ejercicio.
+2. **Gimnasio → Enviar al reloj**. El botón está siempre visible; no hay que
+   preparar nada ni marcar casillas.
+3. Estado esperado: **«Enviado al reloj»**. Si aparece **«No se pudo enviar»**,
+   acercar el reloj, sincronizar y pulsar **Reintentar**.
+4. En el reloj, abrir el entreno de hoy. Debe mostrar el peso objetivo de cada serie.
+   El usuario **no escribe pesos**.
+5. Pulsar **Empezar** y ejecutar una serie. La app propia cierra la serie sola cuando
+   detecta el reposo; no hace falta pulsar OK ni configurar nada.
+6. El reloj devuelve la serie al backend; en el móvil aparece en **Últimas sesiones**.
 
 ## Prueba B — Calendario y auto-carga (T-42)
 
-1. **Calendario → Programar entrenamiento**: elegir plantilla, «Se repite cada semana», uno o varios
-   días y la hora. Debe aparecer en «Tus entrenamientos semanales».
-2. **Preparar los próximos 7 días**. Debe devolver `sent > 0` para los días que tengan entreno.
-3. Alternativa automática: esperar al job de las **06:30**.
-4. **Reloj**: el entreno de hoy debe estar en el calendario y abrirse como en A.
-5. Ejecutarlo otra vez el mismo día: `sent: 0`, sin duplicar (idempotencia).
-6. **Casos raros**: programa dos entrenos el mismo día (uno por la mañana y otro por la tarde); deben
-   aparecer los dos y poder quitar uno sin borrar el otro. Programa un entreno futuro y comprueba
-   que no aparece antes de su primera fecha.
+1. **Calendario → Programar entrenamiento**: plantilla, repetición semanal y hora.
+2. **Preparar los próximos 7 días**: `sent > 0` para los días con entreno.
+3. Repetir el mismo día: `sent: 0`, sin duplicados.
+4. Dos entrenos el mismo día: aparecen los dos y se puede quitar uno sin borrar el otro.
 
-## Prueba C — Importar las series reales (T-30)
+## Prueba C — Series de vuelta y corrección (T-30)
 
-1. Terminar una actividad de fuerza en el reloj.
-2. Sincronizar en Garmin Connect y esperar a que aparezca.
-3. Llamar `POST /api/v1/strength/import-garmin/{activity_id}` con el token.
-4. **Debe volver**: `sets_imported > 0`, `unmapped` vacío si todo está en el catálogo y la sesión en
-   el historial con peso/reps.
-5. Repetir: `409 already_imported`, sin duplicar.
+1. Terminar una actividad de fuerza y sincronizar.
+2. Importar la actividad o esperar la sincronización de Lyfta.
+3. Comprobar en **Últimas sesiones** que están las series con peso y reps.
+4. **Corregir pesos**: abrir la sesión y cambiar el peso real con **− / +**. Al guardar
+   se recalcula el volumen.
+5. Repetir la importación: no debe duplicar la sesión.
 
-## Prueba D — Detección automática de repeticiones (T-43)
+## Prueba D — Detección automática (watch-app)
 
-1. En la app: **Catálogo → Detección** en 3 ejercicios de brazo (curl, press militar, elevación
-   lateral). Pulsar **Activar detección automática**. No hay que configurar duración ni inicio de
-   serie; el ajuste fino queda plegado.
-2. En la watch-app, abrir el entreno y hacer 5 series de 8–12 reps.
-3. **Debe verse**: reps detectadas, velocidad de ejecución y fuerza estimada; al terminar, 1RM
-   estimado.
-4. **Criterio**: ≥90 % de series con error ≤1 rep y ≥90 % de series detectadas. Si no, el conteo
-   automático se queda fuera y se mantiene el marcado manual.
+La detección nueva vive en la **watch-app de Lyfta**, no en el entreno nativo de Garmin.
+El detector está en pausa hasta cerrar la interfaz móvil; cuando se retome:
 
-## Prueba E — Watch-app propia (T-32)
+1. Instalar la watch-app en el fr255.
+2. Abrir Lyfta en el reloj; debe cargar el entreno de hoy.
+3. Hacer 8–12 reps en press y curl. No pulsar nada más que **Empezar**.
+4. Debe cerrar la serie tras el reposo y enviar las reps al backend.
+5. Criterio: ≥95 % de series con error ≤1 rep y ningún cierre prematuro. Si no se
+   cumple, se deja el conteo manual.
 
-Depende de tener el `.prg` firmado y la instalación de desarrollador en el fr255 (Nivel 3). El
-proyecto está en `watch/lyfta-watch/`.
+## Prueba E — Watch-app propia
 
-1. Instalar `build/lyfta-fr255.prg` en el reloj con el flujo de desarrollador.
-2. En Garmin Connect → app Lyfta → Ajustes, poner la dirección del backend y el token de David.
-3. Abrir **Lyfta** en el reloj. Debe pedir el entreno de hoy.
-4. **Debe verse**: «Lyfta», el nombre del entreno, «Ejercicio 1/N», el ejercicio, «Serie 1/N»,
-   «Peso», «Objetivo × reps», «Reps detectadas», velocidad y fuerza.
-5. Pulsar OK: la serie se guarda y avanza; el backend recibe `/watch/sets` (misma serie dos veces =
-   `duplicate: true`, no dos filas).
-6. Apagar el móvil/reloj o dejar sin red y marcar otra serie: debe verse «1 por enviar» al terminar y
-   enviarse al recuperar la conexión.
-7. **No se promete instalación desde aquí**: si falla el sideload, apuntar el error y seguir con A–D.
+1. Instalar `build/lyfta-fr255.prg` con el flujo de desarrollador.
+2. Configurar la URL del backend y el token en los ajustes de la watch-app.
+3. Abrir **Lyfta** en el reloj.
+4. Debe verse: «Lyfta», el nombre del entreno, «Ejercicio 1/N», el ejercicio,
+   «Serie 1/N», «Peso (kg)» con el objetivo, «Objetivo x N» y las reps detectadas.
+5. La serie se cierra sola; no hay que pulsar OK ni meter pesos. No vibra.
+6. El móvil recibe `/watch/sets`; la misma serie dos veces devuelve `duplicate: true`.
 
 ## Prueba F — Ruta en el reloj (T-35)
 
-1. En **Rutas**, generar una ruta de carrera o bici con al menos un paso, altitud y esfuerzo.
-2. Comprobar el perfil de elevación y el ritmo por kilómetro en la app.
-3. Descargar el GPX y llevarlo al reloj por el flujo de Garmin Connect que use David.
-4. **En el reloj**: debe abrirse el recorrido y verse el perfil de elevación nativo. La app no
-   promete navegación giro a giro: entrega el track.
+1. **Rutas** → generar ruta con pasos, altitud y esfuerzo.
+2. Descargar GPX y llevarlo al reloj.
+3. En el reloj debe abrirse el recorrido con su perfil de elevación.
 
-## Evidencia que hay que dejar
+## Evidencia
 
-| Prueba | Qué apuntar | Dónde |
-|---|---|---|
-| A | `workoutId`, captura del reloj, captura del entreno en Garmin Connect | `ESTADO-AGENTE.md` + captura |
-| B | `sent`, días enviados, dos entrenos el mismo día y recorte | `ESTADO-AGENTE.md` |
-| C | `activity_id`, `sets_imported`, `unmapped` | `ESTADO-AGENTE.md` |
-| D | error por serie, % detectadas, fuerza/1RM | `research/IMU-CALENDARIO.md` §10.3 |
-| E | capturas de las pantallas de la watch-app | `watch/lyfta-watch/` |
-| F | captura del recorrido y del perfil en el reloj | `ESTADO-AGENTE.md` |
+| Prueba | Qué apuntar |
+|---|---|
+| A | Captura del plan con pesos, estado del envío, captura del reloj |
+| B | `sent`, días enviados, dos entrenos el mismo día |
+| C | `activity_id`, `sets_imported`, `unmapped`, captura del historial corregido |
+| D/E | Reps por serie, % de aciertos, capturas de la watch-app |
+| F | Captura del recorrido y del perfil |
 
-Hasta que A–C estén hechas, T-30/T-31/T-42 siguen **en curso**, no cerradas.
+## Ya preparado (2026-11-08)
 
-## Ya preparado (2026-11-06)
-
-- **Detección automática**: activar desde Catálogo → Detección; sin configurar duración ni inicio.
-  La watch-app detecta con el acelerómetro y estima fuerza/1RM.
-- **Calendario**: siete días en una fila, recurrencia semanal, quitar desde fecha, día concreto y
-  auto-carga de hoy + 7 días a las 06:30.
-- **Rutas**: generador con pasos, altitud, perfil, esfuerzo, ritmo por km y GPX.
-- **Actividades**: velocidad, ritmo, altitud, FC, cadencia, potencia, zancada, desnivel/zancada,
-  oscilación, contacto, sudor y temperatura.
-- **Envío e importación**: endpoints y UI listos; solo falta la cuenta real.
+- Pesos por serie al planificar y después de entrenar, con botones − / + y guardado automático.
+- Envío desde Lyfta con estado «Enviado al reloj» / «No se pudo enviar».
+- Series guardadas con peso y reps; historial y corrección desde el móvil.
+- Watch-app con peso objetivo por serie, cierre automático y envío de series al backend.
+- La captura del simulador espera el primer fotograma real; si la ventana sigue apagada,
+  falla y no guarda una imagen negra.

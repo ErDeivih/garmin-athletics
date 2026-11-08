@@ -117,5 +117,5 @@ pide ni lo guarda.
    ofrece eliminar los datos desde la app.
 9. **Investigación.** `research/RUTAS-BIBLIOTECA.md` con Strava, Komoot, Hevy y Strong.
 
-**Evidencia:** frontend **41/41** pruebas en 18 ficheros; backend **18/18** scripts; 18 capturas
+**Evidencia:** frontend **41/41** pruebas en 18 ficheros; backend **19/19** scripts; 18 capturas
 390×844 sin errores de consola; contrato ampliado con `/watch/today` y `/routes/generate`.
