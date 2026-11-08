@@ -124,6 +124,14 @@ export function GymPage() {
                 Editar pesos
               </Link>
             </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-caption text-ink-muted">Estado del envío</span>
+              <span role="status">
+                <Badge tone={push.isError ? 'stop' : push.data?.status === 'sent' ? 'go' : 'idle'}>
+                  {push.isPending ? 'Enviando…' : push.isError ? 'Error' : push.data?.status === 'sent' ? 'Enviado' : 'Pendiente'}
+                </Badge>
+              </span>
+            </div>
             <Button onClick={startSend} disabled={push.isPending} className="min-h-12 w-full">
               {push.isPending ? 'Enviando…' : 'Enviar al reloj'}
             </Button>

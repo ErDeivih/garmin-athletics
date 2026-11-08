@@ -9,7 +9,7 @@ introduce David; el agente no lo pide ni lo guarda. No se activan GitHub Actions
 |---|---|---|---|
 | 1 | Backend con la cuenta real y **Ajustes → Vincular cuenta** | «Vinculado» | Apuntar el mensaje, sin contraseña ni código |
 | 2 | **Gimnasio → Editar pesos** y ajustar una serie con − / + | El peso cambia y se guarda solo | Apuntar la serie y el plan |
-| 3 | **Gimnasio → Enviar al reloj** | «Enviado al reloj» | Apuntar el texto y si el reloj está sincronizado |
+| 3 | **Gimnasio → Enviar al reloj** | Estado **Pendiente** antes; **Enviado** o **Error** después | Apuntar el estado y si el reloj está sincronizado |
 | 4 | Abrir el entreno en el reloj | Ejercicio, serie, peso objetivo y reps; no pide escribir peso | Captura y pantalla exacta |
 | 5 | Pulsar **Empezar** y hacer una serie | La serie se guarda y avanza sin pulsar OK | Hora, modelo y qué se vio |
 | 6 | Sincronizar el reloj | La actividad aparece en Lyfta / Garmin | Esperar y sincronizar; apuntar hora |

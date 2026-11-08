@@ -37,8 +37,10 @@ describe('envío de la plantilla al reloj', () => {
     const user = userEvent.setup();
     renderApp('/gimnasio');
 
+    expect(await screen.findByText(/^pendiente$/i)).toBeInTheDocument();
     await user.click(await screen.findByRole('button', { name: /^enviar al reloj$/i }));
     expect(await screen.findByText(/enviado al reloj/i)).toBeInTheDocument();
+    expect(screen.getByText(/^enviado$/i)).toBeInTheDocument();
 
     const sentCall = api.calls.find(
       (call) => call.method === 'POST' && call.path === '/api/v1/strength/push-to-garmin',
@@ -62,6 +64,7 @@ describe('envío de la plantilla al reloj', () => {
 
     await user.click(await screen.findByRole('button', { name: /^enviar al reloj$/i }));
     expect(await screen.findByText(/no se pudo enviar/i)).toBeInTheDocument();
+    expect(screen.getByText(/^error$/i)).toBeInTheDocument();
     expect(await screen.findByText(/acerca el reloj, sincroniza/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /reintentar/i })).toBeInTheDocument();
   });
