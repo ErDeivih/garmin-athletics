@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTemplate, useTemplates } from '../../api/queries';
-import { Badge, Card, EmptyState, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../../components/ui';
+import { Badge, Button, Card, EmptyState, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../../components/ui';
 import { formatMinutes, formatNumber } from '../../lib/format';
 
 const FOCUS_ORDER = ['Push', 'Pull', 'Legs', 'Full Body'];
@@ -21,6 +21,7 @@ function phaseFor(index: number, total: number): { label: string; hint: string }
 export function LibraryPage() {
   const templates = useTemplates();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [focusFilter, setFocusFilter] = useState('all');
   const selected = useTemplate(selectedId);
 
   if (templates.isPending) return <LoadingBlock label="Cargando la biblioteca" />;
@@ -33,6 +34,8 @@ export function LibraryPage() {
     const fb = FOCUS_ORDER.indexOf(b.focus ?? '');
     return (fa === -1 ? 9 : fa) - (fb === -1 ? 9 : fb) || a.name.localeCompare(b.name);
   });
+  const focuses = Array.from(new Set(items.map((item) => item.focus).filter(Boolean) as string[]));
+  const filtered = focusFilter === 'all' ? items : items.filter((item) => item.focus === focusFilter);
 
   return (
     <>
