@@ -94,6 +94,34 @@ El detector está en pausa hasta cerrar la interfaz móvil; cuando se retome:
 5. Sin resultados: debe verse un estado vacío con **Quitar filtros**.
 6. Fechas invertidas: aviso claro y sin consulta rota.
 
+## Paso exacto para el envío real (David)
+
+1. **Backend real** (desde `F:\Proyectos\garmin\backend`):
+   ```powershell
+   $env:DATABASE_URL="sqlite+aiosqlite:///F:/Proyectos/garmin/garmin_athletics.db"
+   $env:GARMIN_TOKENS_DIR="F:\Proyectos\garmin\backend\garmin_tokens"
+   $env:TRACKS_DIR="F:\Proyectos\garmin\data"
+   ..\venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8010
+   ```
+   No cerrar la sesión de Garmin ni borrar `backend\garmin_tokens`.
+2. **App móvil**: `cd frontend-nuevo` y `npm run dev`; abrir la URL que imprime Vite
+   (por defecto `http://127.0.0.1:5173`).
+3. Entrar con la cuenta de David y abrir **Gimnasio**.
+4. **Gimnasio → Editar pesos**: comprobar que cada serie tiene su peso objetivo. Cambiar
+   una con **− / +**; se guarda solo.
+5. **Gimnasio → Enviar al reloj**:
+   - estado inicial: **Pendiente**;
+   - al pulsar: **Enviando…**;
+   - resultado esperado: **Enviado**.
+6. Si sale **Error** o **Pendiente**: acercar el reloj al móvil, abrir Garmin Connect,
+   arrastrar hacia abajo para sincronizar y pulsar **Reintentar**. No crear el entreno a mano.
+7. En el reloj: **Entrenamiento → Entrenamientos**, abrir el entreno de hoy y pulsar
+   **Empezar**. Debe verse el peso objetivo de cada serie.
+8. Volver a la app: el envío debe seguir en **Enviado**; las series aparecen en
+   **Gimnasio → Últimas sesiones** al sincronizar y se corrigen con **− / +**.
+
+**Evidencia que hay que dejar**: captura del estado **Enviado**, captura del reloj y el
+`workoutId`/mensajes del backend (sin tokens ni contraseñas).
 
 ## Evidencia
 
@@ -103,7 +131,8 @@ El detector está en pausa hasta cerrar la interfaz móvil; cuando se retome:
 | B | `sent`, días enviados, dos entrenos el mismo día |
 | C | `activity_id`, `sets_imported`, `unmapped`, captura del historial corregido |
 | D/E | Reps por serie, % de aciertos, capturas de la watch-app |
-| F | Captura del recorrido y del perfil |\n| G | Captura de biblioteca por fases y filtros de actividades |
+| F | Captura del recorrido y del perfil |
+| G | Captura de biblioteca por fases y filtros de actividades |
 
 ## Ya preparado (2026-11-08)
 
