@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTemplate, useTemplates } from '../../api/queries';
 import { Badge, Button, Card, EmptyState, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../../components/ui';
@@ -49,28 +49,53 @@ export function LibraryPage() {
         <EmptyState title="Sin rutinas" description="Cuando crees una plantilla, aquí aparecerá ordenada por foco." />
       ) : (
         <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
-          <ul className="flex flex-col gap-2">
-            {items.map((template) => (
-              <li key={template.id}>
-                <button type="button" onClick={() => setSelectedId(template.id)} className="focus-ring w-full rounded-lg text-left">
-                  <Card as="article" className={selectedId === template.id ? 'border-accent' : ''}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h2 className="text-heading text-ink">{template.name}</h2>
-                        <p className="text-caption text-ink-faint">
-                          {template.weekday_label ?? 'Sin día fijo'} · {template.exercises.length} ejercicios
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtrar por foco">
+              <Button
+                variant={focusFilter === 'all' ? 'primary' : 'secondary'}
+                aria-pressed={focusFilter === 'all'}
+                onClick={() => setFocusFilter('all')}
+              >
+                Todos
+              </Button>
+              {focuses.map((focus) => (
+                <Button
+                  key={focus}
+                  variant={focusFilter === focus ? 'primary' : 'secondary'}
+                  aria-pressed={focusFilter === focus}
+                  onClick={() => setFocusFilter(focus)}
+                >
+                  {FOCUS_LABEL[focus] ?? focus}
+                </Button>
+              ))}
+            </div>
+            {filtered.length === 0 ? (
+              <EmptyState title="Sin rutinas de ese foco" description="Prueba otro foco o vuelve a Todos." />
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {filtered.map((template) => (
+                  <li key={template.id}>
+                    <button type="button" onClick={() => setSelectedId(template.id)} className="focus-ring w-full rounded-lg text-left">
+                      <Card as="article" className={selectedId === template.id ? 'border-accent' : ''}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h2 className="text-heading text-ink">{template.name}</h2>
+                            <p className="text-caption text-ink-faint">
+                              {template.weekday_label ?? 'Sin día fijo'} · {template.exercises.length} ejercicios
+                            </p>
+                          </div>
+                          <Badge tone="info">{FOCUS_LABEL[template.focus ?? ''] ?? template.focus ?? 'General'}</Badge>
+                        </div>
+                        <p className="mt-1 text-caption text-ink-muted">
+                          {template.total_sets} series · {formatNumber(template.estimated_tonnage_kg, 'kg')} de volumen
                         </p>
-                      </div>
-                      <Badge tone="info">{FOCUS_LABEL[template.focus ?? ''] ?? template.focus ?? 'General'}</Badge>
-                    </div>
-                    <p className="mt-1 text-caption text-ink-muted">
-                      {template.total_sets} series · {formatNumber(template.estimated_tonnage_kg, 'kg')} de volumen
-                    </p>
-                  </Card>
-                </button>
-              </li>
-            ))}
-          </ul>
+                      </Card>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
           <div>
             {selectedId === null ? (
@@ -92,6 +117,14 @@ export function LibraryPage() {
                 <div className="mt-3 flex flex-col gap-3">
                   {selected.data.exercises.map((item, index) => {
                     const phase = phaseFor(index, selected.data.exercises.length);
+                    const targets = item.set_targets?.length
+                      ? item.set_targets
+                      : Array.from({ length: item.sets }, (_, setIndex) => ({
+                          set_number: setIndex + 1,
+                          reps: item.reps,
+                          weight_kg: item.weight_kg,
+                        }));
+                    const volume = targets.reduce((total, target) => total + target.weight_kg * target.reps, 0);
                     return (
                       <article key={item.id} className="rounded-md border border-line bg-raised p-3">
                         <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -102,8 +135,21 @@ export function LibraryPage() {
                         </div>
                         <h3 className="text-heading text-ink">{item.exercise?.name ?? 'Ejercicio'}</h3>
                         <p className="text-caption text-ink-muted">{phase.hint}</p>
-                        <p className="mt-1 text-caption text-ink-faint">
-                          Descanso {item.rest_seconds}s
+                        <div className="mt-2 grid gap-1 sm:grid-cols-2">
+                          {targets.map((target) => (
+                            <div
+                              key={target.set_number}
+                              className="flex items-center justify-between rounded-sm border border-line/70 bg-surface px-2 py-1.5 text-caption"
+                            >
+                              <span className="text-ink-faint">Serie {target.set_number}</span>
+                              <span className="tnum font-semibold text-ink">
+                                {target.weight_kg ? `${formatNumber(target.weight_kg, 'kg')} × ${target.reps}` : ` corporal × ${target.reps}`}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="mt-2 text-caption text-ink-faint">
+                          Volumen {formatNumber(volume, 'kg')} · descanso {item.rest_seconds}s
                           {item.exercise ? ` · ${item.exercise.equipment}` : ''}
                           {item.notes ? ` · ${item.notes}` : ''}
                         </p>

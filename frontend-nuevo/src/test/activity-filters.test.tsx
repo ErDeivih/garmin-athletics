@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { installFakeApi, json } from './fakeApi';
 import { renderApp } from './renderApp';
@@ -64,6 +64,11 @@ describe('filtros de Actividades', () => {
       (item) => item.path === '/api/v1/activities' && item.query.get('q') === 'rodaje',
     );
     expect(textCall).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Desde'), { target: { value: '2026-11-01' } });
+    const dateCall = api.calls.find(
+      (item) => item.path === '/api/v1/activities' && item.query.get('from') === '2026-11-01',
+    );
+    expect(dateCall).toBeTruthy();
     expect(screen.getByRole('button', { name: /quitar filtros/i })).toBeInTheDocument();
   });
 });

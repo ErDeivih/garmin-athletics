@@ -83,6 +83,18 @@ El detector está en pausa hasta cerrar la interfaz móvil; cuando se retome:
 2. Descargar GPX y llevarlo al reloj.
 3. En el reloj debe abrirse el recorrido con su perfil de elevación.
 
+## Prueba G — Biblioteca y filtros móviles
+
+1. **Gimnasio → Biblioteca**. Filtrar por foco (Todos/Empuje/Tirón/Pierna).
+2. Abrir una rutina: debe mostrar **Activación / Bloque principal / Cierre** y, dentro de cada
+   ejercicio, una fila por serie con su peso y reps.
+3. Comprobar que el resumen del ejercicio (series × reps · peso) y el volumen coinciden.
+4. **Actividades**: filtrar por deporte, texto y rango **Desde/Hasta**; probar los atajos
+   **Últimos 30 días** y **Este mes**.
+5. Sin resultados: debe verse un estado vacío con **Quitar filtros**.
+6. Fechas invertidas: aviso claro y sin consulta rota.
+
+
 ## Evidencia
 
 | Prueba | Qué apuntar |

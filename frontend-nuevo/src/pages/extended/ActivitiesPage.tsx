@@ -38,12 +38,33 @@ function typeLabel(type: string): string {
   return TYPE_LABEL[type.toLowerCase()] ?? type;
 }
 
+function isoDay(offsetDays = 0): string {
+  const date = new Date();
+  date.setDate(date.getDate() + offsetDays);
+  return date.toISOString().slice(0, 10);
+}
+
 export function ActivitiesPage() {
   const [sport, setSport] = useState('all');
   const [search, setSearch] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const [limit, setLimit] = useState(20);
-  const filtersActive = sport !== 'all' || search.trim().length > 0;
-  const activities = useActivities({ sport, q: search, limit });
+  const rangeInvalid = Boolean(fromDate && toDate && fromDate > toDate);
+  const filtersActive = sport !== 'all' || search.trim().length > 0 || Boolean(fromDate || toDate);
+  const activities = useActivities({
+    sport,
+    q: search,
+    limit,
+    from: rangeInvalid ? undefined : fromDate || undefined,
+    to: rangeInvalid ? undefined : toDate || undefined,
+  });
+  const clearFilters = () => {
+    setSport('all');
+    setSearch('');
+    setFromDate('');
+    setToDate('');
+  };
 
   return (
     <>
@@ -59,6 +80,39 @@ export function ActivitiesPage() {
             className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-3 text-body text-ink placeholder:text-ink-faint"
           />
         </label>
+        <div className="grid grid-cols-2 gap-2">
+          <label className="flex flex-col gap-1 text-caption text-ink-muted">
+            Desde
+            <input
+              type="date"
+              value={fromDate}
+              max={toDate || undefined}
+              onChange={(event) => setFromDate(event.target.value)}
+              className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-3 text-body text-ink"
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-caption text-ink-muted">
+            Hasta
+            <input
+              type="date"
+              value={toDate}
+              min={fromDate || undefined}
+              onChange={(event) => setToDate(event.target.value)}
+              className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-3 text-body text-ink"
+            />
+          </label>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          <Button variant="secondary" onClick={() => { setFromDate(isoDay(-30)); setToDate(''); }}>
+            Últimos 30 días
+          </Button>
+          <Button variant="secondary" onClick={() => { setFromDate(`${isoDay().slice(0, 7)}-01`); setToDate(''); }}>
+            Este mes
+          </Button>
+        </div>
+        {rangeInvalid ? (
+          <p role="alert" className="text-caption text-danger">La fecha Desde no puede ser posterior a Hasta.</p>
+        ) : null}
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Deporte">
           {SPORTS.map((option) => (
             <Button
@@ -75,8 +129,7 @@ export function ActivitiesPage() {
           <button
             type="button"
             onClick={() => {
-              setSport('all');
-              setSearch('');
+              clearFilters();
             }}
             className="focus-ring self-start text-caption font-semibold text-accent underline"
           >
@@ -94,7 +147,7 @@ export function ActivitiesPage() {
           title={filtersActive ? 'Sin actividades con esos filtros' : 'Todavía no hay actividades'}
           description={
             filtersActive
-              ? 'Prueba otro deporte o borra la búsqueda.'
+              ? 'Prueba otro deporte, cambia las fechas o borra la búsqueda.'
               : 'Cuando sincronices o registres un entrenamiento, aparecerá aquí.'
           }
           action={
@@ -102,8 +155,7 @@ export function ActivitiesPage() {
               <Button
                 variant="secondary"
                 onClick={() => {
-                  setSport('all');
-                  setSearch('');
+                  clearFilters();
                 }}
               >
                 Quitar filtros

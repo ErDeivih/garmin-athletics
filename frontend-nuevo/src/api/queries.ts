@@ -331,13 +331,15 @@ export function useExercises(search = '', muscle = '', equipment = '') {
   });
 }
 
-export function useActivities(filters: { sport?: string; q?: string; limit?: number } = {}) {
+export function useActivities(filters: { sport?: string; q?: string; limit?: number; from?: string; to?: string } = {}) {
   const params = new URLSearchParams();
   params.set('limit', String(filters.limit ?? 50));
   if (filters.sport && filters.sport !== 'all') params.set('sport', filters.sport);
   if (filters.q?.trim()) params.set('q', filters.q.trim());
+  if (filters.from) params.set('from', filters.from);
+  if (filters.to) params.set('to', filters.to);
   return useQuery({
-    queryKey: [...queryKeys.activities, filters.sport ?? 'all', filters.q ?? '', filters.limit ?? 50],
+    queryKey: [...queryKeys.activities, filters.sport ?? 'all', filters.q ?? '', filters.limit ?? 50, filters.from ?? '', filters.to ?? ''],
     queryFn: () => apiFetch<ActivitySummary[]>(`/api/v1/activities/?${params.toString()}`),
   });
 }

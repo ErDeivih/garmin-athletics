@@ -24,5 +24,7 @@ describe('biblioteca de entrenamientos', () => {
     expect(await screen.findByText(/bloque principal/i)).toBeInTheDocument();
     expect(screen.getByText(/4 × 8 · 80 kg/i)).toBeInTheDocument();
     expect(screen.getByText(/descanso 150s/i)).toBeInTheDocument();
+    expect(screen.getByText(/serie 1/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/80 kg × 8/i).length).toBeGreaterThan(0);
   });
 });
