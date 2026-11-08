@@ -164,13 +164,20 @@ try {
   await page.getByRole('link', { name: /volver a gimnasio/i }).click();
   await page.getByRole('heading', { name: 'Gimnasio', exact: true }).waitFor();
 
-  // T-31: previsualización del envío al reloj (dry_run; no toca la cuenta).
-  await page.getByRole('button', { name: /preparar envío/i }).click();
-  await page.getByText(/ejercicios? · ~/i).waitFor({ timeout: 15000 });
-  await page.setViewportSize({ width: 390, height: 1600 });
+  // Envío desde Lyfta: el botón y su estado, sin depender de Garmin Connect.
+  await page.getByRole('button', { name: /^enviar al reloj$/i }).waitFor({ timeout: 15000 });
+  await page.setViewportSize({ width: 390, height: 1200 });
   await shot('07-envio-reloj');
-  await page.getByRole('button', { name: /^cerrar$/i }).click();
   await page.setViewportSize({ width: 390, height: 844 });
+
+  // Planificador móvil: pesos por serie con − / +.
+  await page.getByRole('link', { name: /editar pesos/i }).first().click();
+  await page.getByRole('heading', { name: /editar pesos/i }).waitFor();
+  await page.setViewportSize({ width: 390, height: 1600 });
+  await shot('19-editar-plan');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('link', { name: /^gimnasio$/i }).first().click();
+  await page.getByRole('heading', { name: 'Gimnasio', exact: true }).waitFor();
 
   // T-04: empezar la plantilla del día, marcar una serie y terminar la sesión
   // contra el backend real (copia). Esto crea una sesión de verdad.
@@ -187,7 +194,14 @@ try {
   await page.setViewportSize({ width: 390, height: 2000 });
   await shot('09-resumen-sesion');
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole('link', { name: /volver a gimnasio/i }).click();
+
+  // Corrección posterior de pesos reales desde el móvil.
+  await page.getByRole('link', { name: /editar pesos reales/i }).click();
+  await page.getByRole('heading', { name: /editar pesos reales/i }).waitFor();
+  await page.setViewportSize({ width: 390, height: 1600 });
+  await shot('20-editar-sesion');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('link', { name: /^gimnasio$/i }).first().click();
   await page.getByRole('heading', { name: 'Gimnasio', exact: true }).waitFor();
 
   await page.getByRole('link', { name: 'Ajustes' }).click();
