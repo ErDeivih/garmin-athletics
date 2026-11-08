@@ -103,7 +103,7 @@ El detector está en pausa hasta cerrar la interfaz móvil; cuando se retome:
 | B | `sent`, días enviados, dos entrenos el mismo día |
 | C | `activity_id`, `sets_imported`, `unmapped`, captura del historial corregido |
 | D/E | Reps por serie, % de aciertos, capturas de la watch-app |
-| F | Captura del recorrido y del perfil |
+| F | Captura del recorrido y del perfil |\n| G | Captura de biblioteca por fases y filtros de actividades |
 
 ## Ya preparado (2026-11-08)
 
