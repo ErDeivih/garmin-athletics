@@ -14,6 +14,7 @@ export function SessionEditPage() {
   const update = useUpdateSession(id ?? null);
   const [sets, setSets] = useState<EditableSet[]>([]);
   const [saved, setSaved] = useState(false);
+  const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
     if (!session.data) return;
@@ -36,23 +37,16 @@ export function SessionEditPage() {
     ));
   }, [session.data]);
 
-  if (session.isPending) return <LoadingBlock label="Cargando la sesión" />;
-  if (session.isError || !session.data) {
-    return (
-      <>
-        <PageHeader title="Editar sesión" />
-        <ErrorState message="No se pudo cargar la sesión." onRetry={() => void session.refetch()} />
-      </>
-    );
-  }
-
   const changeWeight = (index: number, delta: number) => {
     setSets((current) => current.map((row, i) =>
       i === index ? { ...row, weight_kg: Math.max(0, Math.round((row.weight_kg + delta) * 10) / 10) } : row));
     setSaved(false);
+    setDirty(true);
   };
 
-  const save = () => {    const payload: SessionInput = {
+  const save = () => {
+    if (!session.data) return;
+    const payload: SessionInput = {
       name: session.data.name,
       template_id: session.data.template_id,
       started_at: session.data.started_at,
@@ -72,8 +66,29 @@ export function SessionEditPage() {
         needs_review: item.needs_review,
       })),
     };
-    update.mutate(payload, { onSuccess: () => setSaved(true) });
+    update.mutate(payload, {
+      onSuccess: () => {
+        setSaved(true);
+        setDirty(false);
+      },
+    });
   };
+
+  useEffect(() => {
+    if (!dirty) return;
+    const timer = window.setTimeout(save, 450);
+    return () => window.clearTimeout(timer);
+  }, [dirty, sets]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (session.isPending) return <LoadingBlock label="Cargando la sesión" />;
+  if (session.isError || !session.data) {
+    return (
+      <>
+        <PageHeader title="Editar sesión" />
+        <ErrorState message="No se pudo cargar la sesión." onRetry={() => void session.refetch()} />
+      </>
+    );
+  }
 
   return (
     <>
@@ -84,7 +99,7 @@ export function SessionEditPage() {
       />
       <Card>
         <p className="mb-3 text-body text-ink-muted">
-          Ajusta el peso real con − o +. El total y las marcas se recalculan al guardar.
+          Ajusta el peso real con − o +. Se guarda solo y recalcula el total.
         </p>
         <div className="flex flex-col gap-2">
           {sets.map((item, index) => (
@@ -123,10 +138,13 @@ export function SessionEditPage() {
             </div>
           ))}
           <div className="flex items-center gap-3">
-            <Button variant="primary" onClick={save} disabled={update.isPending}>
-              {update.isPending ? 'Guardando…' : 'Guardar pesos reales'}
-            </Button>
-            {saved ? <span role="status" className="text-caption text-success">Sesión actualizada.</span> : null}
+            {update.isPending ? (
+              <span role="status" className="text-caption text-ink-muted">Guardando…</span>
+            ) : saved ? (
+              <span role="status" className="text-caption text-success">Guardado.</span>
+            ) : (
+              <span className="text-caption text-ink-muted">Toca − o + para cambiar una serie.</span>
+            )}
           </div>
           {update.isError ? <p role="alert" className="text-caption text-danger">No se pudo guardar.</p> : null}
         </div>

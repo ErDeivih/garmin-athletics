@@ -14,7 +14,7 @@ introduce David; el agente no lo pide ni lo guarda. No se activan GitHub Actions
 | 5 | Pulsar **Empezar** y hacer una serie | La serie se guarda y avanza sin pulsar OK | Hora, modelo y qué se vio |
 | 6 | Sincronizar el reloj | La actividad aparece en Lyfta / Garmin | Esperar y sincronizar; apuntar hora |
 | 7 | Importar o comprobar la actividad | Series con peso y reps en el historial | `sets_imported`, `unmapped`, id |
-| 8 | **Gimnasio → Últimas sesiones → Corregir pesos** | Cambiar una serie con − / + y guardar | Captura del error |
+| 8 | **Gimnasio → Últimas sesiones → Corregir pesos** | Cambiar una serie con − / +; se guarda solo | Captura del error |
 | 9 | **Calendario → Preparar los próximos 7 días** | `sent > 0`, sin duplicados | Apuntar `sent` y el error |
 
 ## Antes de empezar
@@ -51,8 +51,8 @@ introduce David; el agente no lo pide ni lo guarda. No se activan GitHub Actions
 1. Terminar una actividad de fuerza y sincronizar.
 2. Importar la actividad o esperar la sincronización de Lyfta.
 3. Comprobar en **Últimas sesiones** que están las series con peso y reps.
-4. **Corregir pesos**: abrir la sesión y cambiar el peso real con **− / +**. Al guardar
-   se recalcula el volumen.
+4. **Corregir pesos**: abrir la sesión y cambiar el peso real con **− / +**. Se guarda solo
+   y se recalcula el volumen.
 5. Repetir la importación: no debe duplicar la sesión.
 
 ## Prueba D — Detección automática (watch-app)

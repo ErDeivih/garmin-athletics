@@ -19,7 +19,6 @@ describe('corregir el peso real despuÃ©s de la sesiÃ³n', () => {
 
     expect(await screen.findByRole('heading', { name: /editar pesos reales/i })).toBeInTheDocument();
     await user.click(await screen.findByRole('button', { name: /subir peso serie 1 de press de banca/i }));
-    await user.click(screen.getByRole('button', { name: /guardar pesos reales/i }));
 
     await waitFor(() => {
       expect(api.calls.some((call) => call.method === 'PUT' && call.path === '/api/v1/strength/sessions/s-new')).toBe(true);
