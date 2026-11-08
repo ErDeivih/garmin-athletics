@@ -28,8 +28,8 @@ reloj y el análisis está completo.
 
 - Frontend: 41/41 pruebas en 18 ficheros.
 - Backend: 19/19 scripts (incluye perfil IMU en seco, auto-carga, watch-app, rutas y calendario recurrente).
-- Capturas: `frontend-nuevo/screenshots/` — 26 capturas nuevas y numeradas (01–26).
-- Biblioteca: fases, series y pesos por serie visibles; filtro por foco.
+- Capturas: `frontend-nuevo/screenshots/` — 29 capturas nuevas y numeradas (01–29).
+- Prueba final en seco: plan -> dry-run -> reloj -> 3 series -> sesión guardada; capturas 27–29.\n- Biblioteca: fases, series y pesos por serie visibles; filtro por foco.
 - Actividades: filtros por deporte, texto y rango Desde/Hasta con atajos de 30 días/mes.
 - Regresión visual: `npm run visual` compara planificador, envío y sesión con `pixelmatch` (4 pantallas, 0 píxeles distintos en la última pasada).
 - Envío al reloj: botón único con estado **Pendiente / Enviado / Error** y guía de sincronización; cubierto por pruebas y regresión visual.
