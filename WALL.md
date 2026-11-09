@@ -25,9 +25,12 @@ crear entrenamientos de gimnasio, llevarlos al reloj y analizar todo.
   `docs/capturas-movil/`). Ver `DESPLIEGUE.md` y `docs/revision-interfaz-movil.md`.
   Queda para cerrar del todo: HTTPS en el tailnet para service worker e instalación de
   Android (lo activa David en el panel de Tailscale).
-- [ ] Pesos por serie: el plan y el envío al reloj los respetan, pero la sesión guarda el
-  peso del ejercicio para todas las series (60/60/60 en vez de 60/65/70). Ver
-  `docs/revision-interfaz-movil.md` §5.1.
+- [x] Pesos por serie en la sesión guardada. — 2026-11-09. El borrador de «Entrenar»
+  rellenaba todas las series con la última marca o el peso del ejercicio e ignoraba
+  `set_targets`; ahora cada serie toma su objetivo (objetivo > última marca > peso del
+  ejercicio) y la sesión guarda 60/65/70 con tonelaje 1420 kg. Prueba rojo→verde en
+  `frontend-nuevo/src/test/session-pesos.test.tsx` y verificación en el despliegue con
+  capturas antes/después. Detalle en `docs/revision-interfaz-movil.md` §4.
 - [ ] Watch-app Connect IQ propia (después del camino A). — **en curso**: `watch/lyfta-watch/`
   diseñada, implementada y compilada para fr255 y 4 perfiles más; backend `/watch/today` y
   `/watch/sets` probado; sensor de repeticiones y estimación de fuerza añadidos. Capturas del
@@ -38,11 +41,11 @@ reloj y el análisis está completo.
 
 ## Evidencia
 
-- Frontend: 47/47 pruebas en 19 ficheros (incluye PWA y servido SPA).
-- Backend: 20/20 scripts (incluye perfil IMU en seco, auto-carga, watch-app, rutas, calendario recurrente y servido del frontend).
+- Frontend: 49/49 pruebas en 20 ficheros (incluye PWA, servido SPA y pesos por serie en la sesión).
+- Backend: 21/21 scripts (incluye perfil IMU en seco, auto-carga, watch-app, rutas, calendario recurrente, servido del frontend y corrección de pesos por serie).
 - Despliegue: `deploy/verify-server.sh` en verde el 2026-11-09 — salud, rutas profundas, cabeceras del service worker y datos migrados. Captura del móvil contra la URL desplegada: `frontend-nuevo/screenshots/30-despliegue-login.png`.
-- Flujo móvil contra el despliegue: `scripts/flujo-movil-desplegado.mjs` recorre plan (60/65/70) → edición guardada en servidor → `dry_run` con `unmapped: []` → envío sin credencial (400 limpio) → 3 series → sesión guardada; 8 capturas a 390 px e informe en `docs/capturas-movil/`. Hallazgo abierto: la sesión guarda 60/60/60.
-- Revisión de interfaz: `docs/revision-interfaz-movil.md` — inventario de las 6 pantallas del flujo, textos literales y 10 problemas con evidencia.
+- Flujo móvil contra el despliegue: `scripts/flujo-movil-desplegado.mjs` recorre plan (60/65/70) → edición guardada en servidor → `dry_run` con `unmapped: []` → envío sin credencial (400 limpio) → 3 series → sesión guardada **con 60/65/70** (`coincide: true`); 8 capturas a 390 px e informe en `docs/capturas-movil/`, con las de antes en `antes/`.
+- Revisión de interfaz: `docs/revision-interfaz-movil.md` — inventario de las 6 pantallas del flujo, textos literales, 10 problemas con evidencia y el antes/después del arreglo de pesos por serie.
 - Capturas: `frontend-nuevo/screenshots/` — 29 capturas nuevas y numeradas (01–29).
 - Prueba final en seco: plan -> dry-run -> reloj -> 3 series -> sesión guardada; capturas 27–29.\n- Biblioteca: fases, series y pesos por serie visibles; filtro por foco.
 - Actividades: filtros por deporte, texto y rango Desde/Hasta con atajos de 30 días/mes.

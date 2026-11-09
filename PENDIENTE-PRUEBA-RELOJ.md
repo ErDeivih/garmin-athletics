@@ -17,9 +17,10 @@ código»** o **«no verificado en el repo»**.
 > 3. El 2026-11-09 se recorrió el flujo completo **contra el despliegue** (instancia
 >    desechable, capturas en `docs/capturas-movil/`): planificar 60/65/70, editar, mapeo
 >    `dry_run` con `unmapped: []`, envío sin credencial (400 limpio), 3 series y sesión
->    guardada. Todo correcto **salvo** un hallazgo que afecta a la prueba C: la sesión
->    guarda 60/60/60 en vez de 60/65/70 porque `SessionPage.tsx:115-116` ignora los
->    objetivos por serie. Detalle en `docs/revision-interfaz-movil.md` (problema 1).
+>    guardada **con 60/65/70**. En esa misma pasada se detectó un fallo (la sesión
+>    guardaba 60/60/60 porque el borrador ignoraba los objetivos por serie) que ya está
+>    corregido y verificado, con prueba rojo → verde; ver `docs/revision-interfaz-movil.md`
+>    §4.
 > 4. **Falta exactamente esto, y solo David puede hacerlo**: (a) reloj fr255 cargado y
 >    emparejado + sincronizar en Garmin Connect; (b) 2FA de Garmin delante, la primera
 >    vez que se vincule la cuenta desde el móvil; (c) pulsar «Enviar al reloj» y mirar la

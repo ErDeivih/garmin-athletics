@@ -92,6 +92,8 @@ function buildDraft(
     reps: number;
     weightKg: number;
     restSeconds: number;
+    /** Objetivo por serie del plan: manda sobre la última marca. */
+    setTargets?: { weight_kg: number; reps: number }[];
   }[],
   marks: Record<string, { weight_kg: number; reps: number; date: string | null } | undefined>,
 ): SessionDraft {
@@ -112,13 +114,21 @@ function buildDraft(
         targetSets: exercise.sets,
         targetReps: exercise.reps,
         previous,
-        sets: Array.from({ length: Math.max(1, exercise.sets) }, () => ({
-          weight: String(mark?.weight_kg ?? exercise.weightKg ?? ''),
-          reps: String(mark?.reps ?? exercise.reps ?? ''),
-          rpe: '',
-          done: false,
-          completedAt: null,
-        })),
+        // Prioridad: objetivo de esa serie en el plan > última marca > peso del
+        // ejercicio. Sin esto, un plan 60/65/70 se convertía en 60/60/60 en la
+        // sesión y se guardaba con los pesos equivocados.
+        sets: Array.from({ length: Math.max(1, exercise.sets) }, (_, index) => {
+          const objetivo = exercise.setTargets?.[index];
+          const peso = objetivo?.weight_kg ?? mark?.weight_kg ?? exercise.weightKg;
+          const reps = objetivo?.reps ?? mark?.reps ?? exercise.reps;
+          return {
+            weight: peso === undefined || peso === null ? '' : String(peso),
+            reps: reps === undefined || reps === null ? '' : String(reps),
+            rpe: '',
+            done: false,
+            completedAt: null,
+          };
+        }),
       };
     }),
   };
@@ -271,6 +281,7 @@ export function SessionPage() {
             reps: item.reps,
             weightKg: item.weight_kg,
             restSeconds: item.rest_seconds,
+            setTargets: item.set_targets,
           }]
         : [],
     );

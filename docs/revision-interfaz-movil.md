@@ -1,9 +1,9 @@
 # Revisión de interfaz móvil — Lyfta
 
-Fecha: 2026-11-09. Ámbito: app desplegada (no una copia local). Este documento sirve
-para que un revisor externo juzgue la interfaz sin acceso al proyecto: qué pantallas
-hay, qué textos exactos muestran, qué estados existen y diez problemas concretos con
-evidencia.
+Fecha: 2026-11-09 (actualizado tras el arreglo de pesos por serie del mismo día). Ámbito:
+app desplegada (no una copia local). Este documento sirve para que un revisor externo
+juzgue la interfaz sin acceso al proyecto: qué pantallas hay, qué textos exactos
+muestran, qué estados existen y diez problemas concretos con evidencia.
 
 ## Cómo se ha generado
 
@@ -17,6 +17,8 @@ evidencia.
 - Capturas a **390 × 844 CSS** (viewport real de móvil, densidad 2 → PNG de 780 × 1688).
   Sin `fullPage`: con la página entera la barra fija se pinta a media altura y parece
   que tapa contenido (artefacto, no fallo).
+- Las capturas de este directorio son las de **después** del arreglo de pesos por serie.
+  Las de **antes** están en `antes/`, y el informe anterior en `informe-flujo-antes.json`.
 - Datos del recorrido: `docs/capturas-movil/informe-flujo.json`.
 
 ## 1. Cómo se abre desde el móvil
@@ -104,10 +106,14 @@ No existe: confirmación al terminar sesión, estado persistido del envío, avis
 | `04-envio-pendiente.png` | Bloque de envío en estado «PENDIENTE» |
 | `05-envio-error.png` | Bloque de envío en «ERROR» con «Reintentar» |
 | `06-entrenar.png` | Sesión en curso con las tres series marcadas |
-| `07-sesion-terminada.png` | Resumen: 1440 kg, 3 series, reparto muscular |
-| `08-sesion-guardada.png` | Edición posterior de pesos reales (60/60/60) |
+| `07-sesion-terminada.png` | Resumen: 1420 kg, 3 series (60/65/70), reparto muscular |
+| `08-sesion-guardada.png` | Edición posterior de pesos reales (60/65/70) |
 
 ## 4. Qué pasó al recorrer el flujo contra el despliegue
+
+Resultado de la pasada **después del arreglo** (2026-11-09 19:45). Las capturas de este
+directorio son las de después; las de antes están en `antes/` y el informe anterior en
+`informe-flujo-antes.json`.
 
 | Comprobación | Resultado |
 |---|---|
@@ -118,41 +124,75 @@ No existe: confirmación al terminar sesión, estado persistido del envío, avis
 | Mapeo del entreno con `dry_run` | OK: `dry_run`, `unmapped: []`, los tres pesos en el payload |
 | Enviar al reloj sin credencial de Garmin | 400 limpio, la UI muestra «No se pudo enviar» |
 | 3 series ejecutadas y sesión guardada | OK: 3 series |
-| **Pesos por serie en la sesión guardada** | **FALLO: 60/60/60 en vez de 60/65/70** |
+| Pesos y reps por serie en la sesión guardada | **OK: 60/65/70 y 8/8/6** (antes 60/60/60 y 8/8/8) |
+| Corregir después de entrenar | OK: 62,5/67,5/72,5 persisten y el tonelaje pasa de 1420 a 1475 |
 
-El fallo de la última fila es el hallazgo importante de esta pasada (problema 1).
+### Antes y después (2026-11-09)
+
+El plan decía 60/65/70 kg y 8/8/6 reps. Esto es lo que se guardaba antes y lo que se
+guarda ahora:
+
+| Captura | Antes (`antes/`) | Después |
+|---|---|---|
+| `06-entrenar.png` | 60 / 60 / 60 kg · 8 / 8 / 8 reps | **60 / 65 / 70 kg · 8 / 8 / 6 reps** |
+| `07-sesion-terminada.png` | «PESO MOVIDO 1440 kg», series 60 × 8 | **«PESO MOVIDO 1420 kg»**, series 60×8, 65×8, 70×6 |
+| `08-sesion-guardada.png` | filas a 60 / 60 / 60 | **filas a 60 / 65 / 70** |
+| `informe-flujo.json` | `pesos: [60,60,60]`, `coincide: false` | **`pesos: [60,65,70]`, `coincide: true`, `resultado: OK`** |
+
+**Causa.** `buildDraft` (`SessionPage.tsx`) creaba todas las series con
+`mark?.weight_kg ?? exercise.weightKg`, es decir, el peso de la última marca o el del
+ejercicio; el objetivo por serie (`set_targets`) ni siquiera se pasaba al borrador
+(`SessionPage.tsx:270-272`). Se perdía en la pantalla de entrenar: el plan y el envío al
+reloj sí llevaban los tres pesos.
+
+**Arreglo.** El borrador recibe `set_targets` y cada serie toma su objetivo
+(`setTargets[index].weight_kg` y `.reps`), con esta prioridad: **objetivo de la serie >
+última marca > peso del ejercicio**. Así un plan 60/65/70 se entrena y se guarda como
+60/65/70, y si no hay objetivos se mantiene el respaldo anterior.
+
+**Prueba rojo → verde.**
+`frontend-nuevo/src/test/session-pesos.test.tsx` recorre el camino real (plantilla con
+`set_targets` → pantalla de entrenar → POST de la sesión) y comprueba los campos y el
+cuerpo enviado. Antes del arreglo falla en la primera serie (`esperado 60`, recibido
+82,5) y después pasa (2/2). El segundo caso fija el respaldo con la última marca.
+`tests/test_session_weight_correction.py` cubre el camino HTTP completo de la corrección
+posterior: guardar 60/65/70, corregir a 62,5/67,5/72,5, releer y comprobar tonelaje.
+
 
 ## 5. Diez problemas concretos
 
-### 1. Los pesos por serie del plan no llegan a la sesión: se guarda 60/60/60
+### 1. Los pesos por serie del plan no llegaban a la sesión — **resuelto el 2026-11-09**
 
-**Evidencia.** Capturas `03-plan-pesos.png` (el plan dice 60, 65 y 70) y
-`06-entrenar.png` / `08-sesion-guardada.png` (las tres series salen a 60). Registro
-`informe-flujo.json`: `pesos: [60,60,60]`, `esperado: [60,65,70]`. Código:
-`SessionPage.tsx:115-116` construye las series con `String(mark?.weight_kg ??
-exercise.weightKg ?? '')` — el peso de la última marca o el del ejercicio, **ignorando
-`set_targets`**; `SessionPage.tsx:270-272` ni siquiera pasa los objetivos por serie al
-borrador.
+**Qué pasaba.** Con el plan a 60/65/70, la pantalla de entrenar rellenaba las tres series
+con 60 y la sesión se guardaba 60/60/60. Evidencia de antes: `antes/06-entrenar.png`,
+`antes/08-sesion-guardada.png` e `informe-flujo-antes.json` (`pesos: [60,60,60]`).
+Código: `buildDraft` usaba `mark?.weight_kg ?? exercise.weightKg` e ignoraba
+`set_targets`, que ni se pasaba al borrador.
 
-**Por qué duele.** Es el corazón del producto: planificas una serie de aproximación a 60,
-una de trabajo a 65 y una de tope a 70, y al entrenar la app te pone 60 en las tres. Si
-no lo corriges a mano, el historial miente y el volumen sale mal (1440 kg en vez de 1420).
+**Causa.** No se perdía ni en el envío ni en el reloj: el plan y el `dry_run` llevaban
+los tres pesos. Se perdía al montar el borrador de la sesión, en el móvil.
 
-**Arreglo.** Al montar el borrador, usar el `weight_kg`/`reps` de `set_targets[index]`
-cuando exista, y dejar el peso del ejercicio solo como respaldo. La pantalla ya tiene el
-dato: el editor lo pinta.
+**Arreglo.** El borrador recibe `set_targets` y cada serie toma su objetivo, con
+prioridad **objetivo de la serie > última marca > peso del ejercicio**.
 
-### 2. Las repeticiones por serie tampoco llegan, y el plan lo esconde
+**Prueba.** `src/test/session-pesos.test.tsx` (rojo antes: esperaba 60 y recibía 82,5;
+verde después: 2/2) sobre el camino real plantilla → borrador → POST de sesión.
+Verificado además contra el despliegue: `06-entrenar.png`, `07-sesion-terminada.png`
+(1420 kg) y `08-sesion-guardada.png` ya con 60/65/70, e `informe-flujo.json` con
+`coincide: true`.
 
-**Evidencia.** El plan se creó con reps 8/8/6 y en `06-entrenar.png` las tres filas
-muestran 8. En `03-plan-pesos.png` la cabecera dice «3 × 8», que es solo el valor del
-ejercicio (`PlanEditorPage.tsx:120`), aunque las series tengan reps distintas.
+### 2. Las repeticiones por serie tampoco llegaban, y el plan lo esconde — **mitad resuelto**
 
-**Por qué duele.** Misma consecuencia que el problema 1: la sesión guardada no reproduce
-lo planificado, y la cabecera del plan da una información que no es cierta.
+**Evidencia.** El plan se creó con reps 8/8/6 y en `antes/06-entrenar.png` las tres filas
+mostraban 8. Tras el arreglo del problema 1, las reps ya se guardan (8/8/6, visible en
+`08-sesion-guardada.png`). Lo que **sigue** mal es la cabecera del plan, que dice «3 × 8»
+(`PlanEditorPage.tsx:120`) aunque las series tengan reps distintas.
 
-**Arreglo.** Igual que el 1 para las reps; y en la cabecera, mostrar «3 series · 8/8/6»
-cuando los objetivos no coincidan, o quitar el «× reps» si no es representativo.
+**Por qué duele.** La sesión ya reproduce el plan, pero el plan se describe a sí mismo de
+forma engañosa.
+
+**Arreglo pendiente.** Mostrar «3 series · 8/8/6» cuando los objetivos no coincidan, o
+quitar el «× reps» si no es representativo. Cambio pequeño y aislado en el editor.
 
 ### 3. «Objetivo 3×8» en Entrenar no dice cuál toca en cada serie
 

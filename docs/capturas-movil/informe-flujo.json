@@ -1,7 +1,7 @@
 {
   "app": "http://192.168.1.139:8011",
-  "cuenta": "flujo+1794246249966@example.com",
-  "plantilla": "0ef41d9e-d4f9-431a-b327-1364f9b1d3e5",
+  "cuenta": "flujo+1794249504207@example.com",
+  "plantilla": "8cc44b0d-e914-4b36-8309-9dcf1079f392",
   "checks": {
     "plantilla_creada": "set_targets=60/65/70",
     "titulo": "Lyfta",
@@ -18,19 +18,19 @@
       "esperado": 400
     },
     "sesion_guardada": {
-      "id": "1e5c2c6d-864f-4874-839c-5fc63238d940",
+      "id": "238feb16-3751-4878-8e4a-bd0957b01cd4",
       "series": 3,
       "pesos": [
         60,
-        60,
-        60
+        65,
+        70
       ],
       "esperado": [
         60,
         65,
         70
       ],
-      "coincide": false
+      "coincide": true
     },
     "errores_consola_esperados": 1
   },
@@ -47,5 +47,5 @@
   "erroresConsola": [
     "Failed to load resource: the server responded with a status of 400 (Bad Request)"
   ],
-  "resultado": "OK con hallazgo: la sesión no guarda los pesos por serie"
+  "resultado": "OK"
 }
