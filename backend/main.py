@@ -36,15 +36,13 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
-# Configuración de CORS (orígenes explícitos: '*' es incompatible con allow_credentials)
+# Configuración de CORS (orígenes explícitos: '*' es incompatible con allow_credentials).
+# En el despliegue de un solo origen la app llama a su propio host y CORS no
+# interviene; ALLOWED_ORIGINS sirve para pruebas y para un frontend aparte.
+_origins = [origen.strip() for origen in settings.ALLOWED_ORIGINS.split(",") if origen.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -91,39 +89,102 @@ def healthz():
     return {"status": "ok"}
 
 
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
-import os
+from fastapi.responses import FileResponse, JSONResponse
+from pathlib import Path
 
-# Servir el build del frontend (frontend/dist). En dev (vite) se usa el proxy.
-BASE_DIR = os.path.dirname(__file__)
-DIST_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "frontend", "dist"))
-ASSETS_DIR = os.path.join(DIST_DIR, "assets")
-if os.path.isdir(ASSETS_DIR):
-    app.mount("/assets", StaticFiles(directory=ASSETS_DIR), name="assets")
+# Servir el build del frontend en el mismo origen que la API: el móvil necesita
+# una sola URL y el service worker un único origen que cachear. En desarrollo se
+# usa Vite con su proxy y esto no interviene.
+mimetypes.add_type("application/manifest+json", ".webmanifest")
 
-frontend_dir = DIST_DIR
+BASE_DIR = Path(__file__).resolve().parent
 
 
-@app.get("/", summary="Dashboard Principal UI")
+def _resolve_dist_dir() -> Path:
+    """Build a servir: `FRONTEND_DIST_DIR` si se define; si no, el más nuevo."""
+    configured = settings.FRONTEND_DIST_DIR.strip()
+    if configured:
+        return Path(configured).expanduser().resolve()
+    for candidate in (BASE_DIR.parent / "frontend-nuevo" / "dist", BASE_DIR.parent / "frontend" / "dist"):
+        if (candidate / "index.html").is_file():
+            return candidate.resolve()
+    return (BASE_DIR.parent / "frontend-nuevo" / "dist").resolve()
+
+
+DIST_DIR = _resolve_dist_dir()
+
+# Rutas que nunca deben devolver el shell HTML: la API y la documentación.
+_API_PREFIXES = ("/api/", "/docs", "/redoc", "/openapi.json")
+
+
+def _index_response() -> FileResponse:
+    # Sin caché: el shell HTML debe ser siempre fresco; los bundles llevan hash
+    # en el nombre y se cachean sin problema.
+    return FileResponse(
+        DIST_DIR / "index.html",
+        media_type="text/html",
+        headers={"Cache-Control": "no-cache"},
+    )
+
+
+@app.api_route("/", methods=["GET", "HEAD"], summary="Aplicación web de Lyfta")
 def root():
-    index_path = os.path.join(frontend_dir, "index.html")
-    if os.path.exists(index_path):
-        # Sin caché: el shell HTML debe ser siempre fresco; los bundles
-        # llevan hash en el nombre y se cachean sin problema.
-        return FileResponse(index_path, headers={"Cache-Control": "no-cache"})
+    if (DIST_DIR / "index.html").is_file():
+        return _index_response()
     return {
         "status": "online",
         "app": settings.PROJECT_NAME,
         "version": settings.VERSION,
-        "docs_url": "/docs"
+        "docs_url": "/docs",
+        "frontend": None,
     }
 
 
-# Fallback SPA: sirve favicon.svg, icons.svg y cualquier ruta del frontend
-# compilado. Va el último para no tapar /api/*, /docs ni /healthz.
-if os.path.isdir(DIST_DIR):
-    app.mount("/", StaticFiles(directory=DIST_DIR, html=True), name="frontend")
+@app.api_route("/{full_path:path}", methods=["GET", "HEAD"], include_in_schema=False)
+def frontend_files(full_path: str):
+    """Ficheros del build y *fallback* SPA para las rutas profundas.
+
+    `/gimnasio` o `/gimnasio/sesiones/{id}` no son ficheros: el móvil los abre
+    (recarga, Atrás, icono de la pantalla de inicio) y deben devolver el shell.
+    Un asset inexistente, en cambio, es un 404 seco: nada de disfrazarlo de HTML.
+    """
+    # Starlette entrega el comodín sin la barra inicial.
+    path = "/" + full_path
+    if path.startswith(_API_PREFIXES):
+        return JSONResponse({"detail": "Not Found"}, status_code=404)
+
+    index = DIST_DIR / "index.html"
+    if not index.is_file():
+        return JSONResponse(
+            {"detail": "El frontend no está compilado en este servidor."},
+            status_code=404,
+        )
+
+    try:
+        target = (DIST_DIR / full_path).resolve()
+    except (OSError, ValueError):
+        return JSONResponse({"detail": "Not Found"}, status_code=404)
+    # Sin salir del directorio del build (path traversal).
+    if target != DIST_DIR and DIST_DIR not in target.parents:
+        return JSONResponse({"detail": "Not Found"}, status_code=404)
+
+    if target.is_file():
+        headers = {}
+        if full_path in ("sw.js", "manifest.webmanifest"):
+            # El service worker y el manifiesto no pueden quedarse pegados en caché.
+            headers["Cache-Control"] = "no-cache"
+        elif full_path.startswith("assets/"):
+            # Los bundles llevan hash en el nombre: se pueden cachear para siempre.
+            headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        else:
+            headers["Cache-Control"] = "no-cache"
+        return FileResponse(target, headers=headers)
+
+    # Ruta de navegación (sin extensión) o la raíz: el shell de la SPA.
+    if target.suffix == "":
+        return _index_response()
+    return JSONResponse({"detail": "Not Found"}, status_code=404)
+
 
 if __name__ == "__main__":
     import uvicorn

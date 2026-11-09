@@ -3,6 +3,13 @@
 Lista de una pasada para cuando David tenga el reloj y el móvil delante. El 2FA lo
 introduce David; el agente no lo pide ni lo guarda. No se activan GitHub Actions.
 
+> **Actualización 2026-11-09 — el backend ya está desplegado.** No hay que arrancar
+> nada en el PC: Lyfta vive en el servidor de casa y se abre desde el móvil en
+> **`http://100.117.58.93:8010`** (con Tailscale encendido; ver `DESPLIEGUE.md`). El
+> backend de este guion **solo** se usa para pruebas con base efímera: arrancarlo
+> contra los mismos tokens de Garmin que el servidor invalida la sesión, porque los
+> tokens se renuevan al usarlos. Un solo backend por cuenta.
+
 ## Checklist
 
 | # | Acción | Debe verse | Si falla |

@@ -3,7 +3,10 @@ uvicorn>=0.28.0
 pydantic>=2.6.0
 pydantic-settings>=2.2.0
 garminconnect>=0.3.11
-sqlalchemy>=2.0.0
+# [asyncio] trae greenlet: sin él, `sqlalchemy.ext.asyncio` falla al importar.
+# En el venv local estaba instalado como dependencia suelta, así que la imagen
+# del servidor arrancaba sin él y no levantaba.
+sqlalchemy[asyncio]>=2.0.0
 aiosqlite>=0.20.0
 python-dotenv>=1.0.0
 httpx>=0.27.0

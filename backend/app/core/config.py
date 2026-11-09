@@ -20,6 +20,17 @@ class Settings(BaseSettings):
     # Auth (multiusuario / social)
     SECRET_KEY: str = "dev-secret-change-me"
 
+    # Despliegue web: build del frontend que sirve la API en el mismo origen.
+    # Vacío = se elige solo: frontend-nuevo/dist si existe, si no frontend/dist.
+    FRONTEND_DIST_DIR: str = ""
+
+    # Orígenes permitidos para el navegador (coma separada). En el despliegue de
+    # un solo origen no hace falta ninguno: la app llama a su propio host.
+    ALLOWED_ORIGINS: str = (
+        "http://localhost:8000,http://127.0.0.1:8000,"
+        "http://localhost:5173,http://127.0.0.1:5173"
+    )
+
     class Config:
         env_file = ".env"
         extra = "ignore"

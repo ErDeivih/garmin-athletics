@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "tokens": "node scripts/sync-tokens.mjs",
     "tokens:check": "node scripts/sync-tokens.mjs --check",
+    "icons": "node scripts/make-icons.mjs",
     "contrast": "node scripts/check-contrast.mjs",
     "scale": "node scripts/check-scale.mjs",
     "verify:api": "node scripts/verify-api.mjs",

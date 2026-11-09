@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { installFakeApi, json } from './fakeApi';
 import { renderApp } from './renderApp';
@@ -29,7 +29,9 @@ describe('moverse por la app', () => {
 
     await user.click(screen.getByRole('link', { name: 'Gimnasio' }));
     expect(await screen.findByRole('heading', { name: 'Gimnasio' })).toBeInTheDocument();
-    expect(await screen.findByText('Empuje A')).toBeInTheDocument();
+    // «Empuje A» sale dos veces legítimamente: en «Hoy toca» y en «Tus plantillas».
+    const plantillas = await screen.findByRole('region', { name: 'Plantillas' });
+    expect(within(plantillas).getAllByText('Empuje A').length).toBeGreaterThan(0);
 
     await user.click(screen.getByRole('link', { name: 'Ajustes' }));
     expect(await screen.findByRole('heading', { name: 'Ajustes' })).toBeInTheDocument();

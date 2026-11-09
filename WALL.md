@@ -16,6 +16,12 @@ crear entrenamientos de gimnasio, llevarlos al reloj y analizar todo.
   calorías, carga), zonas de FC, recorrido, FC/ritmo/altitud/velocidad, parciales, vueltas y meteo;
   las gráficas sin datos no se pintan.
 - [ ] Prueba real en el Forerunner 255 (necesita 2FA de David).
+- [x] Despliegue web para el móvil. — 2026-11-09. La app y la API se sirven desde el
+  servidor de casa en `http://100.117.58.93:8010` (solo IP del tailnet, nada expuesto a
+  Internet), con manifiesto e iconos PWA, fallback de rutas profundas y la base de David
+  migrada (46 actividades, plantilla, credencial de Garmin). Ver `DESPLIEGUE.md`.
+  Queda para cerrar del todo: HTTPS en el tailnet para que el service worker y la
+  instalación de Android funcionen (lo activa David en el panel de Tailscale).
 - [ ] Watch-app Connect IQ propia (después del camino A). — **en curso**: `watch/lyfta-watch/`
   diseñada, implementada y compilada para fr255 y 4 perfiles más; backend `/watch/today` y
   `/watch/sets` probado; sensor de repeticiones y estimación de fuerza añadidos. Capturas del
@@ -26,8 +32,9 @@ reloj y el análisis está completo.
 
 ## Evidencia
 
-- Frontend: 41/41 pruebas en 18 ficheros.
-- Backend: 19/19 scripts (incluye perfil IMU en seco, auto-carga, watch-app, rutas y calendario recurrente).
+- Frontend: 47/47 pruebas en 19 ficheros (incluye PWA y servido SPA).
+- Backend: 20/20 scripts (incluye perfil IMU en seco, auto-carga, watch-app, rutas, calendario recurrente y servido del frontend).
+- Despliegue: `deploy/verify-server.sh` en verde el 2026-11-09 — salud, rutas profundas, cabeceras del service worker y datos migrados. Captura del móvil contra la URL desplegada: `frontend-nuevo/screenshots/30-despliegue-login.png`.
 - Capturas: `frontend-nuevo/screenshots/` — 29 capturas nuevas y numeradas (01–29).
 - Prueba final en seco: plan -> dry-run -> reloj -> 3 series -> sesión guardada; capturas 27–29.\n- Biblioteca: fases, series y pesos por serie visibles; filtro por foco.
 - Actividades: filtros por deporte, texto y rango Desde/Hasta con atajos de 30 días/mes.

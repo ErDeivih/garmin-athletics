@@ -40,3 +40,6 @@ logs/
 .ruff_cache/
 tmp/
 frontend-nuevo/screenshots/visual/
+
+# Estado del despliegue en el servidor (base, tokens y tracks viven fuera del repo)
+deploy/var/

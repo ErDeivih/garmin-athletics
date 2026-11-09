@@ -1,3 +1,4 @@
+# Contexto de build: solo lo que necesita la imagen (API + build del frontend).
 venv/
 __pycache__/
 *.pyc
@@ -12,3 +13,15 @@ frontend/dist/
 .git/
 tests/__pycache__/
 backend/__pycache__/
+
+# Ruido que engordaría el contexto sin servir para nada.
+frontend-nuevo/node_modules/
+frontend-nuevo/dist/
+frontend-nuevo/screenshots/
+frontend-nuevo/scripts/
+research/
+designs/
+watch/
+tests/
+prueba.tmp
+*.md

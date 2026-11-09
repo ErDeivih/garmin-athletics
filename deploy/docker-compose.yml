@@ -1,0 +1,47 @@
+# Lyfta en el servidor: un contenedor, una URL.
+#
+#   cd deploy && docker compose up -d --build
+#
+# El puerto se publica SOLO en la IP del tailnet (no en 0.0.0.0): la app queda
+# accesible desde el móvil con Tailscale encendido, en cualquier red, sin abrir
+# nada a Internet ni depender de la red de casa.
+
+name: lyfta
+
+services:
+  lyfta:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: lyfta:local
+    container_name: lyfta
+    restart: unless-stopped
+
+    # Mismo uid/gid que David en el servidor: puede escribir la base de datos y
+    # los tokens de Garmin del volumen sin permisos raros.
+    user: "1000:1000"
+
+    env_file:
+      - .env
+
+    environment:
+      HOME: /tmp
+      DATABASE_URL: sqlite+aiosqlite:////var/lib/lyfta/lyfta.db
+      GARMIN_TOKENS_DIR: /var/lib/lyfta/garmin_tokens
+      TRACKS_DIR: /var/lib/lyfta/data
+      FRONTEND_DIST_DIR: /app/frontend-nuevo/dist
+
+    ports:
+      # LYFTA_BIND y LYFTA_PORT se leen de deploy/.env
+      - "${LYFTA_BIND}:${LYFTA_PORT}:8000"
+
+    volumes:
+      # Base de datos, tokens de Garmin y tracks GPS: lo único que hay que
+      # conservar entre despliegues.
+      - ./var:/var/lib/lyfta
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

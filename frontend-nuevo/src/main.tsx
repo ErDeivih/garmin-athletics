@@ -20,3 +20,16 @@ createRoot(rootElement).render(
     <App />
   </StrictMode>,
 );
+
+// La app instalada abre desde el icono del móvil: el service worker guarda el
+// shell para que arranque sin cobertura y sirve los assets ya descargados. En
+// desarrollo no se registra, para no servir una versión vieja mientras se
+// programa. Si el navegador no lo soporta (o el contexto no es seguro, por
+// ejemplo una IP sin HTTPS) la app funciona igual: solo pierde el offline.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // sin service worker no se rompe nada
+    });
+  });
+}
