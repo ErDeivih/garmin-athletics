@@ -1,0 +1,292 @@
+# Revisión de interfaz móvil — Lyfta
+
+Fecha: 2026-11-09. Ámbito: app desplegada (no una copia local). Este documento sirve
+para que un revisor externo juzgue la interfaz sin acceso al proyecto: qué pantallas
+hay, qué textos exactos muestran, qué estados existen y diez problemas concretos con
+evidencia.
+
+## Cómo se ha generado
+
+- La app se sirve desde el **servidor de casa** con la imagen que está en producción y
+  una **copia desechable** de la base de datos (sin credencial de Garmin y sin eventos
+  de calendario, para que ningún envío pueda salir hacia el reloj). Esa copia se retira
+  al terminar; no queda ningún servidor extra abierto.
+- El recorrido es automático (Playwright, Chrome real) y recorre el flujo entero:
+  planificar pesos por serie → editarlos → enviar al reloj → entrenar → sesión
+  guardada. Guion: `frontend-nuevo/scripts/flujo-movil-desplegado.mjs`.
+- Capturas a **390 × 844 CSS** (viewport real de móvil, densidad 2 → PNG de 780 × 1688).
+  Sin `fullPage`: con la página entera la barra fija se pinta a media altura y parece
+  que tapa contenido (artefacto, no fallo).
+- Datos del recorrido: `docs/capturas-movil/informe-flujo.json`.
+
+## 1. Cómo se abre desde el móvil
+
+| Desde | URL | Requisito |
+|---|---|---|
+| Casa, misma wifi | `http://192.168.1.139:8010` | Ninguno |
+| Cualquier sitio | `http://100.117.58.93:8010` | Tailscale encendido en el móvil |
+
+Comprobado desde otro equipo de la red local y desde otro nodo del tailnet (200 en `/`,
+`/gimnasio` y `/manifest.webmanifest`; login con credenciales falsas devuelve 401 JSON).
+El túnel es **Tailscale** (WireGuard, cifrado extremo a extremo, sin abrir puertos en el
+router). Cloudflare Tunnel no se usa: `cloudflared` no está instalado y el servidor no
+resuelve nombres. Detalle y runbook en `DESPLIEGUE.md`.
+
+Las capturas `00-login-tailnet.png` y `01-login-movil.png` son la misma pantalla por las
+dos puertas.
+
+## 2. Inventario de las pantallas del flujo
+
+| # | Pantalla | Ruta | Para qué | Captura |
+|---|---|---|---|---|
+| 1 | Gimnasio | `/gimnasio` | Punto de partida: entreno de hoy, envío al reloj, plantillas y últimas sesiones | `02-gimnasio-movil.png` |
+| 2 | Editar pesos (plan) | `/gimnasio/plantillas/:id` | Peso de cada serie con − / +, guardado automático | `03-plan-pesos.png` |
+| 3 | Enviar al reloj | bloque dentro de `/gimnasio` | Botón único, estado del envío y guía de sincronización | `04-envio-pendiente.png`, `05-envio-error.png` |
+| 4 | Entrenar | `/gimnasio/entrenar?template=:id` | Ejecutar la sesión: peso, reps, esfuerzo y «Hecha» por serie | `06-entrenar.png` |
+| 5 | Sesión terminada | estado de la misma ruta | Resumen: volumen, series, reparto y enlaces | `07-sesion-terminada.png` |
+| 6 | Editar pesos reales | `/gimnasio/sesiones/:id` | Corregir el peso real por serie después de entrenar | `08-sesion-guardada.png` |
+
+### Textos exactos por pantalla
+
+**Gimnasio.** Título «GIMNASIO»; subtítulo «Tu entreno de hoy, tus plantillas y tu
+historial.»; acciones «Biblioteca» y «Catálogo». Tarjeta «Hoy toca» con «Lunes»,
+«EMPUJE A», «1 ejercicios · 3 series · 1420 kg», botón «Empezar sesión» y una insignia
+«SERIES, DESCANSO Y ESFUERZO». Bloque «Enviar al reloj»: «1 ejercicios · 3 series»,
+enlace «Editar pesos», «Estado del envío» + insignia «PENDIENTE» / «ERROR» / «Enviado»,
+botón «Enviar al reloj», pie «Tú decides cuándo; el reloj solo muestra el objetivo.».
+Después «Tus plantillas» («1 en total»), tarjeta «Empuje A», «Lunes · 1 ejercicios ·
+3 series», «1420 kg», botones «Pesos» y «Empezar». Cierra «Últimas sesiones» («5
+últimas») con el vacío «Todavía no hay sesiones».
+
+**Editar pesos.** «EDITAR PESOS»; «Empuje A · toca − o + en cada serie»; enlace
+«Gimnasio»; «Los cambios se guardan solos.» → tras editar, «Guardado a las 18:44:12».
+Por ejercicio: «Press de banca con barra» y «3 × 8»; filas «Serie 1/2/3» con
+«60 kg», «65 kg», «70 kg» y botones − / +.
+
+**Enviar al reloj (error).** Insignia «ERROR»; tarjeta «No se pudo enviar»; «Acerca el
+reloj, sincroniza y vuelve a intentarlo.»; botón «Reintentar».
+
+**Entrenar.** «ENTRENAR»; «Empuje A · 0:02 · 3 series hechas»; botones «Descartar»
+(rojo) y «Terminar sesión» (cian) arriba; «DESCANSO 1:00» + «Sigue aunque bloquees el
+móvil»; tarjeta «Press de banca con barra» + «3/3 SERIES»; «Objetivo 3×8 · descanso 60s ·
+sin marca anterior»; «Press horizontal»; cabeceras «Serie / Peso (kg) / Reps / Esfuerzo /
+Hecha»; al pie, otra vez «Descartar sesión» y «Terminar sesión».
+
+**Sesión terminada.** «SESIÓN TERMINADA»; «Empuje A»; «Editar pesos reales» y «Volver a
+Gimnasio»; «PESO MOVIDO 1440 kg»; «SERIES 3»; «Reparto muscular» → «pecho 1440 kg»;
+«Series registradas» → «Serie 1/2/3 → 60 kg × 8»; «Guardada en tu historial.».
+
+**Editar pesos reales.** «EDITAR PESOS REALES»; «Empuje A · 09 nov»; «Gimnasio»;
+«Ajusta el peso real con − o +. Se guarda solo y recalcula el total.»; filas «Press de
+banca con barra · Serie 1/2/3» con «60 kg × 8»; pie «Toca − o + para cambiar una serie.».
+
+### Estados que existen y estados que no
+
+| Pantalla | Carga | Vacío | Error | Éxito |
+|---|---|---|---|---|
+| Gimnasio | «Cargando el gimnasio» | tarjeta «Todavía no hay sesiones» | «No se pudo leer el gimnasio.» + Reintentar | «Enviado» en la insignia |
+| Editar pesos | «Cargando» | — | «No se pudo…» + Reintentar | «Guardado a las …» |
+| Enviar al reloj | «Enviando…» | «Pendiente» (estado inicial) | «No se pudo enviar» | «Enviado al reloj» |
+| Entrenar | «Cargando» | — | — | «Sesión terminada» |
+| Editar pesos reales | «Cargando» | — | no verificado | guardado automático |
+
+No existe: confirmación al terminar sesión, estado persistido del envío, aviso de
+«sesión a medias» al volver, ni confirmación al salir de Entrenar.
+
+## 3. Capturas
+
+| Fichero | Qué muestra |
+|---|---|
+| `00-login-tailnet.png` | Login por la puerta del tailnet (icono, nombre, campos) |
+| `01-login-movil.png` | Login por la puerta de la red local |
+| `02-gimnasio-movil.png` | Gimnasio completo: Hoy toca, Enviar al reloj, plantillas |
+| `03-plan-pesos.png` | Plan con pesos por serie 60/65/70 y botones − / + |
+| `04-envio-pendiente.png` | Bloque de envío en estado «PENDIENTE» |
+| `05-envio-error.png` | Bloque de envío en «ERROR» con «Reintentar» |
+| `06-entrenar.png` | Sesión en curso con las tres series marcadas |
+| `07-sesion-terminada.png` | Resumen: 1440 kg, 3 series, reparto muscular |
+| `08-sesion-guardada.png` | Edición posterior de pesos reales (60/60/60) |
+
+## 4. Qué pasó al recorrer el flujo contra el despliegue
+
+| Comprobación | Resultado |
+|---|---|
+| La app abre por la red local y por el tailnet | OK (390 px, sin errores de consola) |
+| Plantilla con pesos por serie 60/65/70 creada | OK (`set_targets=60/65/70`) |
+| Ruta profunda `/gimnasio/plantillas/:id` al recargar | OK (fallback SPA del servidor) |
+| Editar una serie con + y − y guardar | OK (65 → 67,5 → 65 en el servidor) |
+| Mapeo del entreno con `dry_run` | OK: `dry_run`, `unmapped: []`, los tres pesos en el payload |
+| Enviar al reloj sin credencial de Garmin | 400 limpio, la UI muestra «No se pudo enviar» |
+| 3 series ejecutadas y sesión guardada | OK: 3 series |
+| **Pesos por serie en la sesión guardada** | **FALLO: 60/60/60 en vez de 60/65/70** |
+
+El fallo de la última fila es el hallazgo importante de esta pasada (problema 1).
+
+## 5. Diez problemas concretos
+
+### 1. Los pesos por serie del plan no llegan a la sesión: se guarda 60/60/60
+
+**Evidencia.** Capturas `03-plan-pesos.png` (el plan dice 60, 65 y 70) y
+`06-entrenar.png` / `08-sesion-guardada.png` (las tres series salen a 60). Registro
+`informe-flujo.json`: `pesos: [60,60,60]`, `esperado: [60,65,70]`. Código:
+`SessionPage.tsx:115-116` construye las series con `String(mark?.weight_kg ??
+exercise.weightKg ?? '')` — el peso de la última marca o el del ejercicio, **ignorando
+`set_targets`**; `SessionPage.tsx:270-272` ni siquiera pasa los objetivos por serie al
+borrador.
+
+**Por qué duele.** Es el corazón del producto: planificas una serie de aproximación a 60,
+una de trabajo a 65 y una de tope a 70, y al entrenar la app te pone 60 en las tres. Si
+no lo corriges a mano, el historial miente y el volumen sale mal (1440 kg en vez de 1420).
+
+**Arreglo.** Al montar el borrador, usar el `weight_kg`/`reps` de `set_targets[index]`
+cuando exista, y dejar el peso del ejercicio solo como respaldo. La pantalla ya tiene el
+dato: el editor lo pinta.
+
+### 2. Las repeticiones por serie tampoco llegan, y el plan lo esconde
+
+**Evidencia.** El plan se creó con reps 8/8/6 y en `06-entrenar.png` las tres filas
+muestran 8. En `03-plan-pesos.png` la cabecera dice «3 × 8», que es solo el valor del
+ejercicio (`PlanEditorPage.tsx:120`), aunque las series tengan reps distintas.
+
+**Por qué duele.** Misma consecuencia que el problema 1: la sesión guardada no reproduce
+lo planificado, y la cabecera del plan da una información que no es cierta.
+
+**Arreglo.** Igual que el 1 para las reps; y en la cabecera, mostrar «3 series · 8/8/6»
+cuando los objetivos no coincidan, o quitar el «× reps» si no es representativo.
+
+### 3. «Objetivo 3×8» en Entrenar no dice cuál toca en cada serie
+
+**Evidencia.** `06-entrenar.png`: bajo el nombre del ejercicio solo hay «Objetivo 3×8 ·
+descanso 60s · sin marca anterior»; no hay objetivo por serie. Código:
+`SessionPage.tsx:499`.
+
+**Por qué duele.** Con pesos distintos por serie, lo único que necesitas saber al
+levantarte de la máquina es «esta serie toca 70». La pantalla no lo dice y el campo de
+peso viene con otro valor.
+
+**Arreglo.** Añadir el objetivo por serie junto al número de la fila (por ejemplo
+«Objetivo 70 kg × 6»), o como marcador de agua dentro del campo.
+
+### 4. Acciones duplicadas y confirmación al revés
+
+**Evidencia.** `06-entrenar.png` muestra dos parejas idénticas: «Descartar» + «Terminar
+sesión» arriba y «Descartar sesión» + «Terminar sesión» abajo. «Descartar» es rojo y
+ocupa el mismo tamaño que «Terminar». En el recorrido, «Terminar sesión» guardó y cerró sin pedir
+confirmación; «Descartar» sí la pide. Código: `SessionPage.tsx:449-451` (terminar) frente
+a `:456-477` (descartar).
+
+**Por qué duele.** Al acabar la última serie, con la mano cansada, el botón que guarda
+una sesión incompleta es el más grande y no pregunta; el que borra sí. La duplicación
+invita a pulsar el equivocado según dónde mire.
+
+**Arreglo.** Una sola barra de acción fija abajo (la superior sobra) y confirmar
+«Terminar» cuando falten series, con un resumen de lo que se guarda («2 de 3 series»).
+
+### 5. La barra de navegación global sigue activa durante la sesión
+
+**Evidencia.** `06-entrenar.png`: la barra «Hoy · Gimnasio · Ajustes» está fija abajo
+(`AppShell.tsx:135`), fija abajo, justo donde reposa el pulgar con una mano. La ruta
+`/gimnasio/entrenar` es hija del layout (`App.tsx:98`), así que conserva cabecera de
+marca y barra.
+
+**Por qué duele.** Un toque accidental abandona la sesión en curso y esconde el
+temporizador de descanso; el borrador se conserva, pero el usuario no lo sabe y cree que
+ha perdido la sesión.
+
+**Arreglo.** Modo foco: sin cabecera de marca ni barra de pestañas cuando la ruta empieza
+por `/gimnasio/entrenar`, con una salida explícita («Salir» → confirmación).
+
+### 6. «Estado del envío: PENDIENTE» no es un estado real
+
+**Evidencia.** `02-gimnasio-movil.png` y `05-envio-error.png`: la insignia vive en el
+mismo bloque, pero viene de una mutación en memoria (`GymPage.tsx:19,130-131`), no de una
+consulta ni de `localStorage`. Al cambiar de pantalla y volver, vuelve a «Pendiente»
+aunque el envío se haya hecho. Solo la sesión de navegador actual lo recuerda.
+
+**Por qué duele.** Es justo el dato que quieres consultar al llegar al gimnasio: «¿esto
+está ya en el reloj?». La interfaz contesta «Pendiente» sin saberlo.
+
+**Arreglo.** Persistir el resultado (último envío, hora y `workoutId`) en el backend y
+pintarlo desde una consulta: «Enviado hoy a las 18:04» o «Sin enviar».
+
+### 7. El error de envío no dice lo que ha pasado
+
+**Evidencia.** `05-envio-error.png`: el servidor respondió 400 con «Vincula tu Garmin
+primero» y la pantalla muestra siempre «Acerca el reloj, sincroniza y vuelve a
+intentarlo.» (`GymPage.tsx:147`). El texto es el mismo para un fallo de vinculación, de
+red o del dispositivo.
+
+**Por qué duele.** Manda a hacer un gesto (acercar el reloj) que no arregla nada cuando
+el problema es que la cuenta no está vinculada. El usuario pierde el tiempo y desconfía.
+
+**Arreglo.** Mostrar el `detail` del servidor cuando exista y, si es «no vinculado»,
+ofrecer el botón «Vincular cuenta» en el propio bloque.
+
+### 8. Plurales sin concordancia
+
+**Evidencia.** «1 ejercicios» aparece tres veces en `02-gimnasio-movil.png` (Hoy toca,
+Enviar al reloj, plantillas). Código: `GymPage.tsx:91` y siguientes, sin condición para
+el singular. La misma app sí concuerda en otros sitios («1 serie hecha», «1 actividad»).
+
+**Por qué duele.** Es el texto que más se repite en la pantalla principal; el error se
+lee como descuido y resta confianza en los números que sí importan.
+
+**Arreglo.** Un ayudante `plural(n, 'ejercicio', 'ejercicios')` y aplicarlo en los cuatro
+puntos detectados.
+
+### 9. Dos botones para lo mismo y sin jerarquía
+
+**Evidencia.** `02-gimnasio-movil.png`: «Empezar sesión» en la tarjeta «Hoy toca» y
+«Empezar» en la tarjeta de plantilla: dos botones para la misma acción, uno primario y
+otro secundario.
+Además la tarjeta «Hoy toca» incluye una insignia que no es una acción («SERIES,
+DESCANSO Y ESFUERZO»), que ocupa el sitio donde debería leerse el objetivo por serie.
+
+**Por qué duele.** Dos caminos para lo mismo obligan a decidir en un momento (de pie,
+entre series) en el que no quieres decidir nada. Y la insignia ocupa el espacio del dato
+útil.
+
+**Arreglo.** Un único botón primario «Empezar» en «Hoy toca»; en la lista de plantillas,
+acción secundaria «Abrir» (no «Empezar»). Sustituir la insignia por «60 / 65 / 70 kg ·
+8/8/6».
+
+### 10. Textos que prometen datos que la pantalla no pinta
+
+**Evidencia.** `08-sesion-guardada.png`: el texto dice «Se guarda solo y recalcula el
+total» (`SessionEditPage.tsx:102`) pero no hay ningún total en la pantalla. En
+`03-plan-pesos.png` tampoco hay volumen total del plan. En las dos pantallas, la mitad
+inferior del viewport queda vacía (390 × 844) y no hay acción siguiente («Empezar»,
+«Volver»).
+
+**Por qué duele.** El texto crea una expectativa que la interfaz no cumple, y el espacio
+vacío desaprovecha el único momento en el que el usuario mira su plan o su sesión con
+calma.
+
+**Arreglo.** Pintar un resumen compacto («3 series · 1420 kg · pecho») encima de las
+filas, y usar el hueco inferior para la acción siguiente. Si no se va a mostrar el total,
+quitar la promesa del texto.
+
+## 6. Límites de esta revisión
+
+- No se probó en el móvil físico de David: el Poco aparece `offline` en el tailnet desde
+  hace 10 días. La comprobación se hizo desde otro equipo de la red local y desde otro
+  nodo del tailnet, que es el mismo camino de red que usará el móvil.
+- No se envió nada a Garmin: la instancia de revisión no tiene credencial, así que el
+  camino «enviado de verdad» queda para la prueba física (`PENDIENTE-PRUEBA-RELOJ.md`).
+- No se capturaron los estados de carga ni los errores de las pantallas que no forman
+  parte de este flujo (Actividades, Calendario, Rutas, Tendencias).
+
+## 7. Preguntas para el revisor externo
+
+1. Con el plan a 60/65/70, ¿la sesión debe heredar esos pesos (mi propuesta) o es mejor
+   que el atleta los teclee siempre y el plan sea solo una sugerencia del reloj?
+2. En una pantalla de ejecución, ¿qué es aceptable mantener en pantalla: la barra de
+   pestañas, la cabecera de marca, el temporizador? ¿Dónde va «Terminar sesión» para que
+   no se pulse por accidente ni se esconda?
+3. El bloque «Enviar al reloj» y la tarjeta «Hoy toca» repiten la misma información (1
+   ejercicios · 3 series). ¿Deberían ser una sola tarjeta con dos acciones o dos bloques
+   separados?
+4. ¿Qué debe enseñar la app cuando no sabe si el entreno está en el reloj? ¿Un estado
+   explícito con hora, un aviso, o nada?
+5. ¿Los resúmenes (volumen, series, reparto) deben ir siempre visibles o solo cuando hay
+   datos que merezcan la pena?

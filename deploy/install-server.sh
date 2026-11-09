@@ -50,7 +50,8 @@ if [ ! -f "$ROOT/deploy/.env" ]; then
   {
     echo ""
     echo "# --- despliegue (install-server.sh) ---"
-    echo "LYFTA_BIND=${LYFTA_BIND:-100.117.58.93}"
+    echo "LYFTA_LAN_BIND=${LYFTA_LAN_BIND:-192.168.1.139}"
+    echo "LYFTA_TS_BIND=${LYFTA_TS_BIND:-100.117.58.93}"
     echo "LYFTA_PORT=${LYFTA_PORT:-8010}"
   } >> "$ROOT/deploy/.env"
   echo "==> deploy/.env creado (revisar LYFTA_BIND / LYFTA_PORT)"

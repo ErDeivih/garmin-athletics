@@ -32,8 +32,10 @@ services:
       FRONTEND_DIST_DIR: /app/frontend-nuevo/dist
 
     ports:
-      # LYFTA_BIND y LYFTA_PORT se leen de deploy/.env
-      - "${LYFTA_BIND}:${LYFTA_PORT}:8000"
+      # Dos puertas, ninguna en 0.0.0.0: la red de casa (el móvil sin Tailscale)
+      # y el tailnet (el móvil en cualquier sitio). Ver deploy/.env.
+      - "${LYFTA_LAN_BIND}:${LYFTA_PORT}:8000"
+      - "${LYFTA_TS_BIND}:${LYFTA_PORT}:8000"
 
     volumes:
       # Base de datos, tokens de Garmin y tracks GPS: lo único que hay que

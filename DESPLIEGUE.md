@@ -1,23 +1,25 @@
 # Despliegue de Lyfta para el móvil
 
-La app vive en el **servidor de casa** y se abre desde el móvil en cualquier sitio con
-Tailscale. Una sola URL sirve la interfaz y la API: no hay dos orígenes que cuadrar.
+La app vive en el **servidor de casa** y se abre desde el móvil **en la red de casa o en
+cualquier sitio** (Tailscale). Una sola URL sirve la interfaz y la API: no hay dos
+orígenes que cuadrar.
 
 ## Direcciones
 
 | Desde | URL | Cuándo usarla |
 |---|---|---|
+| Casa, misma wifi | `http://192.168.1.139:8010` | Sin Tailscale; el móvil en casa |
 | Móvil, en cualquier red (con Tailscale) | `http://100.117.58.93:8010` | El caso normal: gimnasio, calle, viaje |
-| Casa, misma wifi | `http://192.168.1.139:8010` | Si el móvil no tiene Tailscale encendido |
 | El propio servidor | `http://127.0.0.1:8010` | Comprobaciones y `curl` |
-| Navegador de este PC (tailnet) | `http://100.117.58.93:8010` | Revisar sin coger el móvil |
+| Navegador de este PC | `http://192.168.1.139:8010` | Revisar sin coger el móvil |
 
-Salud del servicio: `http://100.117.58.93:8010/healthz` → `{"status":"ok"}`.
+Salud del servicio: `http://192.168.1.139:8010/healthz` → `{"status":"ok"}`.
 
 ## Qué hay montado
 
 ```
-móvil ──Tailscale──▶ servidor (Debian 12, 192.168.1.139)
+móvil ─┬─ wifi de casa ───────────────▶ servidor (Debian 12, 192.168.1.139)
+       └─ Tailscale/WireGuard (cifrado) ┘
                        └─ contenedor `lyfta` (FastAPI + build de Vite)
                             ├─ /               → app (SPA, fallback de rutas)
                             ├─ /api/v1/...     → API JSON
@@ -27,8 +29,9 @@ móvil ──Tailscale──▶ servidor (Debian 12, 192.168.1.139)
 - Imagen `lyfta:local`, construida desde `deploy/Dockerfile` (dos etapas: Vite y
   FastAPI). El frontend compilado va dentro de la imagen: no hay Nginx ni `node` en
   el servidor.
-- El puerto se publica **solo en la IP del tailnet** (`100.117.58.93:8010`), no en
-  `0.0.0.0`. Nada de la app queda expuesto a Internet.
+- El puerto se publica en **dos direcciones concretas**, nunca en `0.0.0.0`:
+  `192.168.1.139:8010` (red de casa) y `100.117.58.93:8010` (tailnet). Nada de la app
+  queda expuesto a Internet: fuera de casa solo se entra por Tailscale.
 - Estado persistente en `/home/david/lyfta/deploy/var`:
   - `lyfta.db` — base SQLite con las 46 actividades, la plantilla, los pesos y la
     credencial de Garmin.
@@ -36,15 +39,30 @@ móvil ──Tailscale──▶ servidor (Debian 12, 192.168.1.139)
     contraseña: no se copia al repositorio).
   - `data/tracks`, `data/routes` — recorridos GPS y rutas generadas.
 - Configuración: `/home/david/lyfta/deploy/.env` (permisos 600).
-  `LYFTA_BIND` y `LYFTA_PORT` deciden dónde escucha; `SECRET_KEY` firma las sesiones
-  (la misma que en local: los tokens ya emitidos siguen valiendo).
+  `LYFTA_LAN_BIND`, `LYFTA_TS_BIND` y `LYFTA_PORT` deciden dónde escucha; `SECRET_KEY`
+  firma las sesiones (la misma que en local: los tokens ya emitidos siguen valiendo).
+
+## El túnel: Tailscale (y por qué no Cloudflare)
+
+| Opción | Estado |
+|---|---|
+| **Tailscale** (WireGuard) | ✅ En uso. Cifrado extremo a extremo, sin abrir puertos en el router, sin dominio. Verificado desde otro nodo del tailnet: `/`, `/gimnasio` y el manifiesto responden 200 |
+| Cloudflare Tunnel | ❌ No usado: `cloudflared` no está instalado, hace falta cuenta/dominio y el servidor no resuelve nombres |
+| HTTPS con certificado del tailnet | ❌ Bloqueado: el panel responde «your Tailscale account does not support getting TLS certs» (ver más abajo) |
+
+El móvil de David (`poco-x4-pro-5g`) ya está dado de alta en el tailnet, pero el
+2026-11-09 aparecía **offline desde hacía 10 días**: hay que abrir Tailscale en el móvil
+para la puerta de «cualquier sitio». La de casa no necesita nada.
+
 
 ## Primera vez en el móvil
 
-1. Instalar **Tailscale** en el móvil y entrar con la cuenta de David (`davidpeve01@`).
-   El móvil ya estaba dado de alta en el tailnet como `poco-x4-pro-5g`; solo hay que
-   encenderlo.
-2. Abrir `http://100.117.58.93:8010` en el navegador.
+1. **En casa** no hace falta nada: abrir `http://192.168.1.139:8010` en el navegador del
+   móvil (misma wifi).
+2. **Fuera de casa**: instalar **Tailscale** en el móvil y entrar con la cuenta de David
+   (`davidpeve01@`). El móvil ya estaba dado de alta en el tailnet como
+   `poco-x4-pro-5g`; solo hay que encenderlo (el 2026-11-09 llevaba 10 días offline).
+   Después: `http://100.117.58.93:8010`.
 3. Entrar con la cuenta de Lyfta (la misma de siempre).
 4. **Añadir a la pantalla de inicio**:
    - iOS/Safari: compartir → «Añadir a pantalla de inicio».
@@ -94,6 +112,33 @@ docker compose down               # parar
 
 El contenedor arranca solo tras un reinicio del servidor (`restart: unless-stopped`
 + Docker habilitado al inicio). El `HEALTHCHECK` pega a `/healthz` cada 30 s.
+
+## Probar el flujo entero sin tocar los datos de David
+
+`deploy/instancia-verificacion.sh` levanta una **copia desechable** del despliegue en el
+puerto 8011: copia la base, le quita la credencial de Garmin y los eventos de calendario
+(así ningún envío puede salir hacia el reloj) y arranca la misma imagen.
+
+```bash
+# en el servidor
+~/lyfta/deploy/instancia-verificacion.sh up    # copia en el puerto 8011
+~/lyfta/deploy/instancia-verificacion.sh down  # la retira y borra la copia
+```
+
+Y el recorrido automático contra esa instancia, con capturas a 390 px:
+
+```powershell
+cd frontend-nuevo
+node scripts/flujo-movil-desplegado.mjs http://192.168.1.139:8011
+```
+
+Recorre planificar pesos por serie → editar → enviar al reloj → entrenar → sesión
+guardada, y escribe `docs/capturas-movil/informe-flujo.json`. Resultado del 2026-11-09:
+todo OK menos un hallazgo real (la sesión guarda 60/60/60 en vez de 60/65/70), detallado
+en `docs/revision-interfaz-movil.md`.
+
+Al terminar, `down`. **Nunca se deja la instancia de verificación abierta**: no forma
+parte de la app y su base es una copia.
 
 ## Actualizar la app
 
@@ -168,10 +213,11 @@ Automatizada, en el servidor (`deploy/verify-server.sh`, la llama `ship-image.ps
 ~/lyfta/deploy/verify-server.sh          # exit 0 = todo bien
 ```
 
-Resultado del despliegue del **2026-11-09 17:24**:
+Resultado del despliegue del **2026-11-09 18:40** (dos puertas abiertas):
 
 ```text
-contenedor: lyfta Up (healthy) 100.117.58.93:8010->8000/tcp
+contenedor: lyfta Up (healthy)
+  100.117.58.93:8010->8000/tcp, 192.168.1.139:8010->8000/tcp
 /healthz                 ok   {"status":"ok"}
 /                        ok   200
 /gimnasio                ok   200      (ruta profunda: fallback de la SPA)
@@ -184,14 +230,18 @@ contenedor: lyfta Up (healthy) 100.117.58.93:8010->8000/tcp
 usuarios=1  actividades=46  plantillas=1  ejercicios de plantilla=3  credencial Garmin=1
 ```
 
-Y desde fuera del servidor (este PC, otro nodo del tailnet, lo mismo que hará el móvil):
+Y desde fuera del servidor (este PC, que no usa ninguna de las dos IPs de servicio):
 
 ```text
-http://100.117.58.93:8010/healthz          200
-http://100.117.58.93:8010/gimnasio         200
-POST /api/v1/auth/login (mal)              401 {"detail":"Credenciales inválidas."}
+http://192.168.1.139:8010/healthz   200   (red de casa)
+http://192.168.1.139:8010/gimnasio  200
+http://100.117.58.93:8010/healthz   200   (tailnet: el camino de fuera de casa)
+http://100.117.58.93:8010/gimnasio  200
+POST /api/v1/auth/login (mal)       401 {"detail":"Credenciales inválidas."}
 ```
 
-Captura del móvil (390 × 844) contra la URL desplegada, sin errores de consola:
-`frontend-nuevo/screenshots/30-despliegue-login.png`.
+Capturas a 390 × 844 contra la URL desplegada, sin errores de consola:
+`docs/capturas-movil/00-login-tailnet.png`, `01-login-movil.png` y el recorrido completo
+del flujo en `docs/capturas-movil/`.
+
 

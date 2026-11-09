@@ -17,11 +17,17 @@ crear entrenamientos de gimnasio, llevarlos al reloj y analizar todo.
   las gráficas sin datos no se pintan.
 - [ ] Prueba real en el Forerunner 255 (necesita 2FA de David).
 - [x] Despliegue web para el móvil. — 2026-11-09. La app y la API se sirven desde el
-  servidor de casa en `http://100.117.58.93:8010` (solo IP del tailnet, nada expuesto a
-  Internet), con manifiesto e iconos PWA, fallback de rutas profundas y la base de David
-  migrada (46 actividades, plantilla, credencial de Garmin). Ver `DESPLIEGUE.md`.
-  Queda para cerrar del todo: HTTPS en el tailnet para que el service worker y la
-  instalación de Android funcionen (lo activa David en el panel de Tailscale).
+  servidor de casa en **dos puertas**: `http://192.168.1.139:8010` (red de casa, sin
+  Tailscale) y `http://100.117.58.93:8010` (tailnet/WireGuard, desde cualquier sitio).
+  Nada expuesto a Internet. Manifiesto e iconos PWA, fallback de rutas profundas y la
+  base de David migrada (46 actividades, plantilla, credencial de Garmin). Flujo completo
+  recorrido contra el despliegue (instancia desechable, capturas a 390 px en
+  `docs/capturas-movil/`). Ver `DESPLIEGUE.md` y `docs/revision-interfaz-movil.md`.
+  Queda para cerrar del todo: HTTPS en el tailnet para service worker e instalación de
+  Android (lo activa David en el panel de Tailscale).
+- [ ] Pesos por serie: el plan y el envío al reloj los respetan, pero la sesión guarda el
+  peso del ejercicio para todas las series (60/60/60 en vez de 60/65/70). Ver
+  `docs/revision-interfaz-movil.md` §5.1.
 - [ ] Watch-app Connect IQ propia (después del camino A). — **en curso**: `watch/lyfta-watch/`
   diseñada, implementada y compilada para fr255 y 4 perfiles más; backend `/watch/today` y
   `/watch/sets` probado; sensor de repeticiones y estimación de fuerza añadidos. Capturas del
@@ -35,6 +41,8 @@ reloj y el análisis está completo.
 - Frontend: 47/47 pruebas en 19 ficheros (incluye PWA y servido SPA).
 - Backend: 20/20 scripts (incluye perfil IMU en seco, auto-carga, watch-app, rutas, calendario recurrente y servido del frontend).
 - Despliegue: `deploy/verify-server.sh` en verde el 2026-11-09 — salud, rutas profundas, cabeceras del service worker y datos migrados. Captura del móvil contra la URL desplegada: `frontend-nuevo/screenshots/30-despliegue-login.png`.
+- Flujo móvil contra el despliegue: `scripts/flujo-movil-desplegado.mjs` recorre plan (60/65/70) → edición guardada en servidor → `dry_run` con `unmapped: []` → envío sin credencial (400 limpio) → 3 series → sesión guardada; 8 capturas a 390 px e informe en `docs/capturas-movil/`. Hallazgo abierto: la sesión guarda 60/60/60.
+- Revisión de interfaz: `docs/revision-interfaz-movil.md` — inventario de las 6 pantallas del flujo, textos literales y 10 problemas con evidencia.
 - Capturas: `frontend-nuevo/screenshots/` — 29 capturas nuevas y numeradas (01–29).
 - Prueba final en seco: plan -> dry-run -> reloj -> 3 series -> sesión guardada; capturas 27–29.\n- Biblioteca: fases, series y pesos por serie visibles; filtro por foco.
 - Actividades: filtros por deporte, texto y rango Desde/Hasta con atajos de 30 días/mes.

@@ -18,6 +18,7 @@
     "scale": "node scripts/check-scale.mjs",
     "verify:api": "node scripts/verify-api.mjs",
     "smoke": "node scripts/smoke-browser.mjs",
+    "flujo:movil": "node scripts/flujo-movil-desplegado.mjs",
     "visual": "node scripts/visual-regression.mjs",
     "check": "npm run tokens:check && npm run contrast && npm run scale && npm run typecheck && npm run test"
   },

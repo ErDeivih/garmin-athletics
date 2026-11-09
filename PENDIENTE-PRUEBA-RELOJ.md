@@ -6,11 +6,26 @@ David. No sustituye a `GUION-PRUEBA-RELOJ.md`: lo concreta y corrige donde el c�
 otra cosa. Cuando algo no está demostrado en el repo se marca como **«no verificado en el
 código»** o **«no verificado en el repo»**.
 
-> **Actualización 2026-11-09 (posterior a este documento):** la app ya está desplegada en el
-> servidor de casa y se abre desde el móvil en `http://100.117.58.93:8010` (ver
-> `DESPLIEGUE.md`). Donde este documento dice «backend y app arrancados en el PC», vale el
-> despliegue, y **no** hay que levantar además el backend local contra los mismos tokens de
-> Garmin (un solo backend por cuenta). El resto de pendientes de abajo no cambia.
+> **Actualización 2026-11-09 (posterior a este documento).**
+>
+> 1. La app ya está **desplegada** en el servidor de casa. Se abre sin Tailscale en
+>    `http://192.168.1.139:8010` (red de casa) y con Tailscale en
+>    `http://100.117.58.93:8010` (cualquier sitio). Ver `DESPLIEGUE.md`.
+> 2. Donde este documento dice «backend y app arrancados en el PC», vale el despliegue, y
+>    **no** hay que levantar además el backend local contra los mismos tokens de Garmin
+>    (un solo backend por cuenta).
+> 3. El 2026-11-09 se recorrió el flujo completo **contra el despliegue** (instancia
+>    desechable, capturas en `docs/capturas-movil/`): planificar 60/65/70, editar, mapeo
+>    `dry_run` con `unmapped: []`, envío sin credencial (400 limpio), 3 series y sesión
+>    guardada. Todo correcto **salvo** un hallazgo que afecta a la prueba C: la sesión
+>    guarda 60/60/60 en vez de 60/65/70 porque `SessionPage.tsx:115-116` ignora los
+>    objetivos por serie. Detalle en `docs/revision-interfaz-movil.md` (problema 1).
+> 4. **Falta exactamente esto, y solo David puede hacerlo**: (a) reloj fr255 cargado y
+>    emparejado + sincronizar en Garmin Connect; (b) 2FA de Garmin delante, la primera
+>    vez que se vincule la cuenta desde el móvil; (c) pulsar «Enviar al reloj» y mirar la
+>    pantalla del reloj; (d) hacer una serie real y sincronizar; (e) contar las reps
+>    reales de esa serie para poder medir el detector. Nada más del flujo depende de ti.
+
 
 ---
 

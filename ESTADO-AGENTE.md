@@ -1,8 +1,8 @@
 titulo: Lyfta — entrenamiento, reloj y análisis
-estado: desplegado; en-espera de la prueba física del reloj
-tarea: app desplegada y accesible desde el móvil (PWA servida por el backend en el servidor de casa); dossier de interfaz y pendientes del reloj escritos; solo queda la prueba física del fr255
+estado: desplegado y verificado desde el móvil; en-espera de la prueba física del reloj
+tarea: app desplegada en dos puertas (red de casa y tailnet) y flujo completo recorrido contra el despliegue; revisión de interfaz con capturas a 390 px y 10 problemas
 nivel: 2
-siguiente: David abre http://100.117.58.93:8010 en el móvil con Tailscale, se añade el icono y ejecuta PENDIENTE-PRUEBA-RELOJ.md §7; después, importar las series y medir el detector
-bloqueado: prueba física del fr255 (2FA/reloj de David); PWA completa (service worker e instalación en Android) espera a que David active los certificados HTTPS en el panel de Tailscale
+siguiente: David abre http://192.168.1.139:8010 (en casa) o http://100.117.58.93:8010 (con Tailscale) y ejecuta PENDIENTE-PRUEBA-RELOJ.md §7 con el fr255 delante
+bloqueado: prueba física del fr255 (2FA/reloj de David); PWA completa espera certificados HTTPS del tailnet; los pesos por serie del plan no llegan a la sesión (hallazgo que hay que decidir si se arregla)
 fecha: 2026-11-09
-resumen: Lyfta ya se abre desde el móvil en cualquier sitio —web instalable servida por el servidor de casa por Tailscale, con un único backend para planes, pesos y sesiones— y solo queda la prueba física del reloj.
+resumen: Lyfta se abre desde el móvil en casa (192.168.1.139:8010) y en cualquier sitio por el túnel Tailscale (100.117.58.93:8010), con el flujo completo verificado contra el despliegue; quedan la prueba física del fr255 y decidir el arreglo de los pesos por serie.
