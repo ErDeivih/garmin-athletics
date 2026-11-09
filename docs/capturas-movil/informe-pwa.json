@@ -1,0 +1,104 @@
+[
+  {
+    "url": "http://127.0.0.1:8021",
+    "navegador": {
+      "seguro": true,
+      "protocolo": "http:",
+      "manifestEnlazado": "/manifest.webmanifest",
+      "serviceWorkers": [
+        {
+          "scope": "http://127.0.0.1:8021/",
+          "activo": true,
+          "estado": "activated"
+        }
+      ],
+      "controladoPorSW": true,
+      "manifestStatus": 200
+    },
+    "manifiestoChrome": {
+      "url": "http://127.0.0.1:8021/manifest.webmanifest",
+      "errores": [],
+      "tieneDatos": true
+    },
+    "erroresInstalacion": [
+      {
+        "errorId": "in-incognito",
+        "errorArguments": []
+      }
+    ],
+    "erroresInstalacionReales": [],
+    "erroresPagina": [],
+    "captura": "pwa-127-0-0-1-8021.png",
+    "instalable": true
+  },
+  {
+    "url": "http://192.168.1.139:8010",
+    "navegador": {
+      "seguro": false,
+      "protocolo": "http:",
+      "manifestEnlazado": "/manifest.webmanifest",
+      "serviceWorkers": [],
+      "controladoPorSW": false,
+      "manifestStatus": 200
+    },
+    "manifiestoChrome": {
+      "url": "http://192.168.1.139:8010/manifest.webmanifest",
+      "errores": [],
+      "tieneDatos": true
+    },
+    "erroresInstalacion": [
+      {
+        "errorId": "in-incognito",
+        "errorArguments": []
+      },
+      {
+        "errorId": "not-from-secure-origin",
+        "errorArguments": []
+      }
+    ],
+    "erroresInstalacionReales": [
+      {
+        "errorId": "not-from-secure-origin",
+        "errorArguments": []
+      }
+    ],
+    "erroresPagina": [],
+    "captura": "pwa-192-168-1-139-8010.png",
+    "instalable": false
+  },
+  {
+    "url": "http://100.117.58.93:8010",
+    "navegador": {
+      "seguro": false,
+      "protocolo": "http:",
+      "manifestEnlazado": "/manifest.webmanifest",
+      "serviceWorkers": [],
+      "controladoPorSW": false,
+      "manifestStatus": 200
+    },
+    "manifiestoChrome": {
+      "url": "http://100.117.58.93:8010/manifest.webmanifest",
+      "errores": [],
+      "tieneDatos": true
+    },
+    "erroresInstalacion": [
+      {
+        "errorId": "in-incognito",
+        "errorArguments": []
+      },
+      {
+        "errorId": "not-from-secure-origin",
+        "errorArguments": []
+      }
+    ],
+    "erroresInstalacionReales": [
+      {
+        "errorId": "not-from-secure-origin",
+        "errorArguments": []
+      }
+    ],
+    "erroresPagina": [],
+    "captura": "pwa-100-117-58-93-8010.png",
+    "instalable": false
+  }
+]

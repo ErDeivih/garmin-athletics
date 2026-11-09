@@ -153,6 +153,7 @@ try {
   const trasSubir = await apiJson(`/api/v1/strength/templates/${templateId}`, { token });
   const pesoSubido = trasSubir.json.exercises[0].set_targets[1].weight_kg;
   checks.edicion_guardada = `${65} -> ${pesoSubido}`;
+  await captura('03b-edicion-serie', { espera: 500 });
   await pagina.getByRole('button', { name: new RegExp(`bajar peso serie 2 de ${nombreEjercicio}`, 'i') }).click();
   await pagina.getByText(/guardado a las/i).waitFor({ timeout: 15000 });
   await pagina.waitForTimeout(500);
@@ -214,6 +215,20 @@ try {
   await pagina.getByText(/no se pudo|error/i).first().waitFor({ timeout: 15000 }).catch(() => {});
   await captura('05-envio-error', { espera: 800 });
 
+  // 7b. Confirmación de envío correcto. La cuenta real no se toca: la respuesta
+  //     de Garmin se sustituye en el navegador SOLO para capturar el estado
+  //     «Enviado al reloj». Queda marcado como simulado en el dossier.
+  await pagina.route('**/api/v1/strength/push-to-garmin', (ruta) => ruta.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ status: 'sent', workout_id: 'simulado', mapped_exercises: 1, unmapped_exercises: [], pushed_to_device: true }),
+  }));
+  await botonEnviar.click();
+  await pagina.getByText(/enviado al reloj/i).first().waitFor({ timeout: 20000 });
+  await captura('04b-envio-enviado', { espera: 600 });
+  checks.envio_confirmado_simulado = true;
+  await pagina.unroute('**/api/v1/strength/push-to-garmin');
+
   // 8. Entrenar: marcar las tres series (60 / 65 / 70) y terminar.
   await pagina.getByRole('link', { name: /empezar sesión/i }).click();
   await pagina.getByRole('heading', { name: 'Entrenar', exact: true }).waitFor({ timeout: 20000 });
@@ -222,6 +237,36 @@ try {
     await pagina.waitForTimeout(700);
   }
   await captura('06-entrenar', { espera: 500 });
+
+  // 8b. Sin conexión: el borrador de la sesión vive en el propio móvil. Se
+  //     cambia un peso sin red, se comprueba que la recarga falla (sobre HTTP no
+  //     hay service worker que sirva el shell) y que al volver la serie sigue ahí.
+  const contextoRed = pagina.context();
+  const pesoSerie1 = pagina.getByLabel(new RegExp(`peso serie 1 de ${nombreEjercicio}`, 'i'));
+  await contextoRed.setOffline(true);
+  await pesoSerie1.fill('61');
+  const borradorSinRed = await pagina.evaluate(() => {
+    const clave = Object.keys(localStorage).find((llave) => llave.startsWith('lyfta.session'));
+    return clave ? localStorage.getItem(clave) : null;
+  });
+  checks.sin_conexion = {
+    borrador_guardado: Boolean(borradorSinRed && borradorSinRed.includes('"weight":"61"')),
+  };
+  let recargaSinRed = 'ok';
+  try {
+    await pagina.reload({ timeout: 8000 });
+  } catch {
+    recargaSinRed = 'falla (sin HTTPS no hay service worker que sirva el shell)';
+  }
+  checks.sin_conexion.recarga_sin_red = recargaSinRed;
+  await contextoRed.setOffline(false);
+  await pagina.reload({ waitUntil: 'domcontentloaded' });
+  await pagina.getByRole('heading', { name: 'Entrenar', exact: true }).waitFor({ timeout: 20000 });
+  checks.sin_conexion.peso_restaurado_al_volver = await pagina
+    .getByLabel(new RegExp(`peso serie 1 de ${nombreEjercicio}`, 'i'))
+    .inputValue();
+  // Vuelve al objetivo del plan para que la sesión guardada sea 60/65/70.
+  await pagina.getByLabel(new RegExp(`peso serie 1 de ${nombreEjercicio}`, 'i')).fill('60');
 
   await pagina.getByRole('button', { name: /terminar sesión/i }).first().click();
   await pagina.getByRole('heading', { name: /sesión terminada/i }).waitFor({ timeout: 20000 });

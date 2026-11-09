@@ -1,8 +1,8 @@
 titulo: Lyfta — entrenamiento, reloj y análisis
 estado: desplegado y verificado; en-espera de la prueba física del reloj
-tarea: pesos por serie arreglados con prueba rojo→verde y verificados en el despliegue (sesión guardada 60/65/70); app en dos puertas y dossier de interfaz con antes/después
+tarea: app lista para uso real desde el móvil (PWA por dos puertas, flujo completo verificado y guía de instalación) y dossier de interfaz con 10 problemas y sus arreglos CSS/texto
 nivel: 2
-siguiente: David abre http://192.168.1.139:8010 (en casa) o http://100.117.58.93:8010 (con Tailscale) y ejecuta PENDIENTE-PRUEBA-RELOJ.md §7 con el fr255 delante
-bloqueado: prueba física del fr255 (2FA/reloj de David); PWA completa espera que David active los certificados HTTPS del tailnet
+siguiente: David sigue docs/USO-MOVIL.md para dejarla en la pantalla de inicio y, cuando tenga el reloj, ejecuta PENDIENTE-PRUEBA-RELOJ.md §7
+bloqueado: prueba física del fr255 (2FA/reloj de David); instalación PWA completa y arranque sin cobertura esperan que David active HTTPS en el panel de Tailscale
 fecha: 2026-11-09
-resumen: Los pesos por serie ya llegan a la sesión guardada —el borrador de la sesión ignoraba `set_targets` y ahora cada serie usa su objetivo, con prueba rojo→verde y verificado en el despliegue (60/65/70 y 1420 kg)—; quedan la prueba física del fr255 y el interruptor HTTPS del tailnet.
+resumen: Lyfta se abre por las dos puertas (LAN y Tailscale) y se añade a la pantalla de inicio; el flujo completo guarda 60/65/70 y el borrador sobrevive sin cobertura, así que lo que falta es la prueba física del reloj (y el interruptor HTTPS para la PWA completa).

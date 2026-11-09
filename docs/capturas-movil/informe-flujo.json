@@ -1,7 +1,7 @@
 {
   "app": "http://192.168.1.139:8011",
-  "cuenta": "flujo+1794249504207@example.com",
-  "plantilla": "8cc44b0d-e914-4b36-8309-9dcf1079f392",
+  "cuenta": "flujo+1794258325064@example.com",
+  "plantilla": "74f72567-3449-4d11-86d7-1197abe4d850",
   "checks": {
     "plantilla_creada": "set_targets=60/65/70",
     "titulo": "Lyfta",
@@ -17,8 +17,14 @@
       "status": 400,
       "esperado": 400
     },
+    "envio_confirmado_simulado": true,
+    "sin_conexion": {
+      "borrador_guardado": true,
+      "recarga_sin_red": "falla (sin HTTPS no hay service worker que sirva el shell)",
+      "peso_restaurado_al_volver": "61"
+    },
     "sesion_guardada": {
-      "id": "238feb16-3751-4878-8e4a-bd0957b01cd4",
+      "id": "d3963a3a-236c-4f24-af91-39ebcc84ded4",
       "series": 3,
       "pesos": [
         60,
@@ -38,8 +44,10 @@
     "01-login-movil.png",
     "02-gimnasio-movil.png",
     "03-plan-pesos.png",
+    "03b-edicion-serie.png",
     "04-envio-pendiente.png",
     "05-envio-error.png",
+    "04b-envio-enviado.png",
     "06-entrenar.png",
     "07-sesion-terminada.png",
     "08-sesion-guardada.png"

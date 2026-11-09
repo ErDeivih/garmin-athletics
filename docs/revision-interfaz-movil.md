@@ -103,11 +103,14 @@ No existe: confirmación al terminar sesión, estado persistido del envío, avis
 | `01-login-movil.png` | Login por la puerta de la red local |
 | `02-gimnasio-movil.png` | Gimnasio completo: Hoy toca, Enviar al reloj, plantillas |
 | `03-plan-pesos.png` | Plan con pesos por serie 60/65/70 y botones − / + |
+| `03b-edicion-serie.png` | Edición de la serie 2 (65 → 67,5 kg) con «Guardado a las …» |
 | `04-envio-pendiente.png` | Bloque de envío en estado «PENDIENTE» |
-| `05-envio-error.png` | Bloque de envío en «ERROR» con «Reintentar» |
-| `06-entrenar.png` | Sesión en curso con las tres series marcadas |
+| `04b-envio-enviado.png` | Envío confirmado: «ENVIADO» + «Enviado al reloj». **Estado simulado**: la respuesta de Garmin se sustituye en el navegador para poder capturarlo sin tocar la cuenta |
+| `05-envio-error.png` | Envío con error real (sin credencial Garmin): «ERROR» + «Reintentar» |
+| `06-entrenar.png` | Sesión en curso con las tres series marcadas (60/65/70 · 8/8/6) |
 | `07-sesion-terminada.png` | Resumen: 1420 kg, 3 series (60/65/70), reparto muscular |
 | `08-sesion-guardada.png` | Edición posterior de pesos reales (60/65/70) |
+| `pwa-*.png` | Las dos puertas y un contexto seguro, para la comprobación de instalación (`USO-MOVIL.md` §4) |
 
 ## 4. Qué pasó al recorrer el flujo contra el despliegue
 
@@ -160,6 +163,22 @@ posterior: guardar 60/65/70, corregir a 62,5/67,5/72,5, releer y comprobar tonel
 
 
 ## 5. Diez problemas concretos
+
+Cada uno lleva su **arreglo concreto** (CSS o texto) en esta tabla; debajo está el
+detalle con evidencia. El 1 ya está cerrado en esta pasada; los demás siguen abiertos.
+
+| # | Problema | Arreglo concreto (CSS o texto) |
+|---|---|---|
+| 1 | Pesos por serie no llegaban a la sesión | **Hecho**: `buildDraft` recibe `set_targets` y usa `setTargets[index]` (código, no CSS) |
+| 2 | Cabecera del plan dice «3 × 8» con series 8/8/6 | Texto: en `PlanEditorPage.tsx:120`, si los objetivos no coinciden, `hint={`${sets} series · ${targets.map(t => t.reps).join('/')}`}` |
+| 3 | «Objetivo 3×8» no dice el objetivo de cada serie | CSS/texto: `placeholder={String(target.weight_kg)}` en el input de peso y `placeholder={String(target.reps)}` en reps, con `placeholder:text-ink-faint`; o un `<span className="text-caption text-ink-faint">obj. 70 kg</span>` bajo el número de serie |
+| 4 | Acciones duplicadas arriba/abajo; «Terminar» sin confirmar | CSS: borrar la fila superior (`SessionPage.tsx:436-454`) y dejar solo la barra inferior `sticky bottom-[calc(var(--ga-space-bottom-nav)+env(safe-area-inset-bottom))]`; texto: confirmación `role="alertdialog"` «Te faltan N de M series. ¿Terminar y guardar?» |
+| 5 | Barra de pestañas activa durante la sesión | CSS: en `AppShell`, si `pathname.startsWith('/gimnasio/entrenar')` devolver `<main className="mx-auto w-full max-w-[var(--ga-space-content)] px-4 py-6 pb-28"><Outlet /></main>` sin `<nav>` ni cabecera de marca; `pb-28` deja sitio a la barra de acción propia |
+| 6 | «Estado del envío» no persiste | Texto/UI: sustituir la insignia de mutación por `usePushStatus` y mostrar «Enviado hoy a las 18:04» / «Sin enviar»; requiere guardar `last_pushed_at` y `workout_id` en el backend |
+| 7 | El error de envío no dice la causa | Texto: pintar `error.message` (el `detail` del servidor) y, si incluye «Vincula», añadir `<Button variant="secondary">Vincular cuenta</Button>`; CSS: `text-stop` en vez de `text-ink-muted` |
+| 8 | «1 ejercicios» | Texto: helper `plural(n, 'ejercicio', 'ejercicios')` en `GymPage.tsx:91` y los otros tres puntos que lo repiten |
+| 9 | Dos CTA para empezar | Texto: en «Tus plantillas», «Empezar» → «Abrir» con `className={secondaryLink}` (deja de competir con el primario «Empezar sesión»); CSS: quitar `btn-primary` de esa acción |
+| 10 | «recalcula el total» sin total visible | Texto/CSS: añadir sobre las filas `<p className="text-caption text-ink-muted">{n} series · {formatNumber(total, 'kg')}</p>` (`SessionEditPage.tsx:102`) o borrar la promesa del texto |
 
 ### 1. Los pesos por serie del plan no llegaban a la sesión — **resuelto el 2026-11-09**
 
