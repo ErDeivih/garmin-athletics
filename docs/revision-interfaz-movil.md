@@ -39,6 +39,12 @@ dos puertas.
 
 ## 2. Inventario de las pantallas del flujo
 
+En el Gimnasio hay, arriba del todo, una **tarjeta de estado** añadida el 2026-11-10
+(componente `PendingWatchCard`): «Reloj real · pendiente», con el aviso de que el envío
+todavía no está probado en el Forerunner 255 y los tres pasos para cerrarlo. No es un
+mensaje escondido: se pinta siempre en esa pantalla mientras la bandera
+`AVISO_RELOJ_REAL` esté activa. Sale en `02-gimnasio-movil.png`.
+
 | # | Pantalla | Ruta | Para qué | Captura |
 |---|---|---|---|---|
 | 1 | Gimnasio | `/gimnasio` | Punto de partida: entreno de hoy, envío al reloj, plantillas y últimas sesiones | `02-gimnasio-movil.png` |
@@ -110,6 +116,9 @@ No existe: confirmación al terminar sesión, estado persistido del envío, avis
 | `06-entrenar.png` | Sesión en curso con las tres series marcadas (60/65/70 · 8/8/6) |
 | `07-sesion-terminada.png` | Resumen: 1420 kg, 3 series (60/65/70), reparto muscular |
 | `08-sesion-guardada.png` | Edición posterior de pesos reales (60/65/70) |
+| `09-editar-tras-entrenar.png` | Corrección después de entrenar: serie 1 de 60 → 62,5 kg, guardada en el servidor |
+| `10-historial-sesion.png` | Gimnasio con la sesión en «Últimas sesiones»: 10 nov · 1420 kg · 3 series |
+| `https-arranque-sin-cobertura.png` | La app abierta con la red apagada, servida por HTTPS (service worker) |
 | `pwa-*.png` | Las dos puertas y un contexto seguro, para la comprobación de instalación (`USO-MOVIL.md` §4) |
 
 ## 4. Qué pasó al recorrer el flujo contra el despliegue
@@ -129,6 +138,10 @@ directorio son las de después; las de antes están en `antes/` y el informe ant
 | 3 series ejecutadas y sesión guardada | OK: 3 series |
 | Pesos y reps por serie en la sesión guardada | **OK: 60/65/70 y 8/8/6** (antes 60/60/60 y 8/8/8) |
 | Corregir después de entrenar | OK: 62,5/67,5/72,5 persisten y el tonelaje pasa de 1420 a 1475 |
+| La corrección se ve en el mismo sitio | OK: botones − / + y «Guardado a las …» (`09-editar-tras-entrenar.png`) |
+| La sesión aparece en el historial | OK: «Últimas sesiones · 10 nov · 1420 kg · 3 series» (`10-historial-sesion.png`) |
+| Aviso de lo que falta para el reloj real | OK: tarjeta visible «Reloj real · pendiente» en Gimnasio (problema 0, nueva) |
+| Instalable y arranque sin cobertura | OK servida por HTTPS: service worker activo, Chrome la considera instalable y arranca con la red apagada (`USO-MOVIL.md` §4) |
 
 ### Antes y después (2026-11-09)
 

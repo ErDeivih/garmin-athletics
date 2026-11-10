@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { CalendarCheck } from 'lucide-react';
 import { usePushWorkout, useSessions, useTemplate, useTemplates } from '../api/queries';
 import { Badge, Button, Card, EmptyState, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../components/ui';
+import { PendingWatchCard } from '../components/PendingWatchCard';
+import { AVISO_RELOJ_REAL } from '../config/features';
 import { formatDate, formatMinutes, formatNumber, todayWeekday, weekdayName } from '../lib/format';
 
 const startLink =
@@ -80,6 +82,8 @@ export function GymPage() {
           </div>
         }
       />
+
+      {AVISO_RELOJ_REAL ? <PendingWatchCard /> : null}
 
       <section aria-label="Hoy toca">
         <Card>

@@ -1,0 +1,27 @@
+{
+  "url": "https://127.0.0.1:8444",
+  "pasos": {
+    "contexto": {
+      "seguro": true,
+      "protocolo": "https:"
+    },
+    "serviceWorker": {
+      "controlado": true,
+      "registros": [
+        {
+          "ambito": "https://127.0.0.1:8444/",
+          "estado": "activated"
+        }
+      ]
+    },
+    "instalabilidad": [
+      {
+        "errorId": "in-incognito",
+        "errorArguments": []
+      }
+    ],
+    "arranqueSinCobertura": true,
+    "captura": "https-arranque-sin-cobertura.png"
+  },
+  "resultado": "OK: instala y arranca sin cobertura"
+}

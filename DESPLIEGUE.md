@@ -140,6 +140,14 @@ en `docs/revision-interfaz-movil.md`.
 Al terminar, `down`. **Nunca se deja la instancia de verificación abierta**: no forma
 parte de la app y su base es una copia.
 
+La regresión visual se puede lanzar contra esa copia (no contra la app real: crea una
+cuenta y una sesión de prueba, y en la base de David dejaría basura):
+
+```powershell
+cd frontend-nuevo
+node scripts/visual-regression.mjs http://192.168.1.139:8011 http://192.168.1.139:8011
+```
+
 ## Actualizar la app
 
 **La imagen se construye en el PC y se envía hecha** porque el servidor no resuelve

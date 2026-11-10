@@ -295,6 +295,32 @@ try {
   };
   if (series.length !== 3) throw new Error(`Se esperaban 3 series, hay ${series.length}`);
 
+  // 9. Corregir un peso DESPUÉS de entrenar y comprobar que persiste.
+  await pagina.getByRole('button', { name: new RegExp(`subir peso serie 1 de ${nombreEjercicio}`, 'i') }).click();
+  await pagina.waitForTimeout(1400);
+  const corregida = await apiJson(`/api/v1/strength/sessions/${ultima.id}`, { token });
+  const pesosCorregidos = corregida.json.exercises
+    .flatMap((ejercicio) => ejercicio.sets)
+    .map((serie) => Number(serie.weight_kg));
+  checks.correccion_post_entreno = { pesos: pesosCorregidos, esperado: [62.5, 65, 70] };
+  if (JSON.stringify(pesosCorregidos) !== JSON.stringify([62.5, 65, 70])) {
+    throw new Error(`La corrección posterior no persistió: ${JSON.stringify(pesosCorregidos)}`);
+  }
+  await captura('09-editar-tras-entrenar', { espera: 500 });
+  // Se deja como se entrenó (60) para que el historial cuadre con la sesión.
+  await pagina.getByRole('button', { name: new RegExp(`bajar peso serie 1 de ${nombreEjercicio}`, 'i') }).click();
+  await pagina.waitForTimeout(1400);
+
+  // 10. La sesión aparece en el historial del gimnasio.
+  await pagina.goto(`${APP}/gimnasio`, { waitUntil: 'domcontentloaded' });
+  await pagina.getByRole('heading', { name: 'Gimnasio', exact: true }).waitFor({ timeout: 20000 });
+  const historial = pagina.getByText(/últimas sesiones/i).first();
+  await historial.waitFor({ timeout: 20000 });
+  await historial.scrollIntoViewIfNeeded();
+  await pagina.waitForTimeout(400);
+  await captura('10-historial-sesion', { espera: 400 });
+  checks.historial = true;
+
   // El único error esperado es el 400 del envío sin credencial Garmin (paso 7):
   // el navegador apunta en consola cualquier respuesta >= 400.
   const erroresReales = erroresConsola.filter((texto) => !/400 \(Bad Request\)/.test(texto));

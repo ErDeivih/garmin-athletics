@@ -1,122 +1,126 @@
-# Lyfta en el móvil: cómo se instala y cómo se usa
+# Lyfta en el móvil: instalación y uso
 
-Fecha: 2026-11-09. Este documento es la guía práctica para David: qué URL abrir, cómo
-dejarla en la pantalla de inicio, qué funciona sin cobertura y qué queda pendiente.
+Fecha: 2026-11-10. Guía práctica para David. Resumen: **tres pasos** para dejarla
+instalada, y al final lo único que queda pendiente (la prueba con el reloj físico).
 
-## 1. Las dos puertas
+## Los 3 pasos para instalarla
 
-| Dónde estás | URL | Qué necesitas |
-|---|---|---|
-| En casa, misma wifi | `http://192.168.1.139:8010` | Nada |
-| Fuera de casa | `http://100.117.58.93:8010` | Tailscale encendido en el móvil |
+**1. Abre la dirección correcta y entra con tu cuenta.**
 
-El servidor de casa tiene que estar encendido (lo está siempre). Las dos puertas sirven
-la misma app y la misma base de datos; entra con tu cuenta de Lyfta de siempre.
+| Dónde estás | URL |
+|---|---|
+| En casa, misma wifi | `http://192.168.1.139:8010` |
+| Fuera de casa | `http://100.117.58.93:8010` (con Tailscale encendido en el móvil) |
 
-> El móvil (`poco-x4-pro-5g`) ya está dado de alta en el tailnet; solo hay que abrir la
-> app Tailscale y dejarla conectada. Si aparece desconectado, el botón de encendido de
-> Tailscale en el móvil.
+**2. Añádela a la pantalla de inicio.**
 
-## 2. Cómo instalarla en la pantalla de inicio (hoy)
+- **Android (Chrome)**: menú ⋮ → **Añadir a pantalla de inicio**.
+- **iPhone/iPad (Safari)**: botón **Compartir** → **Añadir a pantalla de inicio**.
 
-La app **se abre y se puede añadir a la pantalla de inicio por las dos puertas**, pero
-hoy todavía **no se instala como PWA completa** en Android. No es un fallo de la app: es
-que las dos puertas son `http://` y Chrome solo permite instalar PWA en HTTPS. Comprobado
-con el propio navegador (detalle en §4).
+Queda el icono «Lyfta» (fondo oscuro, «L» cian). En iPhone se abre a pantalla completa,
+sin barra de Safari.
 
-### Android (Chrome)
+**3. Ábrela desde el icono y comprueba que entra.** Si entra directa a «Hoy» o al login,
+está instalada. El servidor de casa tiene que estar encendido.
 
-1. Abre `http://192.168.1.139:8010` (en casa) o `http://100.117.58.93:8010` (fuera).
-2. Entra con tu cuenta.
-3. Menú ⋮ → **Añadir a pantalla de inicio**. Aparece el icono «Lyfta» con el fondo oscuro
-   y la «L» cian.
-4. Al abrirla desde el icono se comporta como una pestaña del navegador (con barra de
-   direcciones). Es una limitación del HTTP, no de la app: se quita al activar HTTPS (§5).
+> Cuando David active el HTTPS del tailnet (§5), en Android aparecerá además
+> **«Instalar app»** y la app arrancará sin cobertura. Los tres pasos siguen siendo los
+> mismos: ese aviso de instalación es el que convierte el acceso directo en app completa.
 
-### iPhone / iPad (Safari)
+## Qué te vas a encontrar al abrirla
 
-1. Abre la misma URL en **Safari**.
-2. Botón **Compartir** → **Añadir a pantalla de inicio**.
-3. Al abrirla desde el icono se abre **a pantalla completa**, sin barra de Safari (la app
-   declara `apple-mobile-web-app-capable`). Es la experiencia más parecida a una app que
-   se puede tener hoy.
+- En **Gimnasio** hay una tarjeta visible, **«Reloj real · pendiente»**, con los tres pasos
+  concretos que faltan para probar el envío en el Forerunner 255. No es un mensaje
+  escondido: está siempre arriba mientras la prueba siga pendiente. Desaparece cuando se
+  cierre la prueba y se ponga `AVISO_RELOJ_REAL = false` en `frontend-nuevo/src/config/features.ts`.
+- El flujo normal es: **Hoy → Gimnasio → Empezar sesión**, marcar series y **Terminar
+  sesión**. Los pesos por serie del plan (60/65/70) aparecen ya puestos en su serie.
+- **Gimnasio → Enviar al reloj** manda el entreno a Garmin. El estado se ve en el bloque.
 
-## 3. Qué funciona y qué no sin cobertura
+## 2. Qué funciona y qué no sin cobertura
 
-Comprobado el 2026-11-09 contra el despliegue (instancia de prueba, ver §4):
+Comprobado contra el despliegue y contra el mismo build servido por HTTPS:
 
 | Caso | Estado |
 |---|---|
-| Abrir la app por primera vez (con red) | ✅ |
+| Abrir la app con red | ✅ |
 | Entrenar sin cobertura con la app ya abierta | ✅ el borrador se guarda en el móvil |
-| Cambiar pesos/reps/hechas sin red y volver | ✅ se recupera al reconectar (probado: peso 61 kg) |
-| Recargar o abrir la app **sin red** | ❌ error del navegador (hace falta service worker, y para eso HTTPS) |
-| Terminar la sesión sin red | ❌ error visible; el borrador **no se pierde** y se puede reintentar con red |
-| Datos ya descargados (historial, plantillas) sin red | ❌ se piden al servidor |
+| Cambiar pesos/reps/hechas sin red y volver | ✅ se recupera al reconectar (probado: 61 kg) |
+| Recargar o abrir desde cero sin red | ✅ **solo con HTTPS** (service worker); por `http://` falla el navegador |
+| Terminar la sesión sin red | ⚠️ error visible; el borrador no se pierde |
+| Historial ya descargado sin red | ❌ se pide al servidor |
 
-En resumen: **no pierdes el entrenamiento** si te quedas sin cobertura a mitad de sesión,
-pero la app necesita red para abrirse desde cero hasta que se active HTTPS.
+En resumen: **no pierdes el entrenamiento** si se va la cobertura a mitad de sesión; la app
+solo necesita red para abrirse desde cero hasta que se active HTTPS.
 
-## 4. Qué se ha verificado (evidencia)
+## 3. Comprobación de que el flujo completo funciona
 
-Ejecutado con Chrome real a 390 × 844 contra las dos puertas y contra un contexto seguro
-de control:
+Ejecutado con Chrome real a 390 × 844 contra el despliegue (copia desechable de la base,
+sin tocar la cuenta de Garmin):
 
-| Comprobación | LAN `192.168.1.139:8010` | Tailnet `100.117.58.93:8010` | Control seguro `127.0.0.1` |
-|---|---|---|---|
-| La app carga (200, título «Lyfta») | ✅ | ✅ | ✅ |
-| Manifiesto servido y sin errores | ✅ 200 | ✅ 200 | ✅ 200 |
-| Contexto seguro (`isSecureContext`) | ❌ | ❌ | ✅ |
-| Service worker activo y controlando | ❌ | ❌ | ✅ |
-| Chrome la considera **instalable** | ❌ `not-from-secure-origin` | ❌ `not-from-secure-origin` | ✅ **sí** |
-| Captura | `capturas-movil/pwa-192-168-1-139-8010.png` | `capturas-movil/pwa-100-117-58-93-8010.png` | `capturas-movil/pwa-127-0-0-1-8021.png` |
+| Paso | Resultado |
+|---|---|
+| Crear plan con pesos por serie | 60 / 65 / 70 kg y 8 / 8 / 6 reps |
+| Editar una serie con − / + | 65 → 67,5 guardado en el servidor y vuelta a 65 |
+| Enviar al reloj | error real 400 (copia sin credencial) y estado «Enviado» simulado para la captura |
+| Entrenar y guardar | sesión con 3 series: 60/65/70, 1420 kg |
+| Corregir después de entrenar | 60 → 62,5 en la serie 1, persistido en el servidor |
+| Verlo en el historial | «Últimas sesiones: 10 nov · 1420 kg · 3 series · Corregir pesos» |
 
-Datos crudos: `docs/capturas-movil/informe-pwa.json`. El único error que sale en el
-control seguro es `in-incognito`, que lo añade el navegador de pruebas por ir en modo
-privado; en el móvil no aparece.
+Capturas: `docs/capturas-movil/02` a `10`. Informe: `informe-flujo.json`.
 
-Flujo completo contra el despliegue (misma app, copia desechable de la base, sin tocar tu
-cuenta de Garmin): plan 60/65/70 → editar una serie (65 → 67,5 y vuelta) → envío al reloj
-→ 3 series → sesión guardada **60/65/70, 1420 kg**. Informe:
-`docs/capturas-movil/informe-flujo.json`.
+## 4. Qué pasa cuando se active HTTPS
 
-## 5. Lo que falta para la PWA completa (y cómo se activa)
+Comprobado con este mismo build servido por HTTPS (certificado de pruebas): contexto
+seguro, service worker activo controlando la página, Chrome la considera instalable y,
+**con la red apagada, la app arranca igual** desde la caché del service worker. Captura:
+`docs/capturas-movil/https-arranque-sin-cobertura.png`; datos:
+`docs/capturas-movil/informe-https.json`.
 
-Todo el bloqueo está en una casilla del panel de Tailscale que solo puede activar David:
+Eso es exactamente lo que tendrá el móvil cuando el certificado lo emita Tailscale; lo
+único que falta es el interruptor de §5.
 
-1. Entrar en **login.tailscale.com** → **DNS** → activar **HTTPS Certificates** para el
-   tailnet (es un interruptor; hoy la API responde *«your Tailscale account does not
-   support getting TLS certs»*).
-2. En el servidor, servir la app por HTTPS en el tailnet:
+## 5. Activar HTTPS en el tailnet (pasos exactos)
+
+Solo puede hacerlo David, con su cuenta de Tailscale. Son dos minutos:
+
+1. Entrar en **<https://login.tailscale.com/admin/dns>** (menú **DNS**).
+2. Bajar a la sección **HTTPS Certificates** y pulsar **Enable HTTPS…** (Activar HTTPS).
+3. Confirmar en el diálogo. MagicDNS ya está encendido en este tailnet, que es el
+   requisito previo.
+4. En el servidor, servir la app por HTTPS dentro del tailnet:
    ```bash
    sudo tailscale serve --bg --https=443 http://127.0.0.1:8010
    ```
-3. Abrir en el móvil **`https://servidor.tail4263a0.ts.net`**. A partir de ahí:
-   - aparece el aviso **«Instalar app»** en Android (y la opción en el menú ⋮);
-   - el service worker se registra: la app **arranca sin cobertura** y guarda los
-     recursos ya descargados;
-   - la instalación pasa a ser una app de verdad (WebAPK en Android), sin barra del
-     navegador.
+5. Abrir en el móvil **`https://servidor.tail4263a0.ts.net`** y pulsar **Instalar app**
+   (Android) o **Añadir a pantalla de inicio** (iPhone).
 
-Mientras eso no se active, la app se usa desde el icono de la pantalla de inicio como se
-explica en §2. No hay otra forma de tener HTTPS desde fuera de casa sin abrir puertos en
-el router ni contratar un dominio.
+Comprobar que ha funcionado:
 
-## 6. Lo que falta para cerrarlo del todo
+```bash
+# en el servidor
+tailscale cert servidor.tail4263a0.ts.net   # debe emitir el certificado, no dar error
+tailscale serve status                       # debe mostrar https://... → 127.0.0.1:8010
+```
 
-- **Prueba física del reloj** (lo único que depende de David): reloj cargado y
-  emparejado, 2FA de Garmin delante, «Enviar al reloj», mirar el peso por serie en el
-  reloj, hacer una serie y contar las reps reales. Pasos exactos en
-  `PENDIENTE-PRUEBA-RELOJ.md` §7.
-- **Interruptor HTTPS de Tailscale** (§5) si quiere PWA instalable y arranque sin
-  cobertura.
-- **Servidor encendido**: la app vive en el servidor de casa; si está apagado, no hay
-  app (ni por la LAN ni por el tailnet).
+Hoy la API responde `500 Internal Server Error: your Tailscale account does not support
+getting TLS certs`, que es justo lo que cambia ese interruptor. Documentación oficial:
+[Enabling HTTPS](https://tailscale.com/docs/how-to/set-up-https-certificates).
 
-## 7. Notas de seguridad
+## 6. Lo que falta de verdad
 
-- La puerta de la LAN está abierta en la red de casa y pide usuario y contraseña, como
-  cualquier servicio del servidor. La de fuera solo existe dentro del tailnet.
-- No hace falta abrir ningún puerto en el router ni publicar la app en Internet.
-- La sesión dura 30 días; si cambia `SECRET_KEY` en el servidor, habrá que volver a
-  entrar en todos los dispositivos.
+- **Prueba física del Forerunner 255** (lo único que depende de David): reloj cargado y
+  emparejado, 2FA de Garmin delante, «Enviar al reloj», comprobar el peso de cada serie en
+  el reloj, hacer una serie y contar las reps reales. Pasos en
+  `PENDIENTE-PRUEBA-RELOJ.md` §7. La tarjeta «Reloj real» de la app recuerda los tres
+  primeros.
+- **Interruptor HTTPS del tailnet** (§5), si quiere PWA instalable y arranque sin
+  cobertura. La app funciona igual sin él.
+
+## 7. Notas
+
+- La puerta de la LAN está abierta en la red de casa y pide usuario y contraseña; la de
+  fuera solo existe dentro del tailnet. No hay puertos abiertos en el router.
+- La sesión dura 30 días; si cambia `SECRET_KEY` en el servidor, hay que volver a entrar
+  en todos los dispositivos.
+- El servidor tiene que estar encendido: la app vive ahí, no en el móvil.

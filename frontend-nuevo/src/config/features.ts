@@ -51,3 +51,9 @@ export function useExtendedSections(): boolean {
 }
 
 export const EXTENDED_SECTIONS_KEY = STORAGE_KEY;
+
+/**
+ * Aviso visible en el gimnasio de que falta la prueba con el reloj físico.
+ * Poner a `false` cuando WALL.md cierre «Prueba real en el Forerunner 255».
+ */
+export const AVISO_RELOJ_REAL = true;
