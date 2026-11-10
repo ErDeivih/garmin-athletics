@@ -1,93 +1,115 @@
-# ⚡ Lyfta - Tu centro de entrenamiento privado
+# Lyfta — entrenamiento de fuerza con reloj Garmin
 
-Plataforma personal de ingesta de Garmin Connect (sueño, HRV, Body Battery, FC en reposo, actividades con GPS), modelo fisiológico Banister (ATL/CTL/TSB + Readiness), mapas y planificador de rutas, gimnasio con IA, entrenos hacia el reloj y comparativas privadas con amigos.
+**App móvil (PWA) que sustituye a Garmin Connect para entrenar fuerza:** planifica el
+entrenamiento con **un peso distinto por serie**, lo envía **al Forerunner 255 desde la propia
+app**, te deja entrenar sin teclear pesos en la muñeca y devuelve la sesión como historial,
+progreso y resumen semanal exportable.
 
-## 🚀 Inicio Rápido
+> Proyecto personal en uso real desde el 2026-11-09. No es una demo: el servidor sirve la app
+> todos los días y la base tiene las sesiones de entrenamiento de su dueño.
 
-### 1. Requisitos
-- Python 3.11+ y Node 18+.
-- Cuenta en Garmin Connect (la del reloj/app).
+| Estado | |
+|---|---|
+| Producto | En uso: planificar → enviar al reloj → entrenar → corregir → historial |
+| PWA | Instalable por HTTPS y con **arranque sin cobertura** (verificado) |
+| Pruebas | **68/68** frontend (32 ficheros) · **24/24** guiones de backend · **4/4** pantallas de regresión visual |
+| Pendiente | **Prueba física con el reloj** (único punto que requiere el fr255 y el 2FA de Garmin) |
 
-### 2. Backend
+## Capturas
+
+| Plan con pesos por serie | Sesión guardada | Resumen semanal |
+|---|---|---|
+| ![Plan 60/65/70](docs/capturas-movil/03-plan-pesos.png) | ![Sesión 60/65/70 y 1420 kg](docs/capturas-movil/07-sesion-terminada.png) | ![Semana con adherencia](docs/capturas-movil/25-resumen-semanal.png) |
+
+Todas a **390 × 844** contra la app desplegada. Galería completa en
+[`docs/capturas-movil/`](docs/capturas-movil/) (onboarding, biblioteca, editor rápido,
+historial, exportación CSV/JSON, progreso, ajustes y arranque sin cobertura).
+
+## Qué hace
+
+- **Planificación**: plantillas con foco, día y pesos por serie; editor rápido (copiar serie
+  anterior, aplicar un peso a todas, guardado automático); buscar/filtrar; duplicar planes;
+  exportar e importar en JSON.
+- **Reloj**: envío del entreno a Garmin con objetivos por serie y `dry_run` para validar sin
+  tocar la cuenta; **watch-app propia en Connect IQ** que muestra el peso de cada serie, cierra
+  la serie sola y devuelve las series de forma idempotente.
+- **Entrenar**: peso, reps, esfuerzo y «Hecha» por serie; borrador guardado en el móvil que
+  sobrevive a recargas y a quedarse sin cobertura; resumen con volumen y reparto muscular.
+- **Historial y análisis**: lista con fecha/duración/volumen/series; detalle con
+  **planificado frente a real**; corrección posterior; exportación **CSV/JSON**; progreso por
+  ejercicio y semana (volumen, mejor serie, gráfico); resumen semanal con **series por grupo
+  muscular** y **adherencia al plan**.
+- **Producto móvil**: onboarding de tres pasos, ajustes de **unidades kg/lb**, tema
+  claro/oscuro, aviso de uso sin conexión y PWA instalable.
+
+## Arquitectura
+
+```mermaid
+flowchart LR
+  PWA[PWA<br/>React 19 · Vite · TypeScript] -->|HTTPS Tailscale| API[FastAPI<br/>SQLAlchemy async]
+  API --> DB[(SQLite)]
+  API -->|workout con objetivos por serie| GC[Garmin Connect]
+  GC -->|sincroniza| FR[Forerunner 255<br/>watch-app Connect IQ]
+  FR -->|/watch/today · /watch/sets| API
+```
+
+- **Frontend**: React 19 + TypeScript + Vite, React Router y TanStack Query, sistema de tokens
+  propio sobre Tailwind v4 (contraste AA comprobado), manifiesto, iconos y service worker.
+- **Backend**: FastAPI + SQLAlchemy 2 async sobre SQLite, migraciones idempotentes, APScheduler,
+  y el build del frontend servido **en el mismo origen** con *fallback* de rutas SPA.
+- **Garmin**: `garminconnect` para subir el workout y una watch-app en **Monkey C**
+  (`watch/lyfta-watch/`) para leerlo en el reloj y devolver las series.
+- **Despliegue**: imagen Docker multi-etapa, servidor doméstico, acceso **solo por tailnet** con
+  certificado HTTPS válido. Sin puertos abiertos en el router ni servicios públicos.
+
+## Pruebas
+
 ```powershell
+# Frontend: tokens, contraste, escala, tipos y 68 pruebas de flujo
+cd frontend-nuevo; npm run check
+
+# Backend: 24 guiones de contrato con base SQLite efímera (no tocan Garmin ni la base real)
+Get-ChildItem tests\test_*.py | ForEach-Object { .\venv\Scripts\python.exe $_.FullName }
+
+# Regresión visual (4 pantallas, pixelmatch)
+cd frontend-nuevo; npm run visual
+```
+
+Método: cada arreglo empieza por una prueba que falla (rojo → verde), sin GitHub Actions; la
+evidencia (capturas numeradas e informes JSON) se versiona con el código. Ejemplos: los pesos
+por serie no llegaban a la sesión, el plan semanal sin planificación inventaba adherencia, el
+endpoint de exportación devolvía 404 antes de existir.
+
+## Desarrollo en local
+
+```powershell
+# Backend
 python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirements.txt
-copy .env.example .env   # y rellena GARMIN_EMAIL, GARMIN_PASSWORD, SECRET_KEY
-.\venv\Scripts\python.exe backend\test_garmin_sync.py   # 1ª vez: pide 2FA y guarda tokens
-.\venv\Scripts\python.exe backend\main.py
-```
+copy .env.example .env          # rellena GARMIN_EMAIL, GARMIN_PASSWORD, SECRET_KEY
+.\venv\Scripts\python.exe backend\main.py        # API en http://127.0.0.1:8000
 
-### 3. Frontend
-
-Hay dos: el viejo (`frontend/`, sigue sirviendo el backend) y el nuevo (`frontend-nuevo/`).
-
-```powershell
-# Frontend nuevo (T-02): Vite + React + TypeScript + Tailwind
+# Frontend (Vite con proxy a la API)
 cd frontend-nuevo
 npm install
-npm run dev          # http://127.0.0.1:5173
-
-# Frontend viejo (solo referencia, no se toca)
-cd frontend; npm install; npm run build   # dist/ lo sirve el backend
+npm run dev                     # http://127.0.0.1:5173
 ```
 
-El frontend nuevo se prueba con `npm run check` y habla con la API real. Ver
-[`frontend-nuevo/README.md`](frontend-nuevo/README.md) para el detalle de pantallas, banderas y
-pruebas de contrato. El sistema de diseño vive en
-[`designs/lyfta-design-system/`](designs/lyfta-design-system/).
+El backend sirve `frontend-nuevo/dist` cuando existe (una sola URL en producción): compílalo con
+`npm run build` para probar el camino real.
 
-Abre **`http://localhost:8000`** para el frontend viejo (usa incógnito tras actualizar, por la caché
-del bundle). El frontend nuevo se levanta aparte en `http://127.0.0.1:5173`: el backend todavía sirve
-`frontend/dist`, no `frontend-nuevo/dist`; unificar el camino de producción es la tarea T-23 del
-backlog.
+## Documentación
 
-## 🖥️ Qué incluye la web
+- [`PORTFOLIO.md`](PORTFOLIO.md) — resumen de candidatura: problema, competencias y enlaces.
+- [`docs/CASO-GARMIN.md`](docs/CASO-GARMIN.md) — caso técnico: producto, arquitectura y decisiones.
+- [`docs/USO-MOVIL.md`](docs/USO-MOVIL.md) — instalación en 3 pasos y lo que falta para el reloj.
+- [`DESPLIEGUE.md`](DESPLIEGUE.md) — despliegue, HTTPS del tailnet y operación.
+- [`docs/revision-interfaz-movil.md`](docs/revision-interfaz-movil.md) — dossier de interfaz con 10 problemas y su arreglo.
+- [`PENDIENTE-PRUEBA-RELOJ.md`](PENDIENTE-PRUEBA-RELOJ.md) — el único pendiente real, paso a paso.
 
-| Pestaña | Contenido |
-|---|---|
-| **Panel** | Readiness con anillo, Forma/Fatiga/Frescura, semana (sesiones/TSS/km/tiempo), widgets reales de Sueño (fases)/HRV/Body Battery (curva)/FC + Movimiento hoy (pasos), "Garmin dice" (VO2max, estado, predicciones), avisos, gráfica Banister 30d, últimas sesiones, conexión Garmin |
-| **Actividades** | Lista filtrable (deporte, fechas, texto) + paginación; detalle por sesión: mapa multicapa (calles/senderos/satélite) con ruta de colores (velocidad/carga/altitud), perfil de elevación, gráficas FC/ritmo, vueltas, zonas FC, meteo, desnivel, calorías, cadencia/potencia, export GPX, "Guardar como ruta" |
-| **Rutas** | Planificador: clics + arrastre de puntos, capas, deshacer/invertir/ida-vuelta/bucle óptimo, lista editable, guardar, importar GPX, exportar GPX, zonas de privacidad |
-| **Gimnasio** | Asistente editable (foco + intensidad, desplegables por tipo, leyenda, regenerar), registro táctil, temporizador de descanso, vista previa para reloj, historial con tonelaje y PRs |
-| **Tendencias** | 8 métricas (sueño, HRV, FC, batería, readiness, estrés, pasos) 30/90d + media 7d + CSV |
-| **Rendimiento** | Resumen por deporte vs periodo previo, zonas FC, marcas personales + predicciones Garmin |
-| **Calendario** | Mes con eventos (recurrentes inamovibles), actividades y readiness + avisos de entrenamiento |
-| **Social** | Leaderboard solo-agregados, solicitudes + invitaciones por código de 6 letras |
+## Privacidad
 
-## 🔒 Privacidad (importante)
-
-- Tu contraseña de Garmin se usa **una sola vez** para abrir sesión y **no se guarda en ningún sitio** (verificado con test: columna siempre NULL). Solo quedan tokens revocables por usuario.
-- Los tracks GPS solo los ve su dueño. El leaderboard comparte únicamente TSS/CTL/TSB/Readiness.
-- Sesión caducada → aviso "re-vincula". Desvincular borra fila + tokens de disco.
-
-```http
-PUT    /api/v1/auth/garmin-credentials   { garmin_email, garmin_password }  # un solo uso
-POST   /api/v1/auth/garmin-mfa           { garmin_email, garmin_password, ticket, code }
-GET    /api/v1/auth/garmin-status        # { linked, needs_reauth, last_sync_at }
-DELETE /api/v1/auth/garmin-credentials
-POST   /api/v1/sync/garmin               # sync manual (el scheduler automático aún no persiste: T-38)
-GET    /api/v1/sync/status
-```
-
-## 🧪 Pruebas
-
-```powershell
-# Backend (8 scripts en verde, ~36 s)
-.\venv\Scripts\python.exe tests\test_fatigue_engine.py
-.\venv\Scripts\python.exe tests\test_security.py
-.\venv\Scripts\python.exe tests\test_social_e2e.py   # incluye invites, push dry_run, rutas CRUD
-.\venv\Scripts\python.exe tests\test_tracks.py
-
-# Frontend nuevo: tokens + contraste AA + typecheck + flujos
-cd frontend-nuevo; npm run check
-npm run verify:api    # contrato contra un backend real sobre una copia de la BD
-npm run smoke         # flujo completo en un navegador real + capturas
-```
-
-## 📑 Especificaciones (fuente de verdad, revisadas 2026-09-10)
-
-- [`CONSTITUTION.md`](CONSTITUTION.md): principios y stack real.
-- [`SPEC.md`](SPEC.md): historias de usuario + **§2b estado real por HU** (✅/🟡/❌).
-- [`PLAN.md`](PLAN.md): arquitectura y endpoints con lo implementado vs pendiente marcado.
-- [`TASKS.md`](TASKS.md): Fases 1-14 (pendientes honestos: scheduler con persistencia, ingesta ampliada, calendario, rendimiento, PWA, GDPR).
+La contraseña de Garmin se usa una vez para abrir sesión y **no se guarda**; solo quedan tokens
+revocables. La app no se publica en Internet: se sirve en la red de casa y por el túnel privado
+del tailnet. La base y los tokens viven fuera del repositorio.

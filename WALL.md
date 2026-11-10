@@ -91,8 +91,10 @@ reloj y el análisis está completo.
   (`onLine: false`, `transferSize: 0`, `workerStart > 0`). Informe
   `docs/capturas-movil/informe-instalacion.json` y capturas `pwa-instalada-ventana.png` /
   `pwa-instalada-sin-cobertura.png`.
+- README de portfolio: `README.md` — qué es, capturas clave, arquitectura con diagrama,
+  pruebas (68/68 y 24/24) y estado real con el único pendiente (reloj físico).
 - Caso técnico para el portfolio: `docs/CASO-GARMIN.md` — producto, arquitectura (PWA +
-  Connect IQ), decisiones de diseño, qué demuestra y capturas.
+  Connect IQ), decisiones de diseño, qué demuestra y las tres capturas clave.
 - Uso real desde el móvil: `docs/USO-MOVIL.md` — bloque único con los tres pasos de instalación, la URL HTTPS exacta, qué se guarda sin cobertura y lo que falta para el reloj. Verificado contra la URL real (`informe-https.json`: contexto seguro, service worker activo, arranque sin cobertura) y con el inspector de Chrome (`informe-pwa.json`: instalable).
 - Capturas: `frontend-nuevo/screenshots/` — 29 capturas nuevas y numeradas (01–29).
 - Prueba final en seco: plan -> dry-run -> reloj -> 3 series -> sesión guardada; capturas 27–29.\n- Biblioteca: fases, series y pesos por serie visibles; filtro por foco.

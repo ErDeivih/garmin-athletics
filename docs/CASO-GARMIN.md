@@ -114,20 +114,23 @@ Actualizaciones por envío de imagen (`deploy/ship-image.ps1`) y verificación a
 | Despliegue y operación | Docker, HTTPS del tailnet, verificación automática del despliegue, sin exponer la app a Internet |
 | Comunicación | Documentación operativa, guía de uso en 3 pasos, dossier de interfaz y este caso |
 
-## 7. Capturas
+## 7. Las tres capturas clave
 
-![Onboarding de tres pasos](capturas-movil/00-onboarding.png)
-![Plan con pesos por serie](capturas-movil/03-plan-pesos.png)
-![Editor rápido con peso en bloque](capturas-movil/17-editor-aplicado.png)
-![Sesión guardada con 60/65/70](capturas-movil/07-sesion-terminada.png)
-![Historial con exportación CSV/JSON](capturas-movil/24-exportar-historial.png)
-![Resumen semanal con adherencia](capturas-movil/25-resumen-semanal.png)
-![Progreso por ejercicio y semana](capturas-movil/21-progreso.png)
-![La app arrancando sin cobertura](capturas-movil/https-arranque-sin-cobertura.png)
+| 1. Plan con peso por serie | 2. Sesión guardada | 3. Resumen semanal |
+|---|---|---|
+| ![Plan con pesos por serie 60/65/70](capturas-movil/03-plan-pesos.png) | ![Sesión guardada con 60/65/70 y 1420 kg](capturas-movil/07-sesion-terminada.png) | ![Resumen semanal con adherencia](capturas-movil/25-resumen-semanal.png) |
 
-Todas están tomadas a **390 × 844** contra la app desplegada (copia desechable de la base en
-las capturas de flujo, sin tocar la cuenta real de Garmin). Listado completo en
-`docs/capturas-movil/`.
+1. **Plan con pesos por serie** (60 / 65 / 70 kg): el corazón del producto, con − / + por serie y
+   guardado automático.
+2. **Sesión guardada**: los tres pesos llegan al historial, con 1420 kg de volumen y el detalle
+   por serie (60×8, 65×8, 70×6).
+3. **Resumen semanal**: volumen, series por grupo muscular y **adherencia al plan** calculada
+   contra el calendario (1 de 1, 100 %).
+
+Todas a **390 × 844** contra la app desplegada (copia desechable de la base en las capturas de
+flujo, sin tocar la cuenta real de Garmin). El resto de la galería —onboarding, editor rápido,
+historial con exportación CSV/JSON, progreso, ajustes y arranque sin cobertura— está en
+[`capturas-movil/`](capturas-movil/).
 
 ## 8. Estado y pendientes
 

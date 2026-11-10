@@ -135,6 +135,7 @@ necesario (FastAPI sirve el build), scripts de verificación propios.
 
 ## 8. Documentación del proyecto
 
+- `README.md` — qué es, arquitectura, pruebas y estado, con las capturas clave.
 - `DESPLIEGUE.md` — cómo está desplegado, cómo se actualiza y cómo se comprueba.
 - `docs/CASO-GARMIN.md` — **caso técnico**: producto, arquitectura (PWA + Connect IQ), decisiones y qué demuestra.
 - `docs/USO-MOVIL.md` — bloque único con los 3 pasos de instalación y lo que falta para el reloj.
