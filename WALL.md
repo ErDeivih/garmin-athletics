@@ -37,6 +37,8 @@ crear entrenamientos de gimnasio, llevarlos al reloj y analizar todo.
   posterior a 62,5 y sesión en el historial con 1420 kg); servicio por HTTPS comprobado
   como instalable y con arranque sin cobertura. Falta el interruptor HTTPS del tailnet
   (solo David) para que eso ocurra en el móvil real.
+- [x] Portfolio de candidatura. — 2026-11-10. `PORTFOLIO.md` con problema, competencias
+  (producto móvil, hardware, offline), capturas, enlace, estado y tecnologías.
 - [ ] Watch-app Connect IQ propia (después del camino A). — **en curso**: `watch/lyfta-watch/`
   diseñada, implementada y compilada para fr255 y 4 perfiles más; backend `/watch/today` y
   `/watch/sets` probado; sensor de repeticiones y estimación de fuerza añadidos. Capturas del

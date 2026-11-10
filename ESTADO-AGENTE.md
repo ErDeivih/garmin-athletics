@@ -1,8 +1,8 @@
 titulo: Lyfta — entrenamiento, reloj y análisis
-estado: desplegado y verificado; en-espera de la prueba física del reloj
-tarea: uso real desde el móvil cerrado (tres pasos de instalación, aviso del reloj en la app y HTTPS verificado en contexto seguro) y dossier de interfaz con las capturas nuevas del flujo completo
+estado: desplegado, verificado y con portfolio; en-espera de la prueba física del reloj
+tarea: portfolio de candidatura (PORTFOLIO.md) y bloque único de instalación + reloj en docs/USO-MOVIL.md; arranque sin cobertura re-verificado con el build actual
 nivel: 2
-siguiente: David sigue docs/USO-MOVIL.md (tres pasos) y, cuando tenga el reloj, ejecuta PENDIENTE-PRUEBA-RELOJ.md §7; si quiere PWA completa, activa HTTPS en el panel de Tailscale
-bloqueado: prueba física del fr255 (2FA/reloj de David); la instalación PWA real espera el interruptor HTTPS del tailnet, aunque con un HTTPS de pruebas ya está verificado que instala y arranca sin cobertura
+siguiente: David abre docs/USO-MOVIL.md (bloque único, tres pasos) y, cuando tenga el reloj, ejecuta PENDIENTE-PRUEBA-RELOJ.md §7; si quiere PWA completa, activa HTTPS en el panel de Tailscale
+bloqueado: prueba física del fr255 (2FA/reloj de David); la instalación PWA real espera el interruptor HTTPS del tailnet, aunque el arranque sin cobertura ya está verificado con un HTTPS de pruebas
 fecha: 2026-11-10
-resumen: Queda la prueba física del reloj; capturas en docs/capturas-movil/02–10 más https-arranque-sin-cobertura.png, tarjeta «Reloj real · pendiente» en la app y USO-MOVIL.md con los tres pasos de instalación.
+resumen: Queda la prueba física del reloj; PORTFOLIO.md reúne problema, competencias, capturas, enlace, estado y tecnologías, y el arranque sin cobertura está re-verificado (docs/capturas-movil/https-arranque-sin-cobertura.png).
