@@ -1,36 +1,39 @@
 titulo: Lyfta — entrenamiento, reloj y análisis
 estado: producto completo y desplegado; en-espera de la prueba física del reloj
-tarea: modo enfocado de sesión en el gimnasio (serie actual, peso objetivo, «Serie hecha», registro rápido de reps/RPE y descanso) con capturas 26–27
+tarea: tanda repetida por tercera vez (caso, exportar CSV y resumen semanal ya entregados); verificada, sin cambios pendientes
 nivel: 2
-siguiente: David instala la PWA desde https://servidor.tail4263a0.ts.net (3 pasos) y ejecuta la prueba del reloj de docs/USO-MOVIL.md
-bloqueado: prueba física del fr255 (2FA/reloj de David)
+siguiente: David entrega el resultado de la prueba del reloj o una tarea distinta; si no, no hay nada que hacer en esta tanda
+bloqueado: repetición del mismo encargo ya entregado + prueba física del fr255 (2FA/reloj de David)
 fecha: 2026-11-10
-resumen: Modo enfocado de sesión con registro rápido de reps/RPE y temporizador de descanso; 69/69 frontend y 24/24 backend en verde, capturas 26–27; solo falta la prueba física del reloj.
+resumen: Caso de portfolio (arquitectura PWA + Connect IQ, 69/69 y 24/24, pendiente reloj), exportación CSV y resumen semanal por grupo con adherencia ya están entregados y desplegados; la tanda ha vuelto a llegar repetida.
 
 ## Bloqueo
 
-**Situación (2026-11-10, 20:30):** la tanda nueva (modo enfocado + registro rápido) está
-entregada y desplegada. Lo único que no puedo cerrar es la aceptación con el reloj físico.
+**Situación (2026-11-10, 22:55):** llega por tercera vez una tanda ya entregada. Las tres
+tareas están cerradas y comprobadas ahora mismo; no rehago lo mismo en silencio.
 
-**(a) Dónde me quedé.** Producto verificado en frío: frontend **69/69** en 33 ficheros, backend
-**24/24**, regresión visual **4/4**, flujo desplegado OK (`modo_enfocado` y `registro_rapido` a
-`true`, sesión guardada con pesos 60/65/70). Capturas `26-sesion-enfocada` y
-`27-registro-rapido`. Árbol limpio, `master` = `origin/master`.
+**(a) Dónde me quedé.** Verificado contra el repositorio y el despliegue:
+- `docs/CASO-GARMIN.md` con arquitectura PWA + Connect IQ, qué demuestra, tres capturas clave y
+  pendiente del reloj; cifras actualizadas a **69/69** frontend (33 ficheros) y **24/24** backend
+  (commit `b5648ad`, actualizado en `a03e871`).
+- **Exportar historial** CSV/JSON: `GET /api/v1/strength/export` responde **401** (existe y pide
+  sesión) y la captura `24-exportar-historial.png` está en el repo (entrega `5ae6a0b`).
+- **Resumen semanal** con volumen, series por grupo muscular y adherencia al plan:
+  `GET /api/v1/strength/stats` responde **401** y `25-resumen-semanal.png` está en el repo
+  (entrega `5ae6a0b`).
+- Árbol limpio, `master` = `origin/master`, suites verdes en la última pasada (69/69 y 24/24).
 
 **(b) Qué falta revisar.**
-1. La **prueba física del fr255**: enviar el entreno desde la app, comprobar el peso por serie
-   en el reloj, que una serie real vuelva al backend y medir el detector de repeticiones con
-   series contadas a mano (≥95 % con error ≤1 rep).
-2. Confirmar el **sufijo del tailnet**: el servidor anuncia `servidor.tail4263a0.ts.net` y
-   `ta4283ad.ts.net` todavía no resuelve.
-3. Si quiere que el **modo enfocado** use el peso de la última marca cuando no hay objetivo por
-   serie (hoy manda el plan, como en la lista) o que permita editar el peso también ahí.
+1. La **prueba física del fr255** (envío, peso por serie en el reloj, vuelta de una serie real y
+   medición del detector de repeticiones): único pendiente real del producto.
+2. El encargo vuelve a citar **65/65 y 23/23**, que son cifras de una tanda anterior; las reales
+   son **69/69** y **24/24**. No las cambio a las antiguas sin confirmación.
+3. Confirmar el **sufijo del tailnet** (`servidor.tail4263a0.ts.net` funciona; `ta4283ad.ts.net`
+   no resuelve).
 
-**(c) Qué necesito de David u otro chat.**
-- El resultado de la prueba del reloj (reloj cargado, 2FA delante).
-- Que confirme cuál es el sufijo correcto del tailnet en el panel de Tailscale.
+**(c) Qué necesito de David u otro chat.** El resultado de la prueba del reloj (o una tarea
+distinta y concreta); y que confirme si mantengo las cifras reales en el README y en el caso.
 
-**(d) Siguiente paso concreto.** Con el resultado del envío y las reps contadas: importar la
-actividad, contrastar `sets_imported`/`unmapped`, medir el detector y apagar la tarjeta «Reloj
-real» (`AVISO_RELOJ_REAL = false`). Si el envío falla, capturar `workoutId` y el detalle del
-error y depurar `push-to-garmin` sin abrir otro backend contra la misma cuenta.
+**(d) Siguiente paso concreto.** No hay cambios que aplicar sin información nueva: en cuanto
+llegue el resultado del reloj, importo la actividad, contrasto `sets_imported`/`unmapped` y apago
+el aviso «Reloj real»; si prefiere, ejecuto cualquier ajuste de texto que pida sobre el caso.
