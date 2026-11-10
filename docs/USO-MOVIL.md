@@ -40,6 +40,10 @@ pendiente»). Pasos completos y criterios de aprobado: `PENDIENTE-PRUEBA-RELOJ.m
   (útil como copia de seguridad o para pasar los planes a otro móvil).
 - **Progreso** (desde Gimnasio) muestra por ejercicio y semana el volumen, las series y la
   mejor serie, con un gráfico de barras semanal.
+- **Semana** (desde Gimnasio) resume la semana en curso: volumen, sesiones, series por grupo
+  muscular y adherencia al plan (hechas frente a planificadas en el calendario).
+- En **Historial** puedes descargar todo el historial en **CSV** (una fila por serie) o
+  **JSON**, para analizarlo fuera de la app.
 - En **Biblioteca** puedes **aplicar una plantilla a un día concreto** (crea el evento del
   calendario) y, desde una sesión entrenada, **guardarla como plantilla** reutilizable.
 - **Gimnasio** es el punto de partida: tarjeta «Reloj real · pendiente», «Hoy toca» con el

@@ -1,11 +1,11 @@
 titulo: Lyfta — entrenamiento, reloj y análisis
 estado: producto ampliado y desplegado; en-espera de la prueba física del reloj
-tarea: panel de progreso por ejercicio y semana (volumen, mejor serie, gráfico) y plantillas reutilizables (sesión como plantilla, aplicar a un día); capturas 21–23
+tarea: exportación del historial a CSV/JSON y resumen semanal con volumen, series por grupo muscular y adherencia al plan; capturas 24–25
 nivel: 2
 siguiente: David instala la PWA desde https://servidor.tail4263a0.ts.net (3 pasos) y ejecuta la prueba del reloj de docs/USO-MOVIL.md
 bloqueado: prueba física del fr255 (2FA/reloj de David)
 fecha: 2026-11-10
-resumen: Progreso por ejercicio y semana con gráfico (volumen y mejor serie) y plantillas reutilizables (guardar sesión como plantilla y aplicarla a un día); 65/65 frontend y 23/23 backend en verde, capturas 21–23; solo falta la prueba física del reloj.
+resumen: Historial exportable a CSV/JSON y resumen semanal con volumen, series por grupo y adherencia al plan; 68/68 frontend y 24/24 backend en verde, capturas 24–25; solo falta la prueba física del reloj.
 
 ## Bloqueo
 

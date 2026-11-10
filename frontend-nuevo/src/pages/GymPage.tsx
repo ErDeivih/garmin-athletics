@@ -84,6 +84,9 @@ export function GymPage() {
             <Link className={secondaryLink} to="/gimnasio/progreso">
               Progreso
             </Link>
+            <Link className={secondaryLink} to="/gimnasio/semana">
+              Semana
+            </Link>
           </div>
         }
       />

@@ -395,6 +395,44 @@ export interface ProgressResponse {
   exercises: ProgressExerciseOption[];
 }
 
+/** Historial exportable: una fila por serie con su contexto de sesión. */
+export interface HistoryExportSet {
+  set_number: number;
+  weight_kg: number;
+  reps: number;
+  rpe: number | null;
+  is_warmup: boolean;
+  set_type: string;
+  rest_seconds: number | null;
+  completed_at: string | null;
+}
+
+export interface HistoryExportExercise {
+  exercise_id: string;
+  exercise_name: string;
+  muscle_group: string | null;
+  sets: HistoryExportSet[];
+}
+
+export interface HistoryExportSession {
+  id: string;
+  name: string;
+  date: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+  duration_min: number | null;
+  total_tonnage_kg: number;
+  template_id: string | null;
+  sets_count: number;
+  exercises_count: number;
+  exercises: HistoryExportExercise[];
+}
+
+export interface HistoryExportResponse {
+  exported_at: string;
+  sessions: HistoryExportSession[];
+}
+
 export interface SessionSummary {
   id: string;
   name: string;

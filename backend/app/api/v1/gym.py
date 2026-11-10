@@ -1403,6 +1403,110 @@ async def list_sessions(
     return {"total": total, "limit": limit, "offset": offset, "items": items}
 
 
+# ---------------------------------------------------------------------------
+# Exportación del historial
+# ---------------------------------------------------------------------------
+
+# Campos del contrato de exportación (historial plano pensado para CSV/backup).
+# Se recortan de los helpers para no duplicar su formato: la sesión se pinta con
+# `_session_summary`, la serie con `_set_out` y el ejercicio con `_exercise_brief`.
+CAMPOS_SESION_EXPORT = (
+    "id", "name", "date", "started_at", "finished_at", "duration_min",
+    "total_tonnage_kg", "template_id", "sets_count", "exercises_count",
+)
+CAMPOS_SERIE_EXPORT = (
+    "set_number", "weight_kg", "reps", "rpe", "is_warmup", "set_type",
+    "rest_seconds", "completed_at",
+)
+
+
+def _export_set(serie: SessionSet) -> Dict[str, Any]:
+    """Serie con los campos del contrato, en el formato de `_set_out`."""
+    completa = _set_out(serie)
+    return {campo: completa[campo] for campo in CAMPOS_SERIE_EXPORT}
+
+
+def _export_exercise(exercise_id: str, exercise: Optional[Exercise],
+                     series: List[SessionSet]) -> Dict[str, Any]:
+    """Ejercicio de la exportación: nombre y grupo planos, con sus series ordenadas."""
+    brief = _exercise_brief(exercise) or {}
+    return {
+        "exercise_id": exercise_id,
+        "exercise_name": brief.get("name") or "Ejercicio ya borrado",
+        "muscle_group": brief.get("muscle_group") or "sin_clasificar",
+        "sets": [_export_set(s) for s in series],
+    }
+
+
+@router.get("/export", summary="Exportar el historial de fuerza completo (JSON plano)")
+async def export_history(
+    from_date: Optional[date] = Query(None, alias="from",
+                                      description="Fecha inicial (YYYY-MM-DD)."),
+    to_date: Optional[date] = Query(None, alias="to",
+                                    description="Fecha final (YYYY-MM-DD)."),
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """Historial completo del atleta, cronológico y con las series dentro de cada ejercicio.
+
+    Es una foto plana para exportar (CSV/backup), no una vista de pantalla: no
+    pagina y solo filtra por dueño de la sesión y por el rango de `started_at`.
+    """
+    if from_date and to_date and from_date > to_date:
+        raise HTTPException(status_code=422,
+                            detail="'from' no puede ser posterior a 'to'.")
+
+    consulta = select(WorkoutSession).where(WorkoutSession.user_id == user.id)
+    if from_date:
+        consulta = consulta.where(
+            WorkoutSession.started_at >= datetime.combine(from_date, time.min))
+    if to_date:
+        # Mismo patrón que `list_sessions`: el día `to` entra entero.
+        consulta = consulta.where(
+            WorkoutSession.started_at < datetime.combine(to_date, time.max))
+    # De más antigua a más reciente: el CSV se lee en orden cronológico.
+    sesiones = (await db.execute(
+        consulta.order_by(WorkoutSession.started_at.asc(), WorkoutSession.id.asc())
+    )).scalars().all()
+
+    # Todas las series en una sola consulta (sin N+1) y agrupadas en memoria.
+    series_por_sesion: Dict[str, List[SessionSet]] = {}
+    if sesiones:
+        filas = (await db.execute(
+            select(SessionSet).where(
+                SessionSet.session_id.in_([s.id for s in sesiones]))
+        )).scalars().all()
+        for fila in filas:
+            series_por_sesion.setdefault(fila.session_id, []).append(fila)
+
+    exercises_by_id = await _load_exercises_by_id(
+        db, [f.exercise_id for filas in series_por_sesion.values() for f in filas])
+
+    items = []
+    for sesion in sesiones:
+        series = series_por_sesion.get(sesion.id, [])
+        agrupadas: Dict[str, List[SessionSet]] = {}
+        posiciones: Dict[str, int] = {}
+        for serie in series:
+            agrupadas.setdefault(serie.exercise_id, []).append(serie)
+            posiciones[serie.exercise_id] = min(
+                posiciones.get(serie.exercise_id, serie.position), serie.position)
+        ejercicios = []
+        for exercise_id, ss in agrupadas.items():
+            ss.sort(key=lambda x: (x.position, x.set_number, x.id))
+            ejercicios.append(
+                _export_exercise(exercise_id, exercises_by_id.get(exercise_id), ss))
+        # Mismo criterio que el detalle: orden de aparición del ejercicio en la sesión.
+        ejercicios.sort(key=lambda e: (posiciones[e["exercise_id"]], e["exercise_id"]))
+        resumen = _session_summary(sesion, len(series), len(ejercicios))
+        item = {campo: resumen[campo] for campo in CAMPOS_SESION_EXPORT}
+        item["exercises"] = ejercicios
+        items.append(item)
+
+    return {"exported_at": datetime.now().isoformat(timespec="seconds"),
+            "sessions": items}
+
+
 @router.get("/sessions/{session_id}", summary="Detalle de una sesión con todas sus series")
 async def get_session(
     session_id: str,

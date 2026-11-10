@@ -417,7 +417,7 @@ try {
   await pagina.getByText('Empuje A').first().click();
   const dia = pagina.getByLabel(/día para aplicarla/i);
   await dia.waitFor({ timeout: 20000 });
-  await dia.fill('2026-11-20');
+  await dia.fill('2026-11-13');
   await pagina.getByRole('button', { name: /aplicar al día/i }).click();
   await pagina.getByText(/añadido al calendario/i).waitFor({ timeout: 20000 });
   checks.aplicar_dia = true;
@@ -430,6 +430,20 @@ try {
   await pagina.getByText(/plantilla creada/i).waitFor({ timeout: 20000 });
   checks.plantilla_desde_sesion = true;
   await captura('23-guardar-plantilla', { espera: 500 });
+
+  // 24. Exportar el historial a CSV/JSON desde la lista de sesiones.
+  await pagina.goto(`${APP}/gimnasio/historial`, { waitUntil: 'domcontentloaded' });
+  await pagina.getByRole('heading', { name: 'Historial', exact: true }).waitFor({ timeout: 20000 });
+  await pagina.getByRole('button', { name: /exportar csv/i }).waitFor();
+  await captura('24-exportar-historial', { espera: 400 });
+  checks.exportar_historial = true;
+
+  // 25. Resumen de la semana: volumen, series por grupo y adherencia.
+  await pagina.goto(`${APP}/gimnasio/semana`, { waitUntil: 'domcontentloaded' });
+  await pagina.getByRole('heading', { name: 'Semana', exact: true }).waitFor({ timeout: 20000 });
+  await pagina.getByText(/adherencia al plan/i).waitFor({ timeout: 20000 });
+  await captura('25-resumen-semanal', { espera: 500 });
+  checks.resumen_semanal = true;
 
   // El único error esperado es el 400 del envío sin credencial Garmin (paso 7):
   // el navegador apunta en consola cualquier respuesta >= 400.

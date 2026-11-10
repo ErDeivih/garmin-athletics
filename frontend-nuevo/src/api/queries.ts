@@ -15,6 +15,7 @@ import type {
   GymStatsResponse,
   LastMarksResponse,
   ProgressResponse,
+  HistoryExportResponse,
   LeaderboardResponse,
   LoadResponse,
   LoadSummaryResponse,
@@ -137,6 +138,27 @@ export function useProgress(exerciseId?: string | null, weeks = 12) {
   return useQuery({
     queryKey: ['strength', 'progress', exerciseId ?? '', weeks],
     queryFn: () => apiFetch<ProgressResponse>(`/api/v1/strength/progress?${params.toString()}`),
+  });
+}
+
+/** Estadísticas del gimnasio para un rango de fechas concreto (resumen semanal). */
+export function useWeeklyStats(from: string, to: string) {
+  return useQuery({
+    queryKey: ['strength', 'stats', 'rango', from, to],
+    queryFn: () => apiFetch<GymStatsResponse>(`/api/v1/strength/stats?from=${from}&to=${to}`),
+  });
+}
+
+/** Descarga el historial completo (JSON) para CSV/JSON en el cliente. */
+export function useHistoryExport() {
+  return useMutation({
+    mutationFn: (rango: { from?: string; to?: string } = {}) => {
+      const params = new URLSearchParams();
+      if (rango.from) params.set('from', rango.from);
+      if (rango.to) params.set('to', rango.to);
+      const qs = params.toString();
+      return apiFetch<HistoryExportResponse>(`/api/v1/strength/export${qs ? `?${qs}` : ''}`);
+    },
   });
 }
 
@@ -588,8 +610,9 @@ export function useSyncUpcomingWorkouts() {
   });
 }
 
-export function useCalendar() {  return useQuery({
-    queryKey: queryKeys.calendar,
+export function useCalendar(fromDate?: string, toDate?: string) {
+  return useQuery({
+    queryKey: [...queryKeys.calendar, fromDate ?? '', toDate ?? ''],
     queryFn: () => {
       const to = new Date();
       const from = new Date();
@@ -597,7 +620,9 @@ export function useCalendar() {  return useQuery({
       // Fecha local, no UTC: a las 00:30 en Madrid, toISOString() daría el día anterior.
       const localIso = (date: Date) =>
         `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-      return apiFetch<CalendarResponse>(`/api/v1/calendar/?from=${localIso(from)}&to=${localIso(to)}`);
+      const desde = fromDate ?? localIso(from);
+      const hasta = toDate ?? localIso(to);
+      return apiFetch<CalendarResponse>(`/api/v1/calendar/?from=${desde}&to=${hasta}`);
     },
   });
 }
