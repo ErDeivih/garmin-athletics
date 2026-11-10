@@ -1,5 +1,5 @@
 {
-  "url": "https://127.0.0.1:8444",
+  "url": "https://servidor.tail4263a0.ts.net",
   "pasos": {
     "contexto": {
       "seguro": true,
@@ -9,7 +9,7 @@
       "controlado": true,
       "registros": [
         {
-          "ambito": "https://127.0.0.1:8444/",
+          "ambito": "https://servidor.tail4263a0.ts.net/",
           "estado": "activated"
         }
       ]

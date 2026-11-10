@@ -25,14 +25,16 @@ muestran, qué estados existen y diez problemas concretos con evidencia.
 
 | Desde | URL | Requisito |
 |---|---|---|
-| Casa, misma wifi | `http://192.168.1.139:8010` | Ninguno |
-| Cualquier sitio | `http://100.117.58.93:8010` | Tailscale encendido en el móvil |
+| **Cualquier sitio** | **`https://servidor.tail4263a0.ts.net`** | Tailscale encendido en el móvil (HTTPS del tailnet, PWA instalable) |
+| Casa, misma wifi | `http://192.168.1.139:8010` | Ninguno (sin service worker) |
+| Cualquier sitio, sin HTTPS | `http://100.117.58.93:8010` | Tailscale encendido en el móvil |
 
 Comprobado desde otro equipo de la red local y desde otro nodo del tailnet (200 en `/`,
 `/gimnasio` y `/manifest.webmanifest`; login con credenciales falsas devuelve 401 JSON).
 El túnel es **Tailscale** (WireGuard, cifrado extremo a extremo, sin abrir puertos en el
-router). Cloudflare Tunnel no se usa: `cloudflared` no está instalado y el servidor no
-resuelve nombres. Detalle y runbook en `DESPLIEGUE.md`.
+router); desde el 2026-11-10 sirve por HTTPS con certificado válido. Cloudflare Tunnel no
+se usa: `cloudflared` no está instalado y el servidor no resuelve nombres. Detalle y
+runbook en `DESPLIEGUE.md`.
 
 Las capturas `00-login-tailnet.png` y `01-login-movil.png` son la misma pantalla por las
 dos puertas.
@@ -119,7 +121,8 @@ No existe: confirmación al terminar sesión, estado persistido del envío, avis
 | `09-editar-tras-entrenar.png` | Corrección después de entrenar: serie 1 de 60 → 62,5 kg, guardada en el servidor |
 | `10-historial-sesion.png` | Gimnasio con la sesión en «Últimas sesiones»: 10 nov · 1420 kg · 3 series |
 | `https-arranque-sin-cobertura.png` | La app abierta con la red apagada, servida por HTTPS (service worker) |
-| `pwa-*.png` | Las dos puertas y un contexto seguro, para la comprobación de instalación (`USO-MOVIL.md` §4) |
+| `pwa-*.png` | Comprobaciones de instalación: la puerta HTTPS real (`pwa-servidor-tail4263a0-ts-net.png`) y las anteriores |
+| `https-pwa-instalada.png` | La app servida por HTTPS real, a 390 × 844, lista para instalar |
 
 ## 4. Qué pasó al recorrer el flujo contra el despliegue
 

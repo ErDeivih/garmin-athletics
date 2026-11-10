@@ -6,11 +6,11 @@ serie, enviarlo al reloj Garmin desde la propia app, ejecutarlo sin teclear nada
 muñeca, corregir los pesos reales al terminar y verlo en el historial.
 
 - **Repositorio:** <https://github.com/ErDeivih/garmin-athletics>
-- **Demo:** desplegada en un servidor doméstico privado (acceso por red local y túnel
-  Tailscale). Se enseña en directo o por pantalla compartida; no expongo la dirección
-  pública porque es mi red de casa.
-- **Estado:** en uso desde el 2026-11-09. Pendiente solo la prueba física con el reloj
-  (ver «Estado»).
+- **Demo:** desplegada en un servidor doméstico privado, con **HTTPS propio del tailnet**
+  (WireGuard). La PWA se instala en el móvil y arranca sin cobertura. Se enseña en directo
+  o por pantalla compartida; no expongo la dirección pública porque es mi red de casa.
+- **Estado:** en uso desde el 2026-11-09, con PWA instalable desde el 2026-11-10. Pendiente
+  solo la prueba física con el reloj (ver «Estado»).
 
 ---
 
@@ -31,7 +31,7 @@ como historial fiable**.
 |---|---|
 | **Producto móvil de punta a punta** | 21 pantallas (React 19 + Vite + TypeScript), flujo planificar → enviar → entrenar → corregir → historial, con estados de carga, vacío y error en cada pantalla |
 | **Integración con hardware real** | API de Garmin Connect y watch-app propia en Connect IQ (Monkey C) para el Forerunner 255: mapeo de ejercicios y enums, envío del workout con objetivos por serie, series idempotentes desde el reloj, `dry_run` para validar sin tocar la cuenta |
-| **Offline y PWA** | Manifiesto, iconos 192/512/maskable y service worker; el borrador de la sesión se guarda en el móvil y **la app arranca sin cobertura** cuando se sirve por HTTPS (verificado con captura) |
+| **Offline y PWA** | Manifiesto, iconos 192/512/maskable y service worker; el borrador de la sesión se guarda en el móvil y **la app arranca sin cobertura** por HTTPS (verificado contra la URL real, con captura) |
 | **Backend de datos** | FastAPI + SQLAlchemy async + SQLite, migraciones idempotentes, 21 guiones de contrato sobre una base efímera |
 | **Diseño y sistema de diseño** | Tokens de color/tipografía, contraste AA comprobado, escala de espaciado, regresión visual con `pixelmatch` (4 pantallas, 0 píxeles) |
 | **Despliegue y operación** | Imagen Docker de dos etapas, servidor doméstico, acceso privado por Tailscale, verificación automática del despliegue (`verify-server.sh`), sin abrir puertos en el router |
@@ -91,15 +91,13 @@ después, y la corrección posterior a entrenar tiene su propio guion de contrat
 
 **Funcionando hoy:** crear el plan con pesos por serie, editarlo, enviarlo a Garmin,
 entrenar, guardar la sesión con los pesos correctos, corregirla después, historial,
-actividades y análisis del reloj, calendario semanal, rutas, y uso desde el móvil en casa
-o por el túnel privado.
+actividades y análisis del reloj, calendario semanal, rutas, y uso desde el móvil **dentro
+y fuera de casa**, con la PWA instalable por HTTPS y arranque sin cobertura.
 
 **Pendiente:**
 - **Prueba física del Forerunner 255** (reloj cargado, 2FA delante, comprobar el peso en
   el reloj y contar las repeticiones reales del detector). Es lo único que no puede hacer
   un agente; los pasos están en `PENDIENTE-PRUEBA-RELOJ.md`.
-- **Interruptor HTTPS del tailnet** para que la PWA sea instalable en Android y arranque
-  sin cobertura en el móvil; ya está verificado con el mismo build servido por HTTPS.
 - Medición del detector de repeticiones con series reales y ajuste del algoritmo.
 
 ## 7. Tecnologías

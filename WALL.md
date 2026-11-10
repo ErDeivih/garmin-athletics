@@ -23,8 +23,10 @@ crear entrenamientos de gimnasio, llevarlos al reloj y analizar todo.
   base de David migrada (46 actividades, plantilla, credencial de Garmin). Flujo completo
   recorrido contra el despliegue (instancia desechable, capturas a 390 px en
   `docs/capturas-movil/`). Ver `DESPLIEGUE.md` y `docs/revision-interfaz-movil.md`.
-  Queda para cerrar del todo: HTTPS en el tailnet para service worker e instalación de
-  Android (lo activa David en el panel de Tailscale).
+  **HTTPS activo desde el 2026-11-10**: Tailscale Serve termina el TLS con certificado
+  válido en `https://servidor.tail4263a0.ts.net` (PWA instalable y arranque sin cobertura
+  verificados). Nota: el servidor anuncia el sufijo `tail4263a0.ts.net`; el nombre
+  `ta4283ad.ts.net` del panel aún no resuelve.
 - [x] Pesos por serie en la sesión guardada. — 2026-11-09. El borrador de «Entrenar»
   rellenaba todas las series con la última marca o el peso del ejercicio e ignoraba
   `set_targets`; ahora cada serie toma su objetivo (objetivo > última marca > peso del
@@ -34,9 +36,8 @@ crear entrenamientos de gimnasio, llevarlos al reloj y analizar todo.
 - [x] App lista para uso real desde el móvil. — 2026-11-10. Tres pasos de instalación en
   `docs/USO-MOVIL.md`; tarjeta visible «Reloj real · pendiente» en Gimnasio (se apaga con
   `AVISO_RELOJ_REAL`); flujo completo verificado (plan 60/65/70, envío, corrección
-  posterior a 62,5 y sesión en el historial con 1420 kg); servicio por HTTPS comprobado
-  como instalable y con arranque sin cobertura. Falta el interruptor HTTPS del tailnet
-  (solo David) para que eso ocurra en el móvil real.
+  posterior a 62,5 y sesión en el historial con 1420 kg). **HTTPS activo** por Tailscale
+  Serve: instalable y con arranque sin cobertura en `https://servidor.tail4263a0.ts.net`.
 - [x] Portfolio de candidatura. — 2026-11-10. `PORTFOLIO.md` con problema, competencias
   (producto móvil, hardware, offline), capturas, enlace, estado y tecnologías.
 - [ ] Watch-app Connect IQ propia (después del camino A). — **en curso**: `watch/lyfta-watch/`
@@ -55,7 +56,7 @@ reloj y el análisis está completo.
 - Flujo móvil contra el despliegue: `scripts/flujo-movil-desplegado.mjs` recorre plan (60/65/70) → edición guardada en servidor → `dry_run` con `unmapped: []` → envío sin credencial (400 limpio) → 3 series → sesión guardada **con 60/65/70** (`coincide: true`); 8 capturas a 390 px e informe en `docs/capturas-movil/`, con las de antes en `antes/`.
 - Revisión de interfaz: `docs/revision-interfaz-movil.md` — inventario de las 6 pantallas del flujo, 17 capturas a 390 px, 10 problemas con evidencia y su arreglo CSS/texto, y el antes/después del arreglo de pesos por serie.
 - Regresión visual: 4/4 pantallas, 0 píxeles distintos, con la línea base actualizada por la tarjeta «Reloj real» (se regeneró en la instancia de verificación).
-- Uso real desde el móvil: `docs/USO-MOVIL.md` — pasos de instalación por plataforma y puerta, qué se guarda sin cobertura y qué falta (HTTPS). Comprobado con el navegador en las dos puertas y en un contexto seguro: `docs/capturas-movil/informe-pwa.json`.
+- Uso real desde el móvil: `docs/USO-MOVIL.md` — bloque único con los tres pasos de instalación, la URL HTTPS exacta, qué se guarda sin cobertura y lo que falta para el reloj. Verificado contra la URL real (`informe-https.json`: contexto seguro, service worker activo, arranque sin cobertura) y con el inspector de Chrome (`informe-pwa.json`: instalable).
 - Capturas: `frontend-nuevo/screenshots/` — 29 capturas nuevas y numeradas (01–29).
 - Prueba final en seco: plan -> dry-run -> reloj -> 3 series -> sesión guardada; capturas 27–29.\n- Biblioteca: fases, series y pesos por serie visibles; filtro por foco.
 - Actividades: filtros por deporte, texto y rango Desde/Hasta con atajos de 30 días/mes.

@@ -2,18 +2,19 @@
 
 La app vive en el **servidor de casa** y se abre desde el móvil **en la red de casa o en
 cualquier sitio** (Tailscale). Una sola URL sirve la interfaz y la API: no hay dos
-orígenes que cuadrar.
+orígenes que cuadrar. Desde el 2026-11-10 hay **HTTPS con certificado válido**, y la PWA
+se puede instalar.
 
 ## Direcciones
 
 | Desde | URL | Cuándo usarla |
 |---|---|---|
-| Casa, misma wifi | `http://192.168.1.139:8010` | Sin Tailscale; el móvil en casa |
-| Móvil, en cualquier red (con Tailscale) | `http://100.117.58.93:8010` | El caso normal: gimnasio, calle, viaje |
-| El propio servidor | `http://127.0.0.1:8010` | Comprobaciones y `curl` |
-| Navegador de este PC | `http://192.168.1.139:8010` | Revisar sin coger el móvil |
+| **Cualquier sitio (con Tailscale)** | **`https://servidor.tail4263a0.ts.net`** | **La buena: PWA instalable y arranque sin cobertura** |
+| Casa, misma wifi | `http://192.168.1.139:8010` | Sin Tailscale; abrir y usar, sin service worker |
+| Móvil, en cualquier red | `http://100.117.58.93:8010` | Alternativa sin HTTPS (sin PWA instalable) |
+| El propio servidor | `http://127.0.0.1:8010` | Comprobaciones y `curl` internos |
 
-Salud del servicio: `http://192.168.1.139:8010/healthz` → `{"status":"ok"}`.
+Salud del servicio: `https://servidor.tail4263a0.ts.net/healthz` → `{"status":"ok"}`.
 
 ## Qué hay montado
 
@@ -42,13 +43,13 @@ móvil ─┬─ wifi de casa ───────────────▶ s
   `LYFTA_LAN_BIND`, `LYFTA_TS_BIND` y `LYFTA_PORT` deciden dónde escucha; `SECRET_KEY`
   firma las sesiones (la misma que en local: los tokens ya emitidos siguen valiendo).
 
-## El túnel: Tailscale (y por qué no Cloudflare)
+## El túnel: Tailscale + HTTPS (y por qué no Cloudflare)
 
 | Opción | Estado |
 |---|---|
-| **Tailscale** (WireGuard) | ✅ En uso. Cifrado extremo a extremo, sin abrir puertos en el router, sin dominio. Verificado desde otro nodo del tailnet: `/`, `/gimnasio` y el manifiesto responden 200 |
+| **Tailscale** (WireGuard) | ✅ En uso. Cifrado extremo a extremo, sin abrir puertos en el router, sin dominio |
+| **HTTPS del tailnet** (Tailscale Serve) | ✅ **Activo desde el 2026-11-10**: `https://servidor.tail4263a0.ts.net` con certificado válido. Verificado: `ssl_verify_result=0`, PWA instalable y arranque sin cobertura |
 | Cloudflare Tunnel | ❌ No usado: `cloudflared` no está instalado, hace falta cuenta/dominio y el servidor no resuelve nombres |
-| HTTPS con certificado del tailnet | ❌ Bloqueado: el panel responde «your Tailscale account does not support getting TLS certs» (ver más abajo) |
 
 El móvil de David (`poco-x4-pro-5g`) ya está dado de alta en el tailnet, pero el
 2026-11-09 aparecía **offline desde hacía 10 días**: hay que abrir Tailscale en el móvil
@@ -57,47 +58,57 @@ para la puerta de «cualquier sitio». La de casa no necesita nada.
 
 ## Primera vez en el móvil
 
-1. **En casa** no hace falta nada: abrir `http://192.168.1.139:8010` en el navegador del
-   móvil (misma wifi).
-2. **Fuera de casa**: instalar **Tailscale** en el móvil y entrar con la cuenta de David
-   (`davidpeve01@`). El móvil ya estaba dado de alta en el tailnet como
-   `poco-x4-pro-5g`; solo hay que encenderlo (el 2026-11-09 llevaba 10 días offline).
-   Después: `http://100.117.58.93:8010`.
-3. Entrar con la cuenta de Lyfta (la misma de siempre).
-4. **Añadir a la pantalla de inicio**:
-   - iOS/Safari: compartir → «Añadir a pantalla de inicio».
-   - Android/Chrome: menú → «Añadir a pantalla de inicio». El icono ya tiene el
-     manifiesto, los colores y el nombre «Lyfta».
-5. Probar **Gimnasio → Enviar al reloj** con el móvil delante: el servidor es ahora
-   quien habla con Garmin Cloud.
+1. **Con Tailscale encendido (o en casa por la LAN)**: abrir
+   **`https://servidor.tail4263a0.ts.net`** — la puerta buena, con HTTPS. En casa, sin
+   Tailscale, sigue valiendo `http://192.168.1.139:8010`.
+2. Entrar con la cuenta de Lyfta (la misma de siempre). Ojo: la sesión guardada en la
+   puerta `http://` no se traslada; hay que entrar una vez en la nueva.
+3. **Instalarla**: Android → menú ⋮ → **«Instalar app»**; iPhone → Compartir →
+   «Añadir a pantalla de inicio».
+4. Abrirla desde el icono: pantalla completa y **arranca sin cobertura**.
+5. Probar **Gimnasio → Enviar al reloj** con el móvil delante: el servidor es quien habla
+   con Garmin Cloud.
 
-## PWA: qué funciona y qué no
+## PWA y HTTPS
 
 | Pieza | Estado |
 |---|---|
 | Manifiesto, iconos 192/512/maskable, `apple-touch-icon` | ✅ servidos y enlazados |
-| Abrir desde el icono, pantalla completa (`standalone`) | ✅ con «Añadir a pantalla de inicio» |
-| Service worker (arranque sin cobertura y assets en caché) | ⚠️ necesita contexto seguro: **no** se registra por `http://` sobre una IP |
-| Instalación como app real en Android | ⚠️ Chrome exige HTTPS |
+| Service worker (arranque sin cobertura y assets en caché) | ✅ activo por HTTPS |
+| Instalación como app real en Android | ✅ Chrome la considera instalable (`inspector CDP`: solo queda el aviso `in-incognito` del navegador de pruebas) |
+| Instalación en iPhone | ✅ «Añadir a pantalla de inicio», a pantalla completa |
 
-Para tener PWA completa falta servir por HTTPS. La vía barata es Tailscale, pero hoy
-**no está disponible**: probado el 2026-11-09, el tailnet responde
-
-```text
-500 Internal Server Error: your Tailscale account does not support getting TLS certs
-```
-
-Es un interruptor del panel de Tailscale (*DNS → HTTPS Certificates*), no algo que se
-pueda activar desde el servidor. Cuando David lo encienda:
+Cómo está montado: `tailscaled` termina el TLS y hace de proxy a la app. El certificado lo
+emite y renueva Tailscale; no hay certificados dentro del contenedor.
 
 ```bash
-# en el servidor
-tailscale serve --bg --https=443 http://127.0.0.1:8010
+sudo tailscale serve --bg --https=443 http://100.117.58.93:8010
+sudo tailscale serve status        # https://servidor.tail4263a0.ts.net → 100.117.58.93:8010
+sudo tailscale serve --https=443 off   # apagarlo
 ```
 
-Eso da `https://servidor.tail4263a0.ts.net`: contexto seguro, service worker y botón
-«Instalar app». Mientras tanto la app se usa igual desde el icono de la pantalla de
-inicio: solo se pierde el arranque sin cobertura y la instalación «rica» de Android.
+Certificado a fichero (opcional; los flags van **antes** del dominio y con `=`, si no
+Tailscale los lee como argumentos y falla con «Usage: tailscale cert»):
+
+```bash
+sudo tailscale cert --cert-file=/tmp/lyfta.crt --key-file=/tmp/lyfta.key servidor.tail4263a0.ts.net
+```
+
+Solo accesible **dentro del tailnet** (no es Tailscale Funnel): no se publica en Internet
+ni se abre ningún puerto en el router.
+
+**Nombre del tailnet.** El servidor anuncia `servidor.tail4263a0.ts.net`
+(`CurrentTailnet.MagicDNSSuffix: tail4263a0.ts.net`, también tras reiniciar `tailscaled`).
+El nombre `ta4283ad.ts.net` que muestra el panel no resuelve desde los dispositivos y la
+API de certificados lo rechaza con «For domain, use "servidor.tail4263a0.ts.net"». Si el
+tailnet se ha renombrado, el sufijo nuevo tiene que llegar a los dispositivos; cuando
+llegue, la URL será `https://servidor.ta4283ad.ts.net` y el proxy seguirá igual (el
+certificado se emite para el nombre nuevo). Comprobar con:
+
+```bash
+sudo tailscale status --json | python3 -c 'import json,sys;print(json.load(sys.stdin)["Self"]["DNSName"])'
+```
+
 
 ## Operación
 

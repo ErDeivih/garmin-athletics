@@ -1,25 +1,24 @@
 # Lyfta en el móvil: instalar y qué falta
 
 Fecha: 2026-11-10. Este documento tiene **un solo bloque** con lo que hay que hacer para
-usarla en el móvil y lo que falta para el reloj. Debajo, el detalle (sin cobertura,
-comprobaciones y HTTPS).
+usarla en el móvil y lo que falta para el reloj. Debajo, el detalle.
 
 ## Bloque único: instalar y lo que falta para el reloj
 
-**Direcciones**
+**URL (HTTPS con certificado del tailnet, sirve para cualquier sitio):**
+**<https://servidor.tail4263a0.ts.net>**
 
-| Dónde estás | URL |
-|---|---|
-| En casa, misma wifi | `http://192.168.1.139:8010` |
-| Fuera de casa | `http://100.117.58.93:8010` (con Tailscale encendido) |
+*En casa, sin encender Tailscale:* `http://192.168.1.139:8010` (en esa puerta no hay
+service worker; para instalarla de verdad usa la URL HTTPS).
 
 **Instalarla (3 pasos)**
 
-1. **Abre la dirección** que toque y entra con tu cuenta de Lyfta.
-2. **Añádela a la pantalla de inicio**: en Android, menú ⋮ → «Añadir a pantalla de inicio»;
-   en iPhone, botón Compartir → «Añadir a pantalla de inicio». Queda el icono «Lyfta».
-3. **Ábrela desde el icono** y comprueba que entra (en iPhone se abre a pantalla completa).
-   El servidor de casa tiene que estar encendido.
+1. **Abre <https://servidor.tail4263a0.ts.net>** en el móvil, con Tailscale encendido, y
+   entra con tu cuenta de Lyfta.
+2. **Instálala**: en Android, menú ⋮ → **«Instalar app»** (si no sale, «Añadir a pantalla
+   de inicio»); en iPhone, **Compartir → «Añadir a pantalla de inicio»**.
+3. **Ábrela desde el icono**: arranca a pantalla completa y **funciona sin cobertura**
+   (service worker ya activo). El servidor de casa tiene que estar encendido.
 
 **Reloj real: todavía falta esto**
 
@@ -35,28 +34,28 @@ pendiente»). Pasos completos y criterios de aprobado: `PENDIENTE-PRUEBA-RELOJ.m
 
 - **Gimnasio** es el punto de partida: tarjeta «Reloj real · pendiente», «Hoy toca» con el
   entreno del día, bloque «Enviar al reloj», plantillas y últimas sesiones.
-- El flujo normal: **Empezar sesión**, marcar las series (los pesos del plan ya están
-  puestos: 60/65/70) y **Terminar sesión**. Después, «Corregir pesos» si el peso real no
-  era el previsto.
+- Flujo normal: **Empezar sesión**, marcar las series (los pesos del plan ya están puestos:
+  60/65/70) y **Terminar sesión**. Después, «Corregir pesos» si el peso real no era el
+  previsto.
 - Los pesos por serie se editan en **Gimnasio → Editar pesos** con − / +; se guardan solos.
 - El aviso del reloj se apaga poniendo `AVISO_RELOJ_REAL = false` en
   `frontend-nuevo/src/config/features.ts` cuando la prueba física esté hecha.
 
-## Qué funciona y qué no sin cobertura
+## Sin cobertura
+
+Verificado el 2026-11-10 contra la URL HTTPS real (`informe-https.json`): contexto seguro,
+service worker activo controlando la página y **la app arranca con la red apagada**. Captura:
+`docs/capturas-movil/https-pwa-instalada.png` y
+`docs/capturas-movil/https-arranque-sin-cobertura.png`.
 
 | Caso | Estado |
 |---|---|
 | Abrir la app con red | ✅ |
+| Abrirla desde cero **sin red** (instalada por HTTPS) | ✅ service worker |
 | Entrenar sin cobertura con la app ya abierta | ✅ el borrador se guarda en el móvil |
 | Cambiar pesos/reps/hechas sin red y volver | ✅ se recupera al reconectar (probado con 61 kg) |
-| Recargar o abrir desde cero sin red | ✅ **solo con HTTPS** (service worker); por `http://` falla el navegador |
 | Terminar la sesión sin red | ⚠️ error visible; el borrador no se pierde |
 | Historial ya descargado sin red | ❌ se pide al servidor |
-
-Comprobado el 2026-11-10 con este mismo build servido por HTTPS: contexto seguro, service
-worker activo controlando la página, Chrome la considera instalable y **con la red
-apagada la app arranca** desde la caché. Captura:
-`docs/capturas-movil/https-arranque-sin-cobertura.png`; datos: `informe-https.json`.
 
 ## Comprobación del flujo completo
 
@@ -74,25 +73,41 @@ sin tocar la cuenta de Garmin):
 
 Capturas: `docs/capturas-movil/02` a `10`. Informe: `informe-flujo.json`.
 
-## Activar HTTPS en el tailnet (PWA completa)
+## Cómo está montado el HTTPS
 
-Solo puede hacerlo David, con su cuenta de Tailscale. Dos minutos:
+`tailscaled` termina el TLS con el certificado del tailnet y hace de proxy a la app; no hay
+que configurar certificados en el contenedor:
 
-1. Entrar en **<https://login.tailscale.com/admin/dns>** (menú **DNS**).
-2. Bajar a **HTTPS Certificates** y pulsar **Enable HTTPS…**; confirmar en el diálogo.
-   MagicDNS ya está encendido en este tailnet, que es el requisito previo.
-3. En el servidor, servir la app por HTTPS:
-   ```bash
-   sudo tailscale serve --bg --https=443 http://127.0.0.1:8010
-   ```
-4. Abrir en el móvil **`https://servidor.tail4263a0.ts.net`** y pulsar **Instalar app**
-   (Android) o **Añadir a pantalla de inicio** (iPhone).
+```bash
+sudo tailscale serve --bg --https=443 http://100.117.58.93:8010
+sudo tailscale serve status     # https://servidor.tail4263a0.ts.net → 100.117.58.93:8010
+```
 
-Comprobar: `tailscale cert servidor.tail4263a0.ts.net` debe emitir el certificado y
-`tailscale serve status` debe mostrar el proxy. Hoy la API responde `500 Internal Server
-Error: your Tailscale account does not support getting TLS certs`, que es lo que cambia
-ese interruptor. Documentación oficial:
-[Enabling HTTPS](https://tailscale.com/docs/how-to/set-up-https-certificates).
+- El certificado lo emite y renueva Tailscale solo. Para comprobarlo o sacarlo a fichero:
+  `sudo tailscale cert --cert-file=/tmp/x.crt --key-file=/tmp/x.key servidor.tail4263a0.ts.net`
+  (los flags van **antes** del dominio y con `=`; si no, Tailscale los lee como argumentos).
+- Solo accesible **dentro del tailnet** (no es Tailscale Funnel): no se publica en Internet
+  ni se abre ningún puerto en el router.
+- Para apagarlo: `sudo tailscale serve --https=443 off`.
+
+Verificado desde otro equipo del tailnet: `curl https://servidor.tail4263a0.ts.net/healthz`
+responde 200 con `ssl_verify_result=0` (certificado válido), el manifiesto y el `sw.js` se
+sirven, Chrome la considera **instalable** y arranca sin cobertura.
+
+### Nombre del tailnet
+
+El servidor anuncia hoy `servidor.tail4263a0.ts.net` (`MagicDNSSuffix: tail4263a0.ts.net`,
+también tras reiniciar `tailscaled`). El nombre `ta4283ad.ts.net` que aparece en el panel no
+resuelve desde los dispositivos (`servidor.ta4283ad.ts.net` → sin DNS) y la API de
+certificados lo rechaza con «For domain, use "servidor.tail4263a0.ts.net"». Si el panel
+muestra `ta4283ad` porque has renombrado el tailnet, el cambio tiene que llegar a los
+dispositivos; cuando lo haga, la URL será `https://servidor.ta4283ad.ts.net` y el proxy
+seguirá funcionando igual (el certificado se emite para el nombre nuevo). Pasos para
+comprobarlo desde el servidor:
+
+```bash
+sudo tailscale status --json | python3 -c 'import json,sys;print(json.load(sys.stdin)["Self"]["DNSName"])'
+```
 
 ## Notas
 
@@ -100,4 +115,5 @@ ese interruptor. Documentación oficial:
   fuera solo existe dentro del tailnet. No hay puertos abiertos en el router.
 - La sesión dura 30 días; si cambia `SECRET_KEY` en el servidor, hay que volver a entrar
   en todos los dispositivos.
-- El servidor tiene que estar encendido: la app vive ahí, no en el móvil.
+- Al pasar a HTTPS, la sesión que tuvieras guardada en `http://` no se traslada: hay que
+  entrar una vez en la URL nueva.
