@@ -43,10 +43,16 @@ pendiente»). Pasos completos y criterios de aprobado: `PENDIENTE-PRUEBA-RELOJ.m
 
 ## Sin cobertura
 
-Verificado el 2026-11-10 contra la URL HTTPS real (`informe-https.json`): contexto seguro,
-service worker activo controlando la página y **la app arranca con la red apagada**. Captura:
-`docs/capturas-movil/https-pwa-instalada.png` y
-`docs/capturas-movil/https-arranque-sin-cobertura.png`.
+Verificado el 2026-11-10 contra la URL HTTPS real, en una **ventana de aplicación** (el
+equivalente visible a la app instalada: sin barra de direcciones ni pestañas):
+
+- `display-mode: standalone` y service worker activo controlando la página.
+- Con la red apagada, recargar abre la app: `onLine: false`, `transferSize: 0` y
+  `workerStart > 0` (la página la sirvió el service worker, no la red).
+- Informe: `docs/capturas-movil/informe-instalacion.json`. Capturas:
+  `pwa-instalada-ventana.png` (instalada) y `pwa-instalada-sin-cobertura.png` (recargada
+  sin red). Las dos enseñan la misma pantalla de login porque la app no tiene estado
+  distinto sin sesión; lo que cambia es de dónde viene la página.
 
 | Caso | Estado |
 |---|---|
@@ -108,6 +114,27 @@ comprobarlo desde el servidor:
 ```bash
 sudo tailscale status --json | python3 -c 'import json,sys;print(json.load(sys.stdin)["Self"]["DNSName"])'
 ```
+
+## Lo único pendiente: la prueba física del reloj
+
+Todo lo demás está hecho y verificado. Esto es lo que queda, y es lo que solo puede hacer
+David porque exige el reloj en la muñeca y el código 2FA de Garmin.
+
+| # | Qué haces | Qué debe salir |
+|---|---|---|
+| 1 | Reloj **Forerunner 255** cargado, emparejado con el móvil y sincronizado en Garmin Connect (abrir la app y arrastrar hacia abajo). Una plantilla con 2–3 ejercicios, series, pesos y descansos. | El reloj aparece al día y sin avisos de sincronización pendiente. |
+| 2 | En la app, **Ajustes → Vincular cuenta**; introducir el código **2FA** cuando lo pida Garmin. | «Vinculado». Si sale error, apuntarlo sin escribir la contraseña ni el código en ningún sitio. |
+| 3 | **Gimnasio → Editar pesos**: cambiar un peso con − / + (por ejemplo 65 → 67,5). | «Guardado a las …». Al volver a entrar, el peso nuevo sigue ahí. |
+| 4 | **Gimnasio → Enviar al reloj** y esperar el resultado. | Primero «Pendiente», luego **«Enviado al reloj»**. Si sale «No se pudo enviar»: acercar el reloj, sincronizar en Garmin Connect y **Reintentar**. |
+| 5 | En el reloj: **Entrenamiento → Entrenamientos**, abrir el entreno de hoy y pulsar **Empezar**. | El entreno muestra el nombre y, en cada serie, **el peso objetivo** (60/65/70). No hay que teclear el peso en el reloj. |
+| 6 | Hacer una serie de verdad. Contar las repeticiones reales que has hecho. | La serie se cierra sola y avanza sin pulsar OK. Anotar: ejercicio, peso, reps reales. |
+| 7 | Sincronizar el reloj y volver a la app: **Gimnasio → Últimas sesiones**. | La sesión aparece con sus series (peso y reps) y se puede **Corregir pesos** con − / +; se guarda solo y recalcula el total. |
+| 8 | Si quieres medir el detector: repetir con series de **8–10 reps**, sin corregir pesos antes de sacar los datos. | Criterio: ≥95 % de series con error ≤1 rep y ningún cierre prematuro. |
+
+Evidencia que hay que dejar: captura del estado **«Enviado al reloj»**, captura de la
+pantalla del reloj, y la sesión en el historial. Si algo falla, apuntar la hora, el modelo
+y lo que se vio (sin contraseñas ni códigos). El detalle largo, con criterios de aprobado
+por prueba, está en `PENDIENTE-PRUEBA-RELOJ.md`.
 
 ## Notas
 

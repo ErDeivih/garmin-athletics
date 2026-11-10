@@ -1,0 +1,31 @@
+{
+  "url": "https://servidor.tail4263a0.ts.net",
+  "navegador": "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+  "modo": "ventana de aplicación (--app)",
+  "instalada": {
+    "displayMode": [
+      "standalone"
+    ],
+    "contexto_seguro": true,
+    "serviceWorkers": [
+      {
+        "ambito": "https://servidor.tail4263a0.ts.net/",
+        "estado": "activated"
+      }
+    ],
+    "controlado": true,
+    "ventana": {
+      "ancho": 390,
+      "alto": 844
+    }
+  },
+  "sinCobertura": {
+    "onLine": false,
+    "workerStart": 1,
+    "transferSize": 0,
+    "tipo": "reload",
+    "url": "https://servidor.tail4263a0.ts.net/"
+  },
+  "arranqueSinCobertura": true,
+  "resultado": "OK: la app instalada abre sin cobertura"
+}

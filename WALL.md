@@ -56,6 +56,11 @@ reloj y el análisis está completo.
 - Flujo móvil contra el despliegue: `scripts/flujo-movil-desplegado.mjs` recorre plan (60/65/70) → edición guardada en servidor → `dry_run` con `unmapped: []` → envío sin credencial (400 limpio) → 3 series → sesión guardada **con 60/65/70** (`coincide: true`); 8 capturas a 390 px e informe en `docs/capturas-movil/`, con las de antes en `antes/`.
 - Revisión de interfaz: `docs/revision-interfaz-movil.md` — inventario de las 6 pantallas del flujo, 17 capturas a 390 px, 10 problemas con evidencia y su arreglo CSS/texto, y el antes/después del arreglo de pesos por serie.
 - Regresión visual: 4/4 pantallas, 0 píxeles distintos, con la línea base actualizada por la tarjeta «Reloj real» (se regeneró en la instancia de verificación).
+- Instalación PWA verificada: ventana de aplicación (`display-mode: standalone`, sin barra
+  del navegador) con service worker controlando y **arranque sin cobertura**
+  (`onLine: false`, `transferSize: 0`, `workerStart > 0`). Informe
+  `docs/capturas-movil/informe-instalacion.json` y capturas `pwa-instalada-ventana.png` /
+  `pwa-instalada-sin-cobertura.png`.
 - Uso real desde el móvil: `docs/USO-MOVIL.md` — bloque único con los tres pasos de instalación, la URL HTTPS exacta, qué se guarda sin cobertura y lo que falta para el reloj. Verificado contra la URL real (`informe-https.json`: contexto seguro, service worker activo, arranque sin cobertura) y con el inspector de Chrome (`informe-pwa.json`: instalable).
 - Capturas: `frontend-nuevo/screenshots/` — 29 capturas nuevas y numeradas (01–29).
 - Prueba final en seco: plan -> dry-run -> reloj -> 3 series -> sesión guardada; capturas 27–29.\n- Biblioteca: fases, series y pesos por serie visibles; filtro por foco.

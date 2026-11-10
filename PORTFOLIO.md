@@ -6,11 +6,12 @@ serie, enviarlo al reloj Garmin desde la propia app, ejecutarlo sin teclear nada
 muñeca, corregir los pesos reales al terminar y verlo en el historial.
 
 - **Repositorio:** <https://github.com/ErDeivih/garmin-athletics>
-- **Demo:** desplegada en un servidor doméstico privado, con **HTTPS propio del tailnet**
-  (WireGuard). La PWA se instala en el móvil y arranca sin cobertura. Se enseña en directo
-  o por pantalla compartida; no expongo la dirección pública porque es mi red de casa.
-- **Estado:** en uso desde el 2026-11-09, con PWA instalable desde el 2026-11-10. Pendiente
-  solo la prueba física con el reloj (ver «Estado»).
+- **Demo:** **<https://servidor.tail4263a0.ts.net>** — PWA servida por HTTPS con
+  certificado del tailnet (WireGuard), instalable en el móvil y con arranque sin
+  cobertura. Es una red privada: el enlace solo responde desde un dispositivo del tailnet
+  de invitado, así que la demo se enseña en directo o por pantalla compartida.
+- **Estado:** en uso desde el 2026-11-09, con PWA instalable y offline desde el
+  2026-11-10. Pendiente solo la prueba física con el reloj (ver «Estado»).
 
 ---
 
@@ -31,7 +32,7 @@ como historial fiable**.
 |---|---|
 | **Producto móvil de punta a punta** | 21 pantallas (React 19 + Vite + TypeScript), flujo planificar → enviar → entrenar → corregir → historial, con estados de carga, vacío y error en cada pantalla |
 | **Integración con hardware real** | API de Garmin Connect y watch-app propia en Connect IQ (Monkey C) para el Forerunner 255: mapeo de ejercicios y enums, envío del workout con objetivos por serie, series idempotentes desde el reloj, `dry_run` para validar sin tocar la cuenta |
-| **Offline y PWA** | Manifiesto, iconos 192/512/maskable y service worker; el borrador de la sesión se guarda en el móvil y **la app arranca sin cobertura** por HTTPS (verificado contra la URL real, con captura) |
+| **Offline y PWA** | HTTPS con certificado del tailnet; la app se instala (ventana en `display-mode: standalone`, sin barra del navegador) y **arranca sin cobertura**: recarga servida por el service worker con `onLine: false`, `transferSize: 0` y `workerStart > 0`. El borrador de la sesión se guarda en el móvil |
 | **Backend de datos** | FastAPI + SQLAlchemy async + SQLite, migraciones idempotentes, 21 guiones de contrato sobre una base efímera |
 | **Diseño y sistema de diseño** | Tokens de color/tipografía, contraste AA comprobado, escala de espaciado, regresión visual con `pixelmatch` (4 pantallas, 0 píxeles) |
 | **Despliegue y operación** | Imagen Docker de dos etapas, servidor doméstico, acceso privado por Tailscale, verificación automática del despliegue (`verify-server.sh`), sin abrir puertos en el router |
@@ -51,6 +52,7 @@ Todas están tomadas a 390 × 844 (viewport real de móvil) contra la app desple
 | **Envío al reloj** — un botón, estado Pendiente/Enviado/Error y guía de sincronización. [04b-envio-enviado.png](docs/capturas-movil/04b-envio-enviado.png) | **Entrenar** — las tres series con su peso y reps ya puestos. [06-entrenar.png](docs/capturas-movil/06-entrenar.png) |
 | **Sesión guardada** — 60/65/70, 1420 kg, reparto muscular. [07-sesion-terminada.png](docs/capturas-movil/07-sesion-terminada.png) | **Corregir después de entrenar** — 60 → 62,5 kg persistido. [09-editar-tras-entrenar.png](docs/capturas-movil/09-editar-tras-entrenar.png) |
 | **Historial** — la sesión aparece en «Últimas sesiones». [10-historial-sesion.png](docs/capturas-movil/10-historial-sesion.png) | **Sin cobertura** — la app abierta con la red apagada. [https-arranque-sin-cobertura.png](docs/capturas-movil/https-arranque-sin-cobertura.png) |
+| **PWA instalada** — ventana en modo app, sin barra del navegador. [pwa-instalada-ventana.png](docs/capturas-movil/pwa-instalada-ventana.png) | **Instalada y sin cobertura** — recargada con la red apagada. [pwa-instalada-sin-cobertura.png](docs/capturas-movil/pwa-instalada-sin-cobertura.png) |
 
 Los datos de las capturas son de una ejecución real contra el despliegue (copia
 desechable de la base, sin tocar la cuenta de Garmin). Informe:
@@ -63,6 +65,7 @@ desechable de la base, sin tocar la cuenta de Garmin). Informe:
 | Frontend (Vitest + Testing Library) | **51/51 pruebas en 21 ficheros** |
 | Backend (guiones de contrato con TestClient) | **21/21**, base SQLite efímera |
 | Regresión visual (Playwright + pixelmatch) | **4/4 pantallas, 0 píxeles** distintos |
+| PWA instalada (Chrome, ventana `--app`) | `display-mode: standalone`, service worker controlando, **arranque sin cobertura** (`onLine: false`, `transferSize: 0`, `workerStart > 0`) |
 | Contraste y escala tipográfica | 52 pares AA, espaciado dentro de la escala |
 | Despliegue | `verify-server.sh`: salud, rutas profundas, cabeceras y datos OK |
 
