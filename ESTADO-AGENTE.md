@@ -5,7 +5,7 @@ nivel: 2
 siguiente: David instala la PWA desde https://servidor.tail4263a0.ts.net (3 pasos) y ejecuta la prueba del reloj de docs/USO-MOVIL.md
 bloqueado: prueba física del fr255 (2FA/reloj de David)
 fecha: 2026-11-10
-resumen: Historial exportable a CSV/JSON y resumen semanal con volumen, series por grupo y adherencia al plan; 68/68 frontend y 24/24 backend en verde, capturas 24–25; solo falta la prueba física del reloj.
+resumen: Historial exportable a CSV/JSON y resumen semanal con volumen, series por grupo y adherencia al plan; caso técnico `docs/CASO-GARMIN.md` para el portfolio; 68/68 frontend y 24/24 backend en verde; solo falta la prueba física del reloj.
 
 ## Bloqueo
 
