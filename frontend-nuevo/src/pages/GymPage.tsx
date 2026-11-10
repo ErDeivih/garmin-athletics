@@ -198,6 +198,11 @@ export function GymPage() {
 
       <section className="mt-4" aria-label="Últimas sesiones">
         <SectionTitle hint="5 últimas">Últimas sesiones</SectionTitle>
+        <div className="mb-2 flex justify-end">
+          <Link to="/gimnasio/historial" className="text-caption font-semibold text-accent underline">
+            Ver todo el historial
+          </Link>
+        </div>
         {sessions.data.items.length === 0 ? (
           <EmptyState
             title="Todavía no hay sesiones"

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useTemplate, useTemplates } from '../../api/queries';
+import { useDuplicateTemplate, useTemplate, useTemplates } from '../../api/queries';
 import { Badge, Button, Card, EmptyState, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../../components/ui';
 import type { TemplateExercise } from '../../api/types';
 import { formatMinutes, formatNumber } from '../../lib/format';
@@ -44,38 +44,100 @@ function groupPhases(exercises: TemplateExercise[]): { label: string; hint: stri
   return groups;
 }
 
+const controlClass =
+  'focus-ring min-h-11 w-full rounded-md border border-line-strong bg-raised px-2 text-body text-ink';
+
 export function LibraryPage() {
-  const templates = useTemplates();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [focusFilter, setFocusFilter] = useState('all');
+  const [texto, setTexto] = useState('');
+  const [desde, setDesde] = useState('');
+  const [hasta, setHasta] = useState('');
+  const [aviso, setAviso] = useState<string | null>(null);
+
+  // Dos consultas: todas (para los chips de foco) y la que filtra el servidor.
+  const todas = useTemplates();
+  const filtradas = useTemplates({
+    q: texto,
+    focus: focusFilter === 'all' ? undefined : focusFilter,
+    from: desde || undefined,
+    to: hasta || undefined,
+  });
+  const duplicar = useDuplicateTemplate();
   const selected = useTemplate(selectedId);
 
-  if (templates.isPending) return <LoadingBlock label="Cargando la biblioteca" />;
-  if (templates.isError) {
-    return <ErrorState message="No se pudo cargar la biblioteca." onRetry={() => void templates.refetch()} />;
+  const hayFiltros = Boolean(texto.trim() || desde || hasta || focusFilter !== 'all');
+  const limpiar = () => {
+    setTexto('');
+    setDesde('');
+    setHasta('');
+    setFocusFilter('all');
+  };
+
+  if (filtradas.isPending) return <LoadingBlock label="Cargando la biblioteca" />;
+  if (filtradas.isError) {
+    return <ErrorState message="No se pudo cargar la biblioteca." onRetry={() => void filtradas.refetch()} />;
   }
 
-  const items = [...templates.data.items].sort((a, b) => {
+  const items = [...filtradas.data.items].sort((a, b) => {
     const fa = FOCUS_ORDER.indexOf(focusKey(a.focus));
     const fb = FOCUS_ORDER.indexOf(focusKey(b.focus));
     return (fa === -1 ? 9 : fa) - (fb === -1 ? 9 : fb) || a.name.localeCompare(b.name);
   });
-  const focuses = Array.from(new Set(items.map((item) => focusKey(item.focus)).filter(Boolean)));
-  const filtered = focusFilter === 'all' ? items : items.filter((item) => focusKey(item.focus) === focusFilter);
+  const focuses = Array.from(new Set((todas.data?.items ?? []).map((item) => focusKey(item.focus)).filter(Boolean)));
 
   return (
     <>
       <PageHeader
         title="Biblioteca"
-        description="Rutinas ordenadas por foco y fase, con series, peso y descanso."
+        description="Tus planes, con búsqueda, foco y fecha. Duplica uno para reutilizarlo."
         actions={<Link to="/gimnasio" className="text-body font-semibold text-accent underline">Gimnasio</Link>}
       />
 
-      {items.length === 0 ? (
+      {aviso ? (
+        <p role="status" className="mb-3 rounded-md border border-success/40 bg-success/10 px-3 py-2 text-body text-ink">
+          {aviso}
+        </p>
+      ) : null}
+
+      {(todas.data?.total ?? 0) === 0 ? (
         <EmptyState title="Sin rutinas" description="Cuando crees una plantilla, aquí aparecerá ordenada por foco." />
       ) : (
         <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
           <div className="flex flex-col gap-2">
+            <label className="flex flex-col gap-1 text-caption text-ink-muted">
+              Buscar por nombre
+              <input
+                type="search"
+                aria-label="Buscar por nombre"
+                value={texto}
+                onChange={(event) => setTexto(event.target.value)}
+                placeholder="Empuje, pierna…"
+                className={controlClass}
+              />
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="flex flex-col gap-1 text-caption text-ink-muted">
+                Desde
+                <input
+                  type="date"
+                  aria-label="Desde"
+                  value={desde}
+                  onChange={(event) => setDesde(event.target.value)}
+                  className={controlClass}
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-caption text-ink-muted">
+                Hasta
+                <input
+                  type="date"
+                  aria-label="Hasta"
+                  value={hasta}
+                  onChange={(event) => setHasta(event.target.value)}
+                  className={controlClass}
+                />
+              </label>
+            </div>
             <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtrar por foco">
               <Button
                 variant={focusFilter === 'all' ? 'primary' : 'secondary'}
@@ -95,11 +157,22 @@ export function LibraryPage() {
                 </Button>
               ))}
             </div>
-            {filtered.length === 0 ? (
-              <EmptyState title="Sin rutinas de ese foco" description="Prueba otro foco o vuelve a Todos." />
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-caption text-ink-faint">
+                {items.length} de {todas.data?.total ?? 0} planes
+              </p>
+              {hayFiltros ? (
+                <Button variant="secondary" onClick={limpiar}>Quitar filtros</Button>
+              ) : null}
+            </div>
+            {items.length === 0 ? (
+              <EmptyState
+                title="Sin resultados"
+                description="Prueba otro nombre, otro foco o un rango de fechas más amplio."
+              />
             ) : (
               <ul className="flex flex-col gap-2">
-                {filtered.map((template) => (
+                {items.map((template) => (
                   <li key={template.id}>
                     <button type="button" onClick={() => setSelectedId(template.id)} className="focus-ring w-full rounded-lg text-left">
                       <Card as="article" className={selectedId === template.id ? 'border-accent' : ''}>
@@ -196,10 +269,29 @@ export function LibraryPage() {
                   <Link to={`/gimnasio/entrenar?template=${selected.data.id}`} className="focus-ring inline-flex min-h-11 items-center rounded-md bg-accent px-3 text-body font-semibold text-on-accent">
                     Empezar esta sesión
                   </Link>
+                  <Button
+                    variant="secondary"
+                    aria-label={`Duplicar plan ${selected.data.name}`}
+                    disabled={duplicar.isPending}
+                    onClick={() => {
+                      setAviso(null);
+                      duplicar.mutate(selected.data!.id, {
+                        onSuccess: (copia) => {
+                          setSelectedId(copia.id);
+                          setAviso('Copia creada');
+                        },
+                      });
+                    }}
+                  >
+                    {duplicar.isPending ? 'Duplicando…' : 'Duplicar plan'}
+                  </Button>
                   <Link to={`/gimnasio/catalogo`} className="focus-ring inline-flex min-h-11 items-center rounded-md border border-line-strong px-3 text-body font-semibold text-ink">
                     Ver ejercicios
                   </Link>
                 </div>
+                {duplicar.isError ? (
+                  <p role="alert" className="mt-2 text-caption text-danger">No se pudo duplicar el plan.</p>
+                ) : null}
               </Card>
             )}
           </div>

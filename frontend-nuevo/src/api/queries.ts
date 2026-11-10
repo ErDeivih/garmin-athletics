@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from './client';
 import type {
   ActivityDetail,
@@ -150,10 +150,40 @@ export function useSyncNow() {  const queryClient = useQueryClient();
   });
 }
 
-export function useTemplates() {
+export interface TemplateFilters {
+  q?: string;
+  focus?: string;
+  from?: string;
+  to?: string;
+}
+
+export function useTemplates(filters: TemplateFilters = {}) {
+  const params = new URLSearchParams();
+  if (filters.q?.trim()) params.set('q', filters.q.trim());
+  if (filters.focus) params.set('focus', filters.focus);
+  if (filters.from) params.set('from', filters.from);
+  if (filters.to) params.set('to', filters.to);
+  const qs = params.toString();
   return useQuery({
-    queryKey: queryKeys.templates,
-    queryFn: () => apiFetch<TemplateList>('/api/v1/strength/templates'),
+    queryKey: [...queryKeys.templates, qs],
+    queryFn: () => apiFetch<TemplateList>(`/api/v1/strength/templates${qs ? `?${qs}` : ''}`),
+    // Al filtrar no se vacía la lista: se sigue viendo la anterior mientras llega
+    // la nueva, y el campo de búsqueda no pierde el foco.
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** Duplica un plan para reutilizarlo (copia profunda con sus pesos por serie). */
+export function useDuplicateTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (templateId: string) =>
+      apiFetch<WorkoutTemplate>(`/api/v1/strength/templates/${templateId}/duplicate`, {
+        method: 'POST',
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.templates });
+    },
   });
 }
 

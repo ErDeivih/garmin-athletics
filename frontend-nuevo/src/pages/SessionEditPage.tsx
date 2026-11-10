@@ -6,7 +6,13 @@ import type { SessionInput, SessionSetInput } from '../api/types';
 import { Button, Card, ErrorState, LoadingBlock, PageHeader } from '../components/ui';
 import { formatDate, formatNumber } from '../lib/format';
 
-type EditableSet = SessionSetInput & { id: string; exerciseName: string };
+type EditableSet = SessionSetInput & {
+  id: string;
+  exerciseName: string;
+  /** Objetivo del plan para esa serie, para comparar con el peso real. */
+  planned_weight_kg: number | null;
+  planned_reps: number | null;
+};
 
 export function SessionEditPage() {
   const { id } = useParams<{ id: string }>();
@@ -33,6 +39,8 @@ export function SessionEditPage() {
         rest_seconds: item.rest_seconds,
         completed_at: item.completed_at,
         needs_review: item.needs_review,
+        planned_weight_kg: item.planned_weight_kg ?? null,
+        planned_reps: item.planned_reps ?? null,
       })),
     ));
   }, [session.data]);
@@ -107,6 +115,12 @@ export function SessionEditPage() {
               <div>
                 <span className="text-body text-ink">{item.exerciseName}</span>
                 <span className="ml-2 text-caption text-ink-faint">Serie {item.set_number}</span>
+                {item.planned_weight_kg != null ? (
+                  <span className="ml-2 text-caption text-ink-faint">
+                    Plan {formatNumber(item.planned_weight_kg, 'kg')}
+                    {item.planned_reps != null ? ` × ${item.planned_reps}` : ''}
+                  </span>
+                ) : null}
                 {item.needs_review ? (
                   <span className="ml-2 rounded-sm border border-warning px-1.5 py-0.5 text-caption text-warning">
                     Revisar

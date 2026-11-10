@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Minus, Plus } from 'lucide-react';
+import { Copy, Minus, Plus } from 'lucide-react';
 import { useLastMarks, useTemplate, useUpdateTemplate } from '../api/queries';
 import { Button, Card, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../components/ui';
 import { formatNumber } from '../lib/format';
@@ -24,6 +24,7 @@ export function PlanEditorPage() {
   const update = useUpdateTemplate(id ?? null);
   const [draft, setDraft] = useState<DraftExercise[] | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [enBloque, setEnBloque] = useState<Record<string, string>>({});
   const first = useRef(true);
   const lastPayload = useRef('');
 
@@ -99,6 +100,41 @@ export function PlanEditorPage() {
     }) ?? null);
   };
 
+  /** Copia peso y reps de la serie anterior: el salto entre series se teclea una vez. */
+  const copyPrevious = (exerciseIndex: number, setIndex: number) => {
+    if (setIndex === 0) return;
+    setDraft((current) => current?.map((item, index) => {
+      if (index !== exerciseIndex) return item;
+      const anterior = item.targets[setIndex - 1];
+      if (!anterior) return item;
+      return {
+        ...item,
+        targets: item.targets.map((target, targetIndex) =>
+          targetIndex === setIndex
+            ? { ...target, weight_kg: anterior.weight_kg, reps: anterior.reps }
+            : target),
+      };
+    }) ?? null);
+  };
+
+  /** Pone el mismo peso en todas las series del ejercicio. */
+  const applyAll = (exerciseIndex: number, weightKg: number) => {
+    setDraft((current) => current?.map((item, index) => {
+      if (index !== exerciseIndex) return item;
+      return {
+        ...item,
+        targets: item.targets.map((target) => ({ ...target, weight_kg: weightKg })),
+      };
+    }) ?? null);
+  };
+
+  const pesoEnBloque = (exercise: DraftExercise) => enBloque[exercise.exercise_id] ?? '';
+  const aplicarEnBloque = (exerciseIndex: number, exercise: DraftExercise) => {
+    const valor = Number(pesoEnBloque(exercise).replace(',', '.'));
+    if (!Number.isFinite(valor) || valor < 0) return;
+    applyAll(exerciseIndex, valor);
+  };
+
   if (template.isPending) return <LoadingBlock label="Cargando el plan" />;
   if (template.isError || !template.data) {
     return <><PageHeader title="Editar plan" /><ErrorState message="No se pudo cargar el plan." onRetry={() => void template.refetch()} /></>;
@@ -118,11 +154,45 @@ export function PlanEditorPage() {
         {(draft ?? []).map((exercise, exerciseIndex) => (
           <Card key={exercise.exercise_id} as="section">
             <SectionTitle hint={`${exercise.sets} × ${exercise.reps}`}>{exercise.name}</SectionTitle>
+            <div className="mb-3 flex flex-wrap items-end gap-2 rounded-md border border-line bg-raised/60 p-2">
+              <label className="flex flex-col gap-1 text-caption text-ink-muted">
+                Todas las series (kg)
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="2.5"
+                  aria-label={`Peso para todas las series de ${exercise.name}`}
+                  value={pesoEnBloque(exercise)}
+                  onChange={(event) => setEnBloque((actual) => ({
+                    ...actual,
+                    [exercise.exercise_id]: event.target.value,
+                  }))}
+                  className="focus-ring min-h-11 w-28 rounded-md border border-line-strong bg-raised px-2 text-right text-body text-ink"
+                />
+              </label>
+              <Button
+                variant="secondary"
+                onClick={() => aplicarEnBloque(exerciseIndex, exercise)}
+              >
+                Aplicar a todas
+              </Button>
+              <span className="text-caption text-ink-faint">Un peso para las {exercise.sets} series</span>
+            </div>
             <div className="flex flex-col gap-2">
               {exercise.targets.map((target, setIndex) => (
                 <div key={target.set_number} className="flex items-center justify-between gap-3 rounded-md border border-line bg-raised px-3 py-2">
                   <span className="text-body text-ink">Serie {target.set_number}</span>
                   <div className="flex items-center gap-2">
+                    <Button
+                      variant="secondary"
+                      className="size-11 p-0"
+                      aria-label={`Copiar peso de la serie anterior a la serie ${target.set_number} de ${exercise.name}`}
+                      disabled={setIndex === 0}
+                      onClick={() => copyPrevious(exerciseIndex, setIndex)}
+                    >
+                      <Copy aria-hidden="true" className="size-5" />
+                    </Button>
                     <Button
                       variant="secondary"
                       className="size-11 p-0"

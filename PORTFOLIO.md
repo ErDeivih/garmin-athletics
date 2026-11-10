@@ -30,7 +30,7 @@ como historial fiable**.
 
 | Competencia | Cómo se ve en el proyecto |
 |---|---|
-| **Producto móvil de punta a punta** | 21 pantallas (React 19 + Vite + TypeScript), flujo planificar → enviar → entrenar → corregir → historial, con estados de carga, vacío y error en cada pantalla |
+| **Producto móvil de punta a punta** | 21 pantallas (React 19 + Vite + TypeScript): biblioteca con búsqueda, filtro por foco/fecha y **duplicar plan**; editor de pesos con copiar-serie-anterior y peso en bloque; historial con fecha, duración, volumen y series, y detalle con **planificado frente a real**; flujo planificar → enviar → entrenar → corregir → historial |
 | **Integración con hardware real** | API de Garmin Connect y watch-app propia en Connect IQ (Monkey C) para el Forerunner 255: mapeo de ejercicios y enums, envío del workout con objetivos por serie, series idempotentes desde el reloj, `dry_run` para validar sin tocar la cuenta |
 | **Offline y PWA** | HTTPS con certificado del tailnet; la app se instala (ventana en `display-mode: standalone`, sin barra del navegador) y **arranca sin cobertura**: recarga servida por el service worker con `onLine: false`, `transferSize: 0` y `workerStart > 0`. El borrador de la sesión se guarda en el móvil |
 | **Backend de datos** | FastAPI + SQLAlchemy async + SQLite, migraciones idempotentes, 21 guiones de contrato sobre una base efímera |
@@ -53,6 +53,9 @@ Todas están tomadas a 390 × 844 (viewport real de móvil) contra la app desple
 | **Sesión guardada** — 60/65/70, 1420 kg, reparto muscular. [07-sesion-terminada.png](docs/capturas-movil/07-sesion-terminada.png) | **Corregir después de entrenar** — 60 → 62,5 kg persistido. [09-editar-tras-entrenar.png](docs/capturas-movil/09-editar-tras-entrenar.png) |
 | **Historial** — la sesión aparece en «Últimas sesiones». [10-historial-sesion.png](docs/capturas-movil/10-historial-sesion.png) | **Sin cobertura** — la app abierta con la red apagada. [https-arranque-sin-cobertura.png](docs/capturas-movil/https-arranque-sin-cobertura.png) |
 | **PWA instalada** — ventana en modo app, sin barra del navegador. [pwa-instalada-ventana.png](docs/capturas-movil/pwa-instalada-ventana.png) | **Instalada y sin cobertura** — recargada con la red apagada. [pwa-instalada-sin-cobertura.png](docs/capturas-movil/pwa-instalada-sin-cobertura.png) |
+| **Biblioteca con filtros** — búsqueda por nombre, foco y fechas. [13-biblioteca-filtros.png](docs/capturas-movil/13-biblioteca-filtros.png) | **Duplicar plan** — reutilizar una rutina con sus pesos por serie. [14-biblioteca-duplicar.png](docs/capturas-movil/14-biblioteca-duplicar.png) |
+| **Historial completo** — fecha, duración, volumen y series. [11-historial-completo.png](docs/capturas-movil/11-historial-completo.png) | **Planificado frente a real** — el plan (65 kg) junto al peso real. [12-planificado-vs-real.png](docs/capturas-movil/12-planificado-vs-real.png) |
+| **Editor rápido** — copiar la serie anterior y aplicar un peso a todas. [16-editor-rapido.png](docs/capturas-movil/16-editor-rapido.png) | **Aplicado y guardado** — 62,5 kg en las tres series sin salir. [17-editor-aplicado.png](docs/capturas-movil/17-editor-aplicado.png) |
 
 Los datos de las capturas son de una ejecución real contra el despliegue (copia
 desechable de la base, sin tocar la cuenta de Garmin). Informe:
@@ -62,8 +65,8 @@ desechable de la base, sin tocar la cuenta de Garmin). Informe:
 
 | Suite | Resultado |
 |---|---|
-| Frontend (Vitest + Testing Library) | **51/51 pruebas en 21 ficheros** |
-| Backend (guiones de contrato con TestClient) | **21/21**, base SQLite efímera |
+| Frontend (Vitest + Testing Library) | **57/57 pruebas en 24 ficheros** |
+| Backend (guiones de contrato con TestClient) | **22/22**, base SQLite efímera |
 | Regresión visual (Playwright + pixelmatch) | **4/4 pantallas, 0 píxeles** distintos |
 | PWA instalada (Chrome, ventana `--app`) | `display-mode: standalone`, service worker controlando, **arranque sin cobertura** (`onLine: false`, `transferSize: 0`, `workerStart > 0`) |
 | Contraste y escala tipográfica | 52 pares AA, espaciado dentro de la escala |
@@ -92,10 +95,13 @@ después, y la corrección posterior a entrenar tiene su propio guion de contrat
 
 ## 6. Estado
 
-**Funcionando hoy:** crear el plan con pesos por serie, editarlo, enviarlo a Garmin,
-entrenar, guardar la sesión con los pesos correctos, corregirla después, historial,
-actividades y análisis del reloj, calendario semanal, rutas, y uso desde el móvil **dentro
-y fuera de casa**, con la PWA instalable por HTTPS y arranque sin cobertura.
+**Funcionando hoy:** biblioteca de planes (crear, listar, buscar, filtrar por foco y fecha,
+duplicar), editor de pesos por serie rápido (copiar serie anterior, peso en bloque,
+guardado automático), historial completo con fecha/duración/volumen/series y detalle con
+planificado frente a real, además de crear y enviar el entreno a Garmin, entrenar, guardar
+la sesión, corregirla, actividades y análisis del reloj, calendario semanal, rutas y uso
+desde el móvil **dentro y fuera de casa**, con la PWA instalable por HTTPS y arranque sin
+cobertura.
 
 **Pendiente:**
 - **Prueba física del Forerunner 255** (reloj cargado, 2FA delante, comprobar el peso en

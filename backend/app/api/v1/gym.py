@@ -190,6 +190,20 @@ def _tonnage(sets: List[SessionSet]) -> float:
     return round(sum((s.weight_kg or 0) * (s.reps or 0) for s in sets if not s.is_warmup), 2)
 
 
+def _planned_target(target: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Objetivo de una serie según la plantilla, para comparar planificado con real.
+
+    Devuelve `None` en cada campo cuando no hay plantilla o la plantilla no fija
+    ese objetivo: no se inventa un plan que no existe.
+    """
+    weight = (target or {}).get("weight_kg")
+    reps = (target or {}).get("reps")
+    return {
+        "planned_weight_kg": float(weight) if weight is not None else None,
+        "planned_reps": int(reps) if reps is not None else None,
+    }
+
+
 def _normalize_set_targets(raw, sets: int, reps: int, weight_kg: float) -> List[Dict[str, Any]]:
     """Objetivo por serie. Si falta, usa el peso/reps de la plantilla o la última marca."""
     count = max(1, int(sets or 1))
@@ -309,6 +323,24 @@ async def _session_out(db: AsyncSession, sess: WorkoutSession) -> Dict[str, Any]
     sets = res.scalars().all()
     ex_map = await _load_exercises_by_id(db, [s.exercise_id for s in sets])
 
+    # Plan por serie: se lee de la plantilla de la sesión y se empareja por
+    # ejercicio + número de serie. Sin plantilla no hay plan que comparar.
+    planned: Dict[tuple, Dict[str, Any]] = {}
+    if sess.template_id:
+        # Solo la plantilla del propio atleta: una sesión que apunte a un
+        # `template_id` ajeno no debe enseñar el plan de otra persona.
+        tpl_rows = (await db.execute(
+            select(TemplateExercise)
+            .join(WorkoutTemplate, TemplateExercise.template_id == WorkoutTemplate.id)
+            .where(TemplateExercise.template_id == sess.template_id,
+                   WorkoutTemplate.user_id == sess.user_id)
+        )).scalars().all()
+        for row in tpl_rows:
+            for target in (row.set_targets or []):
+                if not isinstance(target, dict) or target.get("set_number") is None:
+                    continue
+                planned[(row.exercise_id, int(target["set_number"]))] = target
+
     grouped: Dict[str, List[SessionSet]] = {}
     for s in sets:
         grouped.setdefault(s.exercise_id, []).append(s)
@@ -317,10 +349,15 @@ async def _session_out(db: AsyncSession, sess: WorkoutSession) -> Dict[str, Any]
     for ex_id, ss in grouped.items():
         ss.sort(key=lambda x: (x.set_number, x.id))
         ordered = sorted(ss, key=lambda x: (x.position, x.set_number))
+        sets_out = []
+        for x in ordered:
+            serie = _set_out(x)
+            serie.update(_planned_target(planned.get((ex_id, int(x.set_number)))))
+            sets_out.append(serie)
         exercises.append({
             "exercise": _exercise_brief(ex_map.get(ex_id)),
             "position": min(x.position for x in ss),
-            "sets": [_set_out(x) for x in ordered],
+            "sets": sets_out,
             "tonnage_kg": round(sum((x.weight_kg or 0) * (x.reps or 0)
                                     for x in ss if not x.is_warmup), 2),
         })
@@ -925,13 +962,30 @@ async def _write_template_exercises(db: AsyncSession, template_id: str,
         ))
 
 
-@router.get("/templates", summary="Mis plantillas de rutina")
+@router.get("/templates", summary="Mis plantillas de rutina (con filtros de biblioteca)")
 async def list_templates(
+    q: Optional[str] = Query(None, description="Texto libre: el nombre lo contiene"),
+    focus: Optional[str] = Query(None, description="Foco exacto, sin distinguir mayúsculas"),
+    from_date: Optional[date] = Query(None, alias="from",
+                                      description="Actualizadas desde (YYYY-MM-DD)."),
+    to_date: Optional[date] = Query(None, alias="to",
+                                    description="Actualizadas hasta (YYYY-MM-DD)."),
     user: User = Depends(require_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
+    conditions = [WorkoutTemplate.user_id == user.id]
+    if q and q.strip():
+        conditions.append(WorkoutTemplate.name.ilike(f"%{q.strip()}%"))
+    if focus and focus.strip():
+        # Igualdad sin mayúsculas: `Push` debe encontrar `push`, pero `Pus` no.
+        conditions.append(func.lower(WorkoutTemplate.focus) == focus.strip().lower())
+    if from_date:
+        conditions.append(WorkoutTemplate.updated_at >= datetime.combine(from_date, time.min))
+    if to_date:
+        conditions.append(WorkoutTemplate.updated_at <= datetime.combine(to_date, time.max))
+
     res = await db.execute(
-        select(WorkoutTemplate).where(WorkoutTemplate.user_id == user.id)
+        select(WorkoutTemplate).where(*conditions)
         .order_by(WorkoutTemplate.weekday.is_(None), WorkoutTemplate.weekday, WorkoutTemplate.name)
     )
     items = [await _template_out(db, t) for t in res.scalars().all()]
@@ -969,6 +1023,51 @@ async def get_template(
     if not tpl:
         raise HTTPException(status_code=404, detail="Plantilla no encontrada.")
     return await _template_out(db, tpl)
+
+
+@router.post("/templates/{template_id}/duplicate", status_code=status.HTTP_201_CREATED,
+             summary="Duplicar una plantilla (copia profunda de sus objetivos)")
+async def duplicate_template(
+    template_id: str,
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """Copia la plantilla para reutilizarla como base de otro plan.
+
+    Se copian weekday/focus/notes y todos los `template_exercises` con sus
+    `set_targets` (copia profunda: editar la copia no toca el original).
+    """
+    res = await db.execute(select(WorkoutTemplate).where(
+        WorkoutTemplate.id == template_id, WorkoutTemplate.user_id == user.id))
+    tpl = res.scalar_one_or_none()
+    if not tpl:
+        raise HTTPException(status_code=404, detail="Plantilla no encontrada.")
+
+    rows = (await db.execute(
+        select(TemplateExercise)
+        .where(TemplateExercise.template_id == template_id)
+        .order_by(TemplateExercise.position, TemplateExercise.id)
+    )).scalars().all()
+
+    copia = WorkoutTemplate(
+        id=str(uuid.uuid4()), user_id=user.id,
+        # El nombre del modelo admite 150: se trunca el conjunto, no solo el original.
+        name=f"{tpl.name} (copia)"[:150],
+        weekday=tpl.weekday, focus=tpl.focus, notes=tpl.notes,
+    )
+    db.add(copia)
+    for row in rows:
+        db.add(TemplateExercise(
+            id=str(uuid.uuid4()), template_id=copia.id, exercise_id=row.exercise_id,
+            position=row.position, sets=row.sets, reps=row.reps, weight_kg=row.weight_kg,
+            rest_seconds=row.rest_seconds, notes=row.notes,
+            # Copia profunda de los dicts: los objetivos no se comparten entre plantillas.
+            set_targets=[dict(target) for target in (row.set_targets or [])
+                         if isinstance(target, dict)],
+        ))
+    await db.commit()
+    await db.refresh(copia)
+    return await _template_out(db, copia)
 
 
 @router.put("/templates/{template_id}", summary="Editar una plantilla (reemplaza sus ejercicios)")

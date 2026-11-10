@@ -321,6 +321,56 @@ try {
   await captura('10-historial-sesion', { espera: 400 });
   checks.historial = true;
 
+  // 11. Historial completo: fecha, duración, volumen y series por sesión.
+  await pagina.goto(`${APP}/gimnasio/historial`, { waitUntil: 'domcontentloaded' });
+  await pagina.getByRole('heading', { name: 'Historial', exact: true }).waitFor({ timeout: 20000 });
+  await pagina.getByText(/1420 kg/).first().waitFor({ timeout: 20000 });
+  await captura('11-historial-completo', { espera: 500 });
+
+  // 12. Detalle con el peso planificado frente al real.
+  await pagina.goto(`${APP}/gimnasio/sesiones/${ultima.id}`, { waitUntil: 'domcontentloaded' });
+  await pagina.getByRole('heading', { name: /editar pesos reales/i }).waitFor({ timeout: 20000 });
+  await pagina.getByText(/plan 65 kg/i).waitFor({ timeout: 15000 });
+  await captura('12-planificado-vs-real', { espera: 500 });
+  checks.planificado_visible = true;
+
+  // 13. Biblioteca: búsqueda y filtro por foco.
+  await pagina.goto(`${APP}/gimnasio/biblioteca`, { waitUntil: 'domcontentloaded' });
+  await pagina.getByRole('heading', { name: 'Biblioteca', exact: true }).waitFor({ timeout: 20000 });
+  await pagina.getByLabel(/buscar por nombre/i).fill('empuje');
+  await pagina.getByText('Empuje A').first().waitFor({ timeout: 20000 });
+  await captura('13-biblioteca-filtros', { espera: 500 });
+
+  // 14. Duplicar el plan para reutilizarlo.
+  await pagina.getByText('Empuje A').first().click();
+  const botonDuplicar = pagina.getByRole('button', { name: /duplicar plan/i });
+  await botonDuplicar.waitFor({ timeout: 20000 });
+  await botonDuplicar.scrollIntoViewIfNeeded();
+  await pagina.waitForTimeout(300);
+  await captura('14-biblioteca-duplicar', { espera: 300 });
+  await botonDuplicar.click();
+  await pagina.getByText(/copia creada/i).waitFor({ timeout: 20000 });
+  checks.duplicado = true;
+  await captura('15-biblioteca-copia', { espera: 600 });
+
+  // 16. Editor de pesos rápido: copiar la serie anterior y aplicar a todas.
+  await pagina.goto(`${APP}/gimnasio/plantillas/${templateId}`, { waitUntil: 'domcontentloaded' });
+  await pagina.getByRole('heading', { name: /editar pesos/i }).waitFor({ timeout: 20000 });
+  await pagina.getByLabel(new RegExp(`peso para todas las series de ${nombreEjercicio}`, 'i')).waitFor();
+  await captura('16-editor-rapido', { espera: 500 });
+  await pagina.getByRole('button', { name: new RegExp(`copiar peso de la serie anterior a la serie 2 de ${nombreEjercicio}`, 'i') }).click();
+  const enBloque = pagina.getByLabel(new RegExp(`peso para todas las series de ${nombreEjercicio}`, 'i'));
+  await enBloque.fill('62.5');
+  await pagina.getByRole('button', { name: /aplicar a todas/i }).first().click();
+  await pagina.waitForTimeout(1400);
+  await captura('17-editor-aplicado', { espera: 500 });
+  const trasBloque = await apiJson(`/api/v1/strength/templates/${templateId}`, { token });
+  const pesosBloque = trasBloque.json.exercises[0].set_targets.map((t) => Number(t.weight_kg));
+  checks.editor_en_bloque = { pesos: pesosBloque, esperado: [62.5, 62.5, 62.5] };
+  if (JSON.stringify(pesosBloque) !== JSON.stringify([62.5, 62.5, 62.5])) {
+    throw new Error(`El peso en bloque no se guardó: ${JSON.stringify(pesosBloque)}`);
+  }
+
   // El único error esperado es el 400 del envío sin credencial Garmin (paso 7):
   // el navegador apunta en consola cualquier respuesta >= 400.
   const erroresReales = erroresConsola.filter((texto) => !/400 \(Bad Request\)/.test(texto));

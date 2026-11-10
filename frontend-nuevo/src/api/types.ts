@@ -403,6 +403,9 @@ export interface SessionSet {
   rest_seconds: number | null;
   completed_at: string | null;
   needs_review?: boolean;
+  /** Objetivo del plan para esa serie; `null` si la sesión no viene de plantilla. */
+  planned_weight_kg?: number | null;
+  planned_reps?: number | null;
 }
 
 export interface SessionExercise {
