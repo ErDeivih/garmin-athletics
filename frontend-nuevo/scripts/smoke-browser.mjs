@@ -112,6 +112,10 @@ try {
   await page.getByLabel(/correo/i).fill(email);
   await page.getByLabel(/contraseña/i).fill(password);
   await page.getByRole('button', { name: /^entrar$/i }).click();
+  // La primera vez aparece la introducción; se pasa para llegar al panel.
+  await page.getByRole('heading', { name: /cómo funciona/i }).waitFor({ timeout: 6000 })
+    .then(() => page.getByRole('button', { name: /empezar/i }).click())
+    .catch(() => {});
   await page.getByRole('heading', { name: 'Hoy', exact: true }).waitFor({ timeout: 15000 });
   // El panel resuelve a estado vacío o a datos; en ambos casos hay que esperar
   // a que las consultas terminen antes de capturar.

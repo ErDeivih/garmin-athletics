@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useSessions } from '../api/queries';
 import { Card, EmptyState, ErrorState, LoadingBlock, PageHeader } from '../components/ui';
-import { formatDate, formatMinutes, formatNumber } from '../lib/format';
+import { formatDate, formatMinutes } from '../lib/format';
+import { formatWeight, useWeightUnit } from '../lib/units';
 
 /**
  * Historial de sesiones: la lista completa, no solo las cinco últimas del
@@ -9,6 +10,7 @@ import { formatDate, formatMinutes, formatNumber } from '../lib/format';
  * el detalle donde se comparan los pesos reales con los planificados.
  */
 export function SessionHistoryPage() {
+  const unit = useWeightUnit();
   const sessions = useSessions(50);
 
   if (sessions.isPending) return <LoadingBlock label="Cargando el historial" />;
@@ -52,7 +54,7 @@ export function SessionHistoryPage() {
                     </div>
                     <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-caption text-ink-muted">
                       <span>{session.duration_min != null ? formatMinutes(session.duration_min) : 'Duración sin registrar'}</span>
-                      <span>{formatNumber(session.total_tonnage_kg, 'kg')}</span>
+                      <span>{formatWeight(session.total_tonnage_kg, unit)}</span>
                       <span>{session.sets_count} series</span>
                     </p>
                   </Card>

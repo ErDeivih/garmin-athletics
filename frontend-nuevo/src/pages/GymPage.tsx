@@ -4,7 +4,8 @@ import { usePushWorkout, useSessions, useTemplate, useTemplates } from '../api/q
 import { Badge, Button, Card, EmptyState, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../components/ui';
 import { PendingWatchCard } from '../components/PendingWatchCard';
 import { AVISO_RELOJ_REAL } from '../config/features';
-import { formatDate, formatMinutes, formatNumber, todayWeekday, weekdayName } from '../lib/format';
+import { formatDate, formatMinutes, todayWeekday, weekdayName } from '../lib/format';
+import { formatWeight, useWeightUnit } from '../lib/units';
 
 const startLink =
   'focus-ring inline-flex min-h-11 items-center justify-center rounded-md bg-accent px-3 text-body font-semibold text-on-accent';
@@ -13,6 +14,7 @@ const secondaryLink =
 
 /** El gimnasio en una pantalla: qué toca, qué plantillas hay y qué has hecho. */
 export function GymPage() {
+  const unit = useWeightUnit();
   const templates = useTemplates();
   const sessions = useSessions(5);
   const today = todayWeekday();
@@ -93,7 +95,7 @@ export function GymPage() {
               <span className="font-display text-title uppercase text-ink">{todaysTemplate.name}</span>
               <p className="text-body text-ink-muted">
                 {todaysTemplate.exercises.length} ejercicios · {todaysTemplate.total_sets} series ·{' '}
-                {formatNumber(todaysTemplate.estimated_tonnage_kg, 'kg')}
+                {formatWeight(todaysTemplate.estimated_tonnage_kg, unit)}
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 <Link className={startLink} to={`/gimnasio/entrenar?template=${todaysTemplate.id}`}>
@@ -180,7 +182,7 @@ export function GymPage() {
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="tnum font-display text-title text-ink">
-                      {formatNumber(template.estimated_tonnage_kg, 'kg')}
+                      {formatWeight(template.estimated_tonnage_kg, unit)}
                     </span>
                     <Link className={secondaryLink} to={`/gimnasio/plantillas/${template.id}`}>
                       Pesos
@@ -220,7 +222,7 @@ export function GymPage() {
                   {formatDate(session.date)}
                 </span>
                 <span className="flex flex-wrap items-center gap-3 text-caption text-ink-muted">
-                  <span>{formatNumber(session.total_tonnage_kg, 'kg')}</span>
+                  <span>{formatWeight(session.total_tonnage_kg, unit)}</span>
                   <span>{session.sets_count} series</span>
                   <span>{formatMinutes(session.duration_min)}</span>
                   <Link to={`/gimnasio/sesiones/${session.id}`} className="font-semibold text-accent underline">

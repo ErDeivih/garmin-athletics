@@ -1,4 +1,4 @@
-import { createElement } from 'react';
+import { createElement, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './auth/AuthContext';
@@ -13,6 +13,8 @@ import { MotionProfilePage } from './pages/MotionProfilePage';
 import { PlanEditorPage } from './pages/PlanEditorPage';
 import { SessionEditPage } from './pages/SessionEditPage';
 import { SessionHistoryPage } from './pages/SessionHistoryPage';
+import { OnboardingPage } from './pages/OnboardingPage';
+import { hasSeenOnboarding } from './lib/onboarding';
 import { CatalogPage } from './pages/extended/CatalogPage';
 import { LibraryPage } from './pages/extended/LibraryPage';
 import { ActivityDetailPage } from './pages/extended/ActivityDetailPage';
@@ -79,10 +81,15 @@ export function AppRoutes() {
 function AuthGate() {
   const auth = useAuth();
   const extended = useExtendedSections();
+  // La introducción se muestra una vez; el estado local evita depender de que
+  // el gate se vuelva a renderizar al navegar.
+  const [introVista, setIntroVista] = useState(() => hasSeenOnboarding());
 
   if (auth.status === 'loading') return <BootScreen />;
   if (auth.status === 'error') return <BootError message={auth.error} onRetry={auth.retry} />;
   if (auth.status === 'anonymous') return <LoginPage />;
+  // Primera visita: explicar la app en tres pasos antes del panel.
+  if (!introVista) return <OnboardingPage onDone={() => setIntroVista(true)} />;
 
   return (
     <Routes>

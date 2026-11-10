@@ -6,7 +6,7 @@ import { useCreateSession, useLastMarks, useTemplate } from '../api/queries';
 import type { SessionDetail, SessionSetInput } from '../api/types';
 import { Badge, Button, Card, EmptyState, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../components/ui';
 import { ExerciseIllustration } from '../components/ExerciseIllustration';
-import { formatNumber } from '../lib/format';
+import { formatWeight, fromKg, toKg, useWeightUnit, type WeightUnit } from '../lib/units';
 
 interface DraftSet {
   weight: string;
@@ -96,6 +96,7 @@ function buildDraft(
     setTargets?: { weight_kg: number; reps: number }[];
   }[],
   marks: Record<string, { weight_kg: number; reps: number; date: string | null } | undefined>,
+  unit: WeightUnit,
 ): SessionDraft {
   return {
     version: 1,
@@ -105,7 +106,7 @@ function buildDraft(
     restEndsAt: null,
     exercises: exercises.map((exercise) => {
       const mark = marks[exercise.exerciseId];
-      const previous = mark ? `Anterior: ${formatNumber(mark.weight_kg, 'kg')} × ${mark.reps}` : null;
+      const previous = mark ? `Anterior: ${formatWeight(mark.weight_kg, unit)} × ${mark.reps}` : null;
       return {
         exerciseId: exercise.exerciseId,
         name: exercise.name,
@@ -122,7 +123,9 @@ function buildDraft(
           const peso = objetivo?.weight_kg ?? mark?.weight_kg ?? exercise.weightKg;
           const reps = objetivo?.reps ?? mark?.reps ?? exercise.reps;
           return {
-            weight: peso === undefined || peso === null ? '' : String(peso),
+            // Se muestra en la unidad elegida; el borrador y el envío se
+            // convierten a kg al terminar la sesión.
+            weight: peso === undefined || peso === null ? '' : String(fromKg(peso, unit)),
             reps: reps === undefined || reps === null ? '' : String(reps),
             rpe: '',
             done: false,
@@ -162,6 +165,7 @@ function RestTimer({ endsAt, now }: { endsAt: string | null; now: number }) {
 }
 
 function SessionSummary({ session }: { session: SessionDetail }) {
+  const unit = useWeightUnit();
   const byMuscle = new Map<string, number>();
   for (const exercise of session.exercises) {
     const group = exercise.exercise?.muscle_group ?? 'sin_clasificar';
@@ -189,7 +193,7 @@ function SessionSummary({ session }: { session: SessionDetail }) {
       />
       <section aria-label="Resumen" className="grid grid-cols-2 gap-3">
         {[
-          { label: 'Peso movido', value: formatNumber(session.total_tonnage_kg, 'kg') },
+          { label: 'Peso movido', value: formatWeight(session.total_tonnage_kg, unit) },
           { label: 'Series', value: String(session.sets_count) },
         ].map((item) => (
           <Card key={item.label}>
@@ -207,7 +211,7 @@ function SessionSummary({ session }: { session: SessionDetail }) {
             {[...byMuscle.entries()].sort((a, b) => b[1] - a[1]).map(([group, tonnage]) => (
               <li key={group} className="flex items-center justify-between gap-2 text-body">
                 <span className="text-ink">{group}</span>
-                <span className="tnum text-ink-muted">{formatNumber(tonnage, 'kg')}</span>
+                <span className="tnum text-ink-muted">{formatWeight(tonnage, unit)}</span>
               </li>
             ))}
           </ul>
@@ -224,7 +228,7 @@ function SessionSummary({ session }: { session: SessionDetail }) {
                   <li key={item.id} className="flex items-center justify-between gap-2 text-caption text-ink-muted">
                     <span>Serie {item.set_number}</span>
                     <span className="tnum">
-                      {formatNumber(item.weight_kg, 'kg')} × {item.reps}
+                      {formatWeight(item.weight_kg, unit)} × {item.reps}
                       {item.rpe !== null ? ` · esfuerzo ${item.rpe}` : ''}
                     </span>
                   </li>
@@ -250,6 +254,7 @@ export function SessionPage() {
     [template.data],
   );
   const marks = useLastMarks(exerciseIds);
+  const unit = useWeightUnit();
   const createSession = useCreateSession();
 
   const [draft, setDraft] = useState<SessionDraft | null>(null);
@@ -285,7 +290,7 @@ export function SessionPage() {
           }]
         : [],
     );
-    const created = buildDraft(templateId, template.data.name, exercises, markMap);
+    const created = buildDraft(templateId, template.data.name, exercises, markMap, unit);
     setDraft(created);
     writeDraft(userId, created);
   }, [templateId, template.data, marks.isPending, marks.data, draft, userId, finished]);
@@ -363,7 +368,8 @@ export function SessionPage() {
     setFinishError(null);
     const sets: SessionSetInput[] = draft.exercises.flatMap((exercise) =>
       exercise.sets.flatMap((item, index) => {
-        const weight = toNumber(item.weight);
+        // Los campos están en la unidad elegida; al backend va siempre en kg.
+        const weight = toKg(toNumber(item.weight), unit);
         const reps = toNumber(item.reps);
         if (!item.done || weight <= 0 || reps <= 0) return [];
         const rpe = item.rpe === '' ? null : toNumber(item.rpe);

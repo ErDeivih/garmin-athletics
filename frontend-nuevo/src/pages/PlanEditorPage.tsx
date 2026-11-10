@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Copy, Minus, Plus } from 'lucide-react';
 import { useLastMarks, useTemplate, useUpdateTemplate } from '../api/queries';
 import { Button, Card, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../components/ui';
-import { formatNumber } from '../lib/format';
+import { fromKg, formatWeight, stepFor, toKg, useWeightUnit } from '../lib/units';
 
 type Target = { set_number: number; reps: number; weight_kg: number };
 type DraftExercise = {
@@ -16,8 +16,6 @@ type DraftExercise = {
   targets: Target[];
 };
 
-const STEP = 2.5;
-
 export function PlanEditorPage() {
   const { id } = useParams<{ id: string }>();
   const template = useTemplate(id ?? null);
@@ -25,6 +23,8 @@ export function PlanEditorPage() {
   const [draft, setDraft] = useState<DraftExercise[] | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [enBloque, setEnBloque] = useState<Record<string, string>>({});
+  const unit = useWeightUnit();
+  const step = stepFor(unit);
   const first = useRef(true);
   const lastPayload = useRef('');
 
@@ -92,10 +92,12 @@ export function PlanEditorPage() {
       if (index !== exerciseIndex) return item;
       return {
         ...item,
-        targets: item.targets.map((target, targetIndex) =>
-          targetIndex === setIndex
-            ? { ...target, weight_kg: Math.max(0, Math.round((target.weight_kg + delta) * 10) / 10) }
-            : target),
+        targets: item.targets.map((target, targetIndex) => {
+          if (targetIndex !== setIndex) return target;
+          // El valor se edita en la unidad elegida; se guarda siempre en kg.
+          const enUnidad = Math.round((fromKg(target.weight_kg, unit) + delta) * 10) / 10;
+          return { ...target, weight_kg: toKg(Math.max(0, enUnidad), unit) };
+        }),
       };
     }) ?? null);
   };
@@ -132,7 +134,7 @@ export function PlanEditorPage() {
   const aplicarEnBloque = (exerciseIndex: number, exercise: DraftExercise) => {
     const valor = Number(pesoEnBloque(exercise).replace(',', '.'));
     if (!Number.isFinite(valor) || valor < 0) return;
-    applyAll(exerciseIndex, valor);
+    applyAll(exerciseIndex, toKg(valor, unit));
   };
 
   if (template.isPending) return <LoadingBlock label="Cargando el plan" />;
@@ -156,7 +158,7 @@ export function PlanEditorPage() {
             <SectionTitle hint={`${exercise.sets} × ${exercise.reps}`}>{exercise.name}</SectionTitle>
             <div className="mb-3 flex flex-wrap items-end gap-2 rounded-md border border-line bg-raised/60 p-2">
               <label className="flex flex-col gap-1 text-caption text-ink-muted">
-                Todas las series (kg)
+                Todas las series ({unit})
                 <input
                   type="number"
                   inputMode="decimal"
@@ -197,18 +199,18 @@ export function PlanEditorPage() {
                       variant="secondary"
                       className="size-11 p-0"
                       aria-label={`Bajar peso serie ${target.set_number} de ${exercise.name}`}
-                      onClick={() => changeWeight(exerciseIndex, setIndex, -STEP)}
+                      onClick={() => changeWeight(exerciseIndex, setIndex, -step)}
                     >
                       <Minus aria-hidden="true" className="size-5" />
                     </Button>
                     <span className="tnum min-w-20 text-center font-display text-title text-ink">
-                      {formatNumber(target.weight_kg, 'kg')}
+                      {formatWeight(target.weight_kg, unit)}
                     </span>
                     <Button
                       variant="secondary"
                       className="size-11 p-0"
                       aria-label={`Subir peso serie ${target.set_number} de ${exercise.name}`}
-                      onClick={() => changeWeight(exerciseIndex, setIndex, STEP)}
+                      onClick={() => changeWeight(exerciseIndex, setIndex, step)}
                     >
                       <Plus aria-hidden="true" className="size-5" />
                     </Button>

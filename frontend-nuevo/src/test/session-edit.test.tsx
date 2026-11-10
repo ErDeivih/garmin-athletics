@@ -6,8 +6,8 @@ import * as f from './fixtures';
 
 const TOKEN_KEY = 'lyfta.token';
 
-describe('corregir el peso real despuÃ©s de la sesiÃ³n', () => {
-  it('edita una serie y envÃ­a el peso corregido', async () => {
+describe('corregir el peso real después de la sesión', () => {
+  it('edita una serie y envía el peso corregido', async () => {
     localStorage.setItem(TOKEN_KEY, 'test-token');
     const api = installFakeApi({
       'GET /api/v1/auth/me': json(f.me),

@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useDuplicateTemplate, useTemplate, useTemplates } from '../../api/queries';
+import { apiFetch } from '../../api/client';
 import { Badge, Button, Card, EmptyState, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../../components/ui';
 import type { TemplateExercise } from '../../api/types';
-import { formatMinutes, formatNumber } from '../../lib/format';
+import { formatMinutes } from '../../lib/format';
+import { buildPlanExport, downloadJson, parsePlansJson } from '../../lib/planes';
+import { formatWeight, useWeightUnit } from '../../lib/units';
 
 const FOCUS_ORDER = ['Push', 'Pull', 'Legs', 'Full Body'];
 const FOCUS_LABEL: Record<string, string> = {
@@ -65,6 +69,45 @@ export function LibraryPage() {
   });
   const duplicar = useDuplicateTemplate();
   const selected = useTemplate(selectedId);
+  const queryClient = useQueryClient();
+  const unit = useWeightUnit();
+  const [importando, setImportando] = useState(false);
+
+  const exportar = () => {
+    const planes = todas.data?.items ?? [];
+    if (planes.length === 0) {
+      setAviso('No hay planes que exportar.');
+      return;
+    }
+    const datos = buildPlanExport(planes);
+    const fecha = new Date().toISOString().slice(0, 10);
+    downloadJson(`lyfta-planes-${fecha}.json`, datos);
+    setAviso(planes.length === 1 ? '1 plan exportado' : `${planes.length} planes exportados`);
+  };
+
+  const importar = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const archivo = event.target.files?.[0];
+    event.target.value = '';
+    if (!archivo) return;
+    setImportando(true);
+    setAviso(null);
+    try {
+      const { templates, error } = parsePlansJson(await archivo.text());
+      if (error) {
+        setAviso(error);
+        return;
+      }
+      for (const plan of templates) {
+        await apiFetch('/api/v1/strength/templates', { method: 'POST', body: plan });
+      }
+      await queryClient.invalidateQueries({ queryKey: ['strength', 'templates'] });
+      setAviso(templates.length === 1 ? '1 plan importado' : `${templates.length} planes importados`);
+    } catch {
+      setAviso('No se pudo importar el fichero.');
+    } finally {
+      setImportando(false);
+    }
+  };
 
   const hayFiltros = Boolean(texto.trim() || desde || hasta || focusFilter !== 'all');
   const limpiar = () => {
@@ -91,7 +134,26 @@ export function LibraryPage() {
       <PageHeader
         title="Biblioteca"
         description="Tus planes, con búsqueda, foco y fecha. Duplica uno para reutilizarlo."
-        actions={<Link to="/gimnasio" className="text-body font-semibold text-accent underline">Gimnasio</Link>}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" onClick={exportar}>Exportar planes</Button>
+            <label
+              htmlFor="importar-planes"
+              className="focus-ring inline-flex min-h-11 cursor-pointer items-center rounded-md border border-line-strong px-3 text-body font-semibold text-ink"
+            >
+              {importando ? 'Importando…' : 'Importar planes'}
+            </label>
+            <input
+              id="importar-planes"
+              type="file"
+              accept="application/json,.json"
+              aria-label="Importar planes"
+              className="sr-only"
+              onChange={importar}
+            />
+            <Link to="/gimnasio" className="text-body font-semibold text-accent underline">Gimnasio</Link>
+          </div>
+        }
       />
 
       {aviso ? (
@@ -186,7 +248,7 @@ export function LibraryPage() {
                           <Badge tone="info">{FOCUS_LABEL[focusKey(template.focus)] ?? (focusKey(template.focus) || 'General')}</Badge>
                         </div>
                         <p className="mt-1 text-caption text-ink-muted">
-                          {template.total_sets} series · {formatNumber(template.estimated_tonnage_kg, 'kg')} de volumen
+                          {template.total_sets} series · {formatWeight(template.estimated_tonnage_kg, unit)} de volumen
                         </p>
                       </Card>
                     </button>
@@ -240,7 +302,7 @@ export function LibraryPage() {
                               <div className="flex flex-wrap items-baseline justify-between gap-2">
                                 <h4 className="text-heading text-ink">{item.exercise?.name ?? 'Ejercicio'}</h4>
                                 <span className="tnum text-caption text-ink-muted">
-                                  {item.sets} × {item.reps} {item.weight_kg ? `· ${item.weight_kg} kg` : ''}
+                                  {item.sets} × {item.reps} {item.weight_kg ? `· ${formatWeight(item.weight_kg, unit)}` : ''}
                                 </span>
                               </div>
                               <div className="mt-2 grid gap-1 sm:grid-cols-2">
@@ -248,13 +310,13 @@ export function LibraryPage() {
                                   <div key={target.set_number} className="flex items-center justify-between rounded-sm border border-line/70 bg-surface px-2 py-1.5 text-caption">
                                     <span className="text-ink-faint">Serie {target.set_number}</span>
                                     <span className="tnum font-semibold text-ink">
-                                      {target.weight_kg ? `${formatNumber(target.weight_kg, 'kg')} × ${target.reps}` : `corporal × ${target.reps}`}
+                                      {target.weight_kg ? `${formatWeight(target.weight_kg, unit)} × ${target.reps}` : `corporal × ${target.reps}`}
                                     </span>
                                   </div>
                                 ))}
                               </div>
                               <p className="mt-2 text-caption text-ink-faint">
-                                Volumen {formatNumber(volume, 'kg')} · descanso {item.rest_seconds}s
+                                Volumen {formatWeight(volume, unit)} · descanso {item.rest_seconds}s
                                 {item.exercise ? ` · ${item.exercise.equipment}` : ''}
                                 {item.notes ? ` · ${item.notes}` : ''}
                               </p>

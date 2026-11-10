@@ -4,7 +4,8 @@ import { Minus, Plus } from 'lucide-react';
 import { useSession, useUpdateSession } from '../api/queries';
 import type { SessionInput, SessionSetInput } from '../api/types';
 import { Button, Card, ErrorState, LoadingBlock, PageHeader } from '../components/ui';
-import { formatDate, formatNumber } from '../lib/format';
+import { formatDate } from '../lib/format';
+import { formatWeight, useWeightUnit } from '../lib/units';
 
 type EditableSet = SessionSetInput & {
   id: string;
@@ -15,6 +16,7 @@ type EditableSet = SessionSetInput & {
 };
 
 export function SessionEditPage() {
+  const unit = useWeightUnit();
   const { id } = useParams<{ id: string }>();
   const session = useSession(id ?? null);
   const update = useUpdateSession(id ?? null);
@@ -117,7 +119,7 @@ export function SessionEditPage() {
                 <span className="ml-2 text-caption text-ink-faint">Serie {item.set_number}</span>
                 {item.planned_weight_kg != null ? (
                   <span className="ml-2 text-caption text-ink-faint">
-                    Plan {formatNumber(item.planned_weight_kg, 'kg')}
+                    Plan {formatWeight(item.planned_weight_kg, unit)}
                     {item.planned_reps != null ? ` × ${item.planned_reps}` : ''}
                   </span>
                 ) : null}
@@ -137,7 +139,7 @@ export function SessionEditPage() {
                   <Minus aria-hidden="true" className="size-5" />
                 </Button>
                 <span className="tnum min-w-20 text-center font-display text-title text-ink">
-                  {formatNumber(item.weight_kg, 'kg')}
+                  {formatWeight(item.weight_kg, unit)}
                 </span>
                 <Button
                   variant="secondary"

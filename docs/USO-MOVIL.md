@@ -32,6 +32,12 @@ pendiente»). Pasos completos y criterios de aprobado: `PENDIENTE-PRUEBA-RELOJ.m
 
 ## Qué te vas a encontrar al abrirla
 
+- La **primera vez** sale una pantalla de tres pasos con lo que hace la app y lo que necesita
+  el reloj; se puede volver a ver desde **Ajustes → Introducción**.
+- En **Ajustes** puedes cambiar **unidades (kg/lb)**, **tema claro/oscuro** y ver el aviso de que
+  la app funciona sin conexión.
+- En **Biblioteca** puedes **exportar** todos los planes a un JSON y **volver a importarlos**
+  (útil como copia de seguridad o para pasar los planes a otro móvil).
 - **Gimnasio** es el punto de partida: tarjeta «Reloj real · pendiente», «Hoy toca» con el
   entreno del día, bloque «Enviar al reloj», plantillas y últimas sesiones.
 - Flujo normal: **Empezar sesión**, marcar las series (los pesos del plan ya están puestos:

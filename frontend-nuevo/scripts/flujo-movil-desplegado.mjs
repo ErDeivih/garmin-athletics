@@ -131,6 +131,14 @@ try {
   await pagina.getByLabel(/correo/i).fill(email);
   await pagina.getByLabel(/contraseña/i).fill(password);
   await pagina.getByRole('button', { name: /^entrar$/i }).click();
+
+  // Primera vez: la app enseña la introducción en tres pasos antes del panel.
+  const intro = pagina.getByRole('heading', { name: /cómo funciona/i });
+  await intro.waitFor({ timeout: 8000 }).then(async () => {
+    await captura('00-onboarding', { espera: 500 });
+    await pagina.getByRole('button', { name: /empezar/i }).click();
+  }).catch(() => {});
+
   await pagina.getByRole('heading', { name: 'Hoy', exact: true }).waitFor({ timeout: 20000 });
 
   await pagina.getByRole('link', { name: 'Gimnasio' }).click();
@@ -370,6 +378,32 @@ try {
   if (JSON.stringify(pesosBloque) !== JSON.stringify([62.5, 62.5, 62.5])) {
     throw new Error(`El peso en bloque no se guardó: ${JSON.stringify(pesosBloque)}`);
   }
+
+  // 18. Biblioteca con exportar/importar JSON.
+  await pagina.goto(`${APP}/gimnasio/biblioteca`, { waitUntil: 'domcontentloaded' });
+  await pagina.getByRole('heading', { name: 'Biblioteca', exact: true }).waitFor({ timeout: 20000 });
+  await pagina.getByRole('button', { name: /exportar planes/i }).waitFor();
+  await captura('18-biblioteca-json', { espera: 400 });
+  checks.biblioteca_json = true;
+
+  // 19. Ajustes: unidades y aviso de uso sin conexión.
+  await pagina.goto(`${APP}/ajustes`, { waitUntil: 'domcontentloaded' });
+  await pagina.getByRole('heading', { name: 'Ajustes', exact: true }).waitFor({ timeout: 20000 });
+  await pagina.getByText(/funciona sin conexión/i).waitFor();
+  await captura('19-ajustes-unidades', { espera: 400 });
+  await pagina.getByRole('button', { name: /libras/i }).click();
+  await pagina.waitForTimeout(400);
+
+  // 20. Con libras activadas, el editor enseña los pesos en lb.
+  await pagina.goto(`${APP}/gimnasio/plantillas/${templateId}`, { waitUntil: 'domcontentloaded' });
+  await pagina.getByRole('heading', { name: /editar pesos/i }).waitFor({ timeout: 20000 });
+  await pagina.getByText(/lb/).first().waitFor();
+  await captura('20-editor-libras', { espera: 500 });
+  checks.unidades_lb = true;
+  // Se vuelve a kg para no dejar la preferencia cambiada en las capturas.
+  await pagina.goto(`${APP}/ajustes`, { waitUntil: 'domcontentloaded' });
+  await pagina.getByRole('button', { name: /kilogramos/i }).click();
+  await pagina.waitForTimeout(300);
 
   // El único error esperado es el 400 del envío sin credencial Garmin (paso 7):
   // el navegador apunta en consola cualquier respuesta >= 400.

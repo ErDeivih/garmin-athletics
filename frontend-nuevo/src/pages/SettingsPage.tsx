@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link2, LogOut, Moon, Sun } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
@@ -9,6 +10,8 @@ import type { WatchLinkResult } from '../api/types';
 import { setExtendedSections, useExtendedSections } from '../config/features';
 import { Badge, Button, Card, ErrorState, Field, PageHeader, SectionTitle } from '../components/ui';
 import { applyTheme, readTheme, type Theme } from '../lib/theme';
+import { setWeightUnit, useWeightUnit } from '../lib/units';
+import { resetOnboarding } from '../lib/onboarding';
 
 function LinkAccountForm() {
   const queryClient = useQueryClient();
@@ -146,9 +149,11 @@ function LinkAccountForm() {
 
 export function SettingsPage() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const sync = useSyncStatus();
   const syncNow = useSyncNow();
   const extended = useExtendedSections();
+  const unit = useWeightUnit();
   const [theme, setTheme] = useState<Theme>(readTheme);
   const [showLink, setShowLink] = useState(false);
 
@@ -226,6 +231,56 @@ export function SettingsPage() {
             Claro
           </Button>
         </div>
+      </Card>
+
+      <Card className="mt-6">
+        <SectionTitle hint={unit === 'lb' ? 'libras' : 'kilogramos'}>Unidades</SectionTitle>
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Unidad de peso">
+          <Button
+            variant={unit === 'kg' ? 'primary' : 'secondary'}
+            aria-pressed={unit === 'kg'}
+            onClick={() => setWeightUnit('kg')}
+          >
+            Kilogramos (kg)
+          </Button>
+          <Button
+            variant={unit === 'lb' ? 'primary' : 'secondary'}
+            aria-pressed={unit === 'lb'}
+            onClick={() => setWeightUnit('lb')}
+          >
+            Libras (lb)
+          </Button>
+        </div>
+        <p className="mt-2 text-caption text-ink-muted">
+          Cambia cómo se muestran y se editan los pesos en la app. Al reloj se envía siempre en kg.
+        </p>
+      </Card>
+
+      <Card className="mt-6">
+        <SectionTitle hint="PWA">Sin conexión</SectionTitle>
+        <p className="text-body text-ink-muted">
+          La app funciona sin conexión una vez instalada: el entrenamiento en curso se guarda en el
+          móvil y el borrador no se pierde si te quedas sin cobertura en el gimnasio.
+        </p>
+        <p className="mt-2 text-caption text-ink-faint">
+          Instálala desde el navegador con «Instalar app» o «Añadir a pantalla de inicio» (en iOS).
+        </p>
+      </Card>
+
+      <Card className="mt-6">
+        <SectionTitle>Introducción</SectionTitle>
+        <p className="mb-3 text-caption text-ink-muted">
+          Vuelve a ver los tres pasos de la app y lo que necesita el reloj.
+        </p>
+        <Button
+          variant="secondary"
+          onClick={() => {
+            resetOnboarding();
+            navigate('/', { replace: true });
+          }}
+        >
+          Ver la introducción otra vez
+        </Button>
       </Card>
 
       <Card className="mt-6">

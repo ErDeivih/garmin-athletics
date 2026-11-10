@@ -1,7 +1,7 @@
 {
   "app": "http://192.168.1.139:8011",
-  "cuenta": "flujo+1794320092903@example.com",
-  "plantilla": "4eb816b9-3100-4cc2-89ca-8b8ea91acbff",
+  "cuenta": "flujo+1794320841206@example.com",
+  "plantilla": "cee97e5e-df08-4e16-af90-304c62c694f6",
   "checks": {
     "plantilla_creada": "set_targets=60/65/70",
     "titulo": "Lyfta",
@@ -24,7 +24,7 @@
       "peso_restaurado_al_volver": "61"
     },
     "sesion_guardada": {
-      "id": "50343554-dc26-4ffe-a707-d13885b6dbb9",
+      "id": "6489087e-6ce7-4571-803d-b901ce65c44e",
       "series": 3,
       "pesos": [
         60,
@@ -65,10 +65,13 @@
         62.5
       ]
     },
+    "biblioteca_json": true,
+    "unidades_lb": true,
     "errores_consola_esperados": 1
   },
   "capturas": [
     "01-login-movil.png",
+    "00-onboarding.png",
     "02-gimnasio-movil.png",
     "03-plan-pesos.png",
     "03b-edicion-serie.png",
@@ -86,7 +89,10 @@
     "14-biblioteca-duplicar.png",
     "15-biblioteca-copia.png",
     "16-editor-rapido.png",
-    "17-editor-aplicado.png"
+    "17-editor-aplicado.png",
+    "18-biblioteca-json.png",
+    "19-ajustes-unidades.png",
+    "20-editor-libras.png"
   ],
   "erroresConsola": [
     "Failed to load resource: the server responded with a status of 400 (Bad Request)"
