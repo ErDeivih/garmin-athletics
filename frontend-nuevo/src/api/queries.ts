@@ -14,6 +14,7 @@ import type {
   ExerciseList,
   GymStatsResponse,
   LastMarksResponse,
+  ProgressResponse,
   LeaderboardResponse,
   LoadResponse,
   LoadSummaryResponse,
@@ -126,6 +127,41 @@ export function useGymStats(days = 90) {
   return useQuery({
     queryKey: queryKeys.gymStats(days),
     queryFn: () => apiFetch<GymStatsResponse>(`/api/v1/strength/stats?days=${days}`),
+  });
+}
+
+/** Progreso de un ejercicio: volumen y mejor serie por semana. */
+export function useProgress(exerciseId?: string | null, weeks = 12) {
+  const params = new URLSearchParams({ weeks: String(weeks) });
+  if (exerciseId) params.set('exercise_id', exerciseId);
+  return useQuery({
+    queryKey: ['strength', 'progress', exerciseId ?? '', weeks],
+    queryFn: () => apiFetch<ProgressResponse>(`/api/v1/strength/progress?${params.toString()}`),
+  });
+}
+
+/** Crea una plantilla nueva (por ejemplo, a partir de una sesión entrenada). */
+export function useCreateTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: {
+      name: string;
+      weekday: number | null;
+      focus: string | null;
+      notes: string | null;
+      exercises: {
+        exercise_id: string;
+        sets: number;
+        reps: number;
+        weight_kg: number;
+        rest_seconds: number;
+        set_targets: { set_number: number; reps: number; weight_kg: number }[];
+      }[];
+    }) =>
+      apiFetch<WorkoutTemplate>('/api/v1/strength/templates', { method: 'POST', body: payload }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.templates });
+    },
   });
 }
 

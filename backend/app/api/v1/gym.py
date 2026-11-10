@@ -835,6 +835,150 @@ async def gym_stats(
     }
 
 
+# ---------------------------------------------------------------------------
+# Progreso por ejercicio y semana
+# ---------------------------------------------------------------------------
+
+def _pick_best_set(best: Optional[tuple], weight: float, reps: int) -> tuple:
+    """Elige la mejor serie de trabajo: más peso×reps y, en empate, la de más peso."""
+    key = (round(weight * reps, 2), weight)
+    if best is None or key > best[0]:
+        return (key, (weight, reps))
+    return best
+
+
+def _best_set_out(best: Optional[tuple]) -> Optional[Dict[str, Any]]:
+    """Serializa la mejor serie elegida por `_pick_best_set` (o `None` si no hay)."""
+    if best is None:
+        return None
+    weight, reps = best[1]
+    return {"weight_kg": weight, "reps": reps, "tonnage_kg": round(weight * reps, 2)}
+
+
+@router.get("/progress",
+            summary="Progreso de un ejercicio por semana (volumen, series y mejor serie)")
+async def exercise_progress(
+    exercise_id: Optional[str] = Query(
+        None, description="Ejercicio a seguir; si falta, el de más volumen de la ventana."),
+    weeks: int = Query(12, ge=4, le=52,
+                       description="Semanas hacia atrás; la semana en curso es la última."),
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """Serie semanal de un ejercicio para el panel de progreso.
+
+    La ventana son `weeks` semanas contadas hacia atrás desde el lunes de esta
+    semana (la actual incluida, aunque aún no tenga sesiones). Solo cuentan las
+    series de trabajo —`is_warmup` falso, peso > 0 y reps > 0—, así que un
+    calentamiento no infla el progreso.
+
+    Devuelve siempre las cuatro claves del panel (`exercise` puede ser `null`) y
+    la ventana completa de semanas, también las vacías, de la más antigua a la
+    más reciente. `exercises` alimenta el selector de ejercicio de la UI.
+    """
+    current_week = _week_start(date.today())
+    week_starts = [current_week - timedelta(weeks=offset)
+                   for offset in range(weeks - 1, -1, -1)]
+    window_start = week_starts[0]
+    window_end = current_week + timedelta(days=7)
+
+    rows = (await db.execute(
+        select(SessionSet, WorkoutSession, Exercise)
+        .join(WorkoutSession, SessionSet.session_id == WorkoutSession.id)
+        .join(Exercise, SessionSet.exercise_id == Exercise.id)
+        .where(WorkoutSession.user_id == user.id,
+               WorkoutSession.started_at >= datetime.combine(window_start, time.min),
+               WorkoutSession.started_at < datetime.combine(window_end, time.min),
+               _visible_exercises(user))
+    )).all()
+
+    # Agregados por ejercicio (selector) y por (ejercicio, semana) (serie del
+    # ejercicio elegido). El filtro de trabajo se aplica en Python, igual que en
+    # `/stats`, para no repartir la misma regla entre consultas y código.
+    per_exercise: Dict[str, Dict[str, Any]] = {}
+    per_week: Dict[tuple, Dict[str, Any]] = {}
+    for item, session, exercise in rows:
+        weight = float(item.weight_kg or 0)
+        reps = int(item.reps or 0)
+        if item.is_warmup or weight <= 0 or reps <= 0:
+            continue
+        week = _week_start(session.started_at.date())
+        tonnage = round(weight * reps, 2)
+
+        total = per_exercise.setdefault(exercise.id, {
+            "exercise": exercise, "tonnage_kg": 0.0, "sets": 0,
+            "sessions": set(), "best": None,
+        })
+        total["tonnage_kg"] = round(total["tonnage_kg"] + tonnage, 2)
+        total["sets"] += 1
+        total["sessions"].add(session.id)
+        total["best"] = _pick_best_set(total["best"], weight, reps)
+
+        bucket = per_week.setdefault((exercise.id, week), {
+            "tonnage_kg": 0.0, "sets": 0, "sessions": set(), "best": None,
+        })
+        bucket["tonnage_kg"] = round(bucket["tonnage_kg"] + tonnage, 2)
+        bucket["sets"] += 1
+        bucket["sessions"].add(session.id)
+        bucket["best"] = _pick_best_set(bucket["best"], weight, reps)
+
+    exercises = [
+        {"id": total["exercise"].id, "name": total["exercise"].name,
+         "tonnage_kg": total["tonnage_kg"]}
+        for total in per_exercise.values()
+    ]
+    exercises.sort(key=lambda row: (-row["tonnage_kg"], row["name"]))
+
+    selected: Optional[Exercise] = None
+    if exercise_id:
+        selected = (await db.execute(select(Exercise).where(
+            Exercise.id == exercise_id, _visible_exercises(user)
+        ))).scalar_one_or_none()
+        if selected is None:
+            raise HTTPException(status_code=404, detail="Ejercicio no encontrado.")
+    elif exercises:
+        # Sin elección explícita se abre el ejercicio que más volumen movió.
+        selected = per_exercise[exercises[0]["id"]]["exercise"]
+
+    weeks_out: List[Dict[str, Any]] = []
+    for week in week_starts:
+        bucket = per_week.get((selected.id, week)) if selected is not None else None
+        if bucket is None:
+            # Semana sin series de trabajo: se pinta igual, con los ceros.
+            weeks_out.append({
+                "week_start": week.isoformat(), "tonnage_kg": 0.0,
+                "sets": 0, "sessions": 0, "best_set": None,
+            })
+            continue
+        weeks_out.append({
+            "week_start": week.isoformat(),
+            "tonnage_kg": bucket["tonnage_kg"],
+            "sets": bucket["sets"],
+            "sessions": len(bucket["sessions"]),
+            "best_set": _best_set_out(bucket["best"]),
+        })
+
+    if selected is None:
+        return {
+            "exercise": None,
+            "weeks": weeks_out,
+            "totals": {"tonnage_kg": 0.0, "sets": 0, "best_set": None},
+            "exercises": exercises,
+        }
+
+    # Un ejercicio elegido a mano sin series en la ventana devuelve su ficha con
+    # los totales a cero: el selector conserva la elección del atleta.
+    total = per_exercise.get(selected.id, {"tonnage_kg": 0.0, "sets": 0, "best": None})
+    return {
+        "exercise": {"id": selected.id, "name": selected.name,
+                     "muscle_group": selected.muscle_group},
+        "weeks": weeks_out,
+        "totals": {"tonnage_kg": total["tonnage_kg"], "sets": total["sets"],
+                   "best_set": _best_set_out(total["best"])},
+        "exercises": exercises,
+    }
+
+
 @router.post("/import-garmin/{activity_id}", summary="Importar las series de una actividad de fuerza de Garmin")
 async def import_garmin_strength(
     activity_id: str,

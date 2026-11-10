@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { useDuplicateTemplate, useTemplate, useTemplates } from '../../api/queries';
+import { useCreateCalendarEvent, useDuplicateTemplate, useTemplate, useTemplates } from '../../api/queries';
 import { apiFetch } from '../../api/client';
 import { Badge, Button, Card, EmptyState, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../../components/ui';
 import type { TemplateExercise } from '../../api/types';
@@ -72,6 +72,22 @@ export function LibraryPage() {
   const queryClient = useQueryClient();
   const unit = useWeightUnit();
   const [importando, setImportando] = useState(false);
+  const [fechaAplicar, setFechaAplicar] = useState('');
+  const crearEvento = useCreateCalendarEvent();
+
+  /** Aplica la plantilla a un día concreto: crea el evento de calendario. */
+  const aplicarAlDia = (templateId: string, nombre: string) => {
+    if (!fechaAplicar) return;
+    setAviso(null);
+    crearEvento.mutate({
+      title: nombre,
+      event_type: 'strength',
+      start_local: `${fechaAplicar}T18:00:00`,
+      duration_min: 60,
+      weekday: null,
+      template_id: templateId,
+    }, { onSuccess: () => setAviso('Añadido al calendario') });
+  };
 
   const exportar = () => {
     const planes = todas.data?.items ?? [];
@@ -346,6 +362,23 @@ export function LibraryPage() {
                     }}
                   >
                     {duplicar.isPending ? 'Duplicando…' : 'Duplicar plan'}
+                  </Button>
+                  <label className="flex flex-col gap-1 text-caption text-ink-muted">
+                    Día para aplicarla
+                    <input
+                      type="date"
+                      aria-label="Día para aplicarla"
+                      value={fechaAplicar}
+                      onChange={(event) => setFechaAplicar(event.target.value)}
+                      className={`${controlClass} w-auto`}
+                    />
+                  </label>
+                  <Button
+                    variant="secondary"
+                    disabled={!fechaAplicar || crearEvento.isPending}
+                    onClick={() => aplicarAlDia(selected.data!.id, selected.data!.name)}
+                  >
+                    {crearEvento.isPending ? 'Aplicando…' : 'Aplicar al día'}
                   </Button>
                   <Link to={`/gimnasio/catalogo`} className="focus-ring inline-flex min-h-11 items-center rounded-md border border-line-strong px-3 text-body font-semibold text-ink">
                     Ver ejercicios

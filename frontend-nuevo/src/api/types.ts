@@ -367,6 +367,34 @@ export interface TemplateList {
   items: WorkoutTemplate[];
 }
 
+/** Serie con mejor peso×reps de una semana (o del periodo). */
+export interface ProgressBestSet {
+  weight_kg: number;
+  reps: number;
+  tonnage_kg: number;
+}
+
+export interface ProgressWeek {
+  week_start: string;
+  tonnage_kg: number;
+  sets: number;
+  sessions: number;
+  best_set: ProgressBestSet | null;
+}
+
+export interface ProgressExerciseOption {
+  id: string;
+  name: string;
+  tonnage_kg: number;
+}
+
+export interface ProgressResponse {
+  exercise: { id: string; name: string; muscle_group: string | null } | null;
+  weeks: ProgressWeek[];
+  totals: { tonnage_kg: number; sets: number; best_set: ProgressBestSet | null };
+  exercises: ProgressExerciseOption[];
+}
+
 export interface SessionSummary {
   id: string;
   name: string;

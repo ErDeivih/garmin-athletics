@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Minus, Plus } from 'lucide-react';
-import { useSession, useUpdateSession } from '../api/queries';
+import { useCreateTemplate, useSession, useUpdateSession } from '../api/queries';
 import type { SessionInput, SessionSetInput } from '../api/types';
 import { Button, Card, ErrorState, LoadingBlock, PageHeader } from '../components/ui';
 import { formatDate } from '../lib/format';
@@ -20,9 +20,11 @@ export function SessionEditPage() {
   const { id } = useParams<{ id: string }>();
   const session = useSession(id ?? null);
   const update = useUpdateSession(id ?? null);
+  const crearPlantilla = useCreateTemplate();
   const [sets, setSets] = useState<EditableSet[]>([]);
   const [saved, setSaved] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [plantillaCreada, setPlantillaCreada] = useState(false);
 
   useEffect(() => {
     if (!session.data) return;
@@ -90,6 +92,41 @@ export function SessionEditPage() {
     return () => window.clearTimeout(timer);
   }, [dirty, sets]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  /**
+   * Guarda lo entrenado como plantilla reutilizable: los pesos reales de cada
+   * serie pasan a ser los objetivos de la plantilla nueva.
+   */
+  const guardarComoPlantilla = () => {
+    if (!session.data || sets.length === 0) return;
+    const grupos = new Map<string, { exercise_id: string; sets: number; reps: number; weight_kg: number; rest_seconds: number; set_targets: { set_number: number; reps: number; weight_kg: number }[] }>();
+    for (const item of sets) {
+      const actual = grupos.get(item.exercise_id) ?? {
+        exercise_id: item.exercise_id,
+        sets: 0,
+        reps: item.reps,
+        weight_kg: item.weight_kg,
+        rest_seconds: item.rest_seconds ?? 60,
+        set_targets: [],
+      };
+      actual.sets += 1;
+      actual.reps = Math.max(actual.reps, item.reps);
+      actual.set_targets.push({
+        set_number: actual.set_targets.length + 1,
+        reps: item.reps,
+        weight_kg: item.weight_kg,
+      });
+      grupos.set(item.exercise_id, actual);
+    }
+    setPlantillaCreada(false);
+    crearPlantilla.mutate({
+      name: `Plantilla de ${session.data.name}`.slice(0, 150),
+      weekday: null,
+      focus: null,
+      notes: null,
+      exercises: [...grupos.values()],
+    }, { onSuccess: () => setPlantillaCreada(true) });
+  };
+
   if (session.isPending) return <LoadingBlock label="Cargando la sesión" />;
   if (session.isError || !session.data) {
     return (
@@ -105,8 +142,28 @@ export function SessionEditPage() {
       <PageHeader
         title="Editar pesos reales"
         description={`${session.data.name} · ${formatDate(session.data.date)}`}
-        actions={<Link to="/gimnasio" className="text-body font-semibold text-accent underline">Gimnasio</Link>}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="secondary"
+              onClick={guardarComoPlantilla}
+              disabled={crearPlantilla.isPending || sets.length === 0}
+            >
+              {crearPlantilla.isPending ? 'Guardando…' : 'Guardar como plantilla'}
+            </Button>
+            <Link to="/gimnasio" className="text-body font-semibold text-accent underline">Gimnasio</Link>
+          </div>
+        }
       />
+
+      {plantillaCreada ? (
+        <p role="status" className="mb-3 rounded-md border border-success/40 bg-success/10 px-3 py-2 text-body text-ink">
+          Plantilla creada. <Link to="/gimnasio/biblioteca" className="text-accent underline">Ver biblioteca</Link>
+        </p>
+      ) : null}
+      {crearPlantilla.isError ? (
+        <p role="alert" className="mb-3 text-body text-danger">No se pudo crear la plantilla.</p>
+      ) : null}
       <Card>
         <p className="mb-3 text-body text-ink-muted">
           Ajusta el peso real con − o +. Se guarda solo y recalcula el total.

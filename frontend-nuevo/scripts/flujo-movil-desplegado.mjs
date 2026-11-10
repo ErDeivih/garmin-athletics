@@ -405,6 +405,32 @@ try {
   await pagina.getByRole('button', { name: /kilogramos/i }).click();
   await pagina.waitForTimeout(300);
 
+  // 21. Progreso por ejercicio y semana, con gráfico.
+  await pagina.goto(`${APP}/gimnasio/progreso`, { waitUntil: 'domcontentloaded' });
+  await pagina.getByRole('heading', { name: 'Progreso', exact: true }).waitFor({ timeout: 20000 });
+  await pagina.getByRole('img', { name: /volumen por semana/i }).waitFor({ timeout: 20000 });
+  await captura('21-progreso', { espera: 500 });
+  checks.progreso = true;
+
+  // 22. Aplicar la plantilla a un día concreto.
+  await pagina.goto(`${APP}/gimnasio/biblioteca`, { waitUntil: 'domcontentloaded' });
+  await pagina.getByText('Empuje A').first().click();
+  const dia = pagina.getByLabel(/día para aplicarla/i);
+  await dia.waitFor({ timeout: 20000 });
+  await dia.fill('2026-11-20');
+  await pagina.getByRole('button', { name: /aplicar al día/i }).click();
+  await pagina.getByText(/añadido al calendario/i).waitFor({ timeout: 20000 });
+  checks.aplicar_dia = true;
+  await captura('22-aplicar-dia', { espera: 500 });
+
+  // 23. Guardar la sesión entrenada como plantilla reutilizable.
+  await pagina.goto(`${APP}/gimnasio/sesiones/${ultima.id}`, { waitUntil: 'domcontentloaded' });
+  await pagina.getByRole('heading', { name: /editar pesos reales/i }).waitFor({ timeout: 20000 });
+  await pagina.getByRole('button', { name: /guardar como plantilla/i }).click();
+  await pagina.getByText(/plantilla creada/i).waitFor({ timeout: 20000 });
+  checks.plantilla_desde_sesion = true;
+  await captura('23-guardar-plantilla', { espera: 500 });
+
   // El único error esperado es el 400 del envío sin credencial Garmin (paso 7):
   // el navegador apunta en consola cualquier respuesta >= 400.
   const erroresReales = erroresConsola.filter((texto) => !/400 \(Bad Request\)/.test(texto));

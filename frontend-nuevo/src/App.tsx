@@ -13,6 +13,7 @@ import { MotionProfilePage } from './pages/MotionProfilePage';
 import { PlanEditorPage } from './pages/PlanEditorPage';
 import { SessionEditPage } from './pages/SessionEditPage';
 import { SessionHistoryPage } from './pages/SessionHistoryPage';
+import { ProgressPage } from './pages/ProgressPage';
 import { OnboardingPage } from './pages/OnboardingPage';
 import { hasSeenOnboarding } from './lib/onboarding';
 import { CatalogPage } from './pages/extended/CatalogPage';
@@ -106,6 +107,7 @@ function AuthGate() {
         <Route path="gimnasio/entrenar" element={<SessionPage />} />
         <Route path="gimnasio/ejercicios/:id/deteccion" element={<MotionProfilePage />} />
         <Route path="gimnasio/historial" element={<SessionHistoryPage />} />
+        <Route path="gimnasio/progreso" element={<ProgressPage />} />
         <Route path="gimnasio/sesiones/:id" element={<SessionEditPage />} />
         <Route path="gimnasio/plantillas/:id" element={<PlanEditorPage />} />
         <Route path="gimnasio/catalogo" element={<CatalogPage />} />

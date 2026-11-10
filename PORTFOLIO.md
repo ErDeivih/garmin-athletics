@@ -32,6 +32,8 @@ como historial fiable**.
 |---|---|
 | **Producto móvil de punta a punta** | 21 pantallas (React 19 + Vite + TypeScript): **onboarding** de tres pasos en la primera visita, biblioteca con búsqueda, filtro por foco/fecha, **duplicar plan** y **exportar/importar en JSON**; editor de pesos con copiar-serie-anterior y peso en bloque; historial con fecha, duración, volumen y series, y detalle con **planificado frente a real**; flujo planificar → enviar → entrenar → corregir → historial |
 | **Preferencias y portabilidad** | Ajustes con **unidades kg/lb** (los pesos se muestran y editan en la unidad elegida; al reloj va siempre kg), **tema claro/oscuro** persistente y aviso de uso sin conexión; los planes salen y entran en un **JSON versionado** para no perderlos o pasarlos a otro móvil |
+| **Análisis de progreso** | Panel por ejercicio y semana: **volumen** (kg×reps), series, **mejor serie** (peso×reps) y gráfico de barras semanal, con selector de ejercicio y semanas vacías incluidas |
+| **Plantillas reutilizables** | Guardar una sesión entrenada como plantilla, lista en la biblioteca y **aplicar la plantilla a un día concreto** creando el evento de calendario |
 | **Integración con hardware real** | API de Garmin Connect y watch-app propia en Connect IQ (Monkey C) para el Forerunner 255: mapeo de ejercicios y enums, envío del workout con objetivos por serie, series idempotentes desde el reloj, `dry_run` para validar sin tocar la cuenta |
 | **Offline y PWA** | HTTPS con certificado del tailnet; la app se instala (ventana en `display-mode: standalone`, sin barra del navegador) y **arranca sin cobertura**: recarga servida por el service worker con `onLine: false`, `transferSize: 0` y `workerStart > 0`. El borrador de la sesión se guarda en el móvil |
 | **Backend de datos** | FastAPI + SQLAlchemy async + SQLite, migraciones idempotentes, 21 guiones de contrato sobre una base efímera |
@@ -59,6 +61,8 @@ Todas están tomadas a 390 × 844 (viewport real de móvil) contra la app desple
 | **Editor rápido** — copiar la serie anterior y aplicar un peso a todas. [16-editor-rapido.png](docs/capturas-movil/16-editor-rapido.png) | **Aplicado y guardado** — 62,5 kg en las tres series sin salir. [17-editor-aplicado.png](docs/capturas-movil/17-editor-aplicado.png) |
 | **Onboarding** — tres pasos y lo que necesita el reloj. [00-onboarding.png](docs/capturas-movil/00-onboarding.png) | **Planes en JSON** — exportar e importar desde la biblioteca. [18-biblioteca-json.png](docs/capturas-movil/18-biblioteca-json.png) |
 | **Ajustes** — unidades, tema y aviso sin conexión. [19-ajustes-unidades.png](docs/capturas-movil/19-ajustes-unidades.png) | **Unidades en lb** — el mismo plan en libras (137,8 lb). [20-editor-libras.png](docs/capturas-movil/20-editor-libras.png) |
+| **Progreso** — volumen y mejor serie por ejercicio y semana. [21-progreso.png](docs/capturas-movil/21-progreso.png) | **Aplicar a un día** — plan al calendario en la fecha elegida. [22-aplicar-dia.png](docs/capturas-movil/22-aplicar-dia.png) |
+| **Sesión → plantilla** — guardar lo entrenado como plantilla. [23-guardar-plantilla.png](docs/capturas-movil/23-guardar-plantilla.png) | |
 
 Los datos de las capturas son de una ejecución real contra el despliegue (copia
 desechable de la base, sin tocar la cuenta de Garmin). Informe:
@@ -68,8 +72,8 @@ desechable de la base, sin tocar la cuenta de Garmin). Informe:
 
 | Suite | Resultado |
 |---|---|
-| Frontend (Vitest + Testing Library) | **62/62 pruebas en 27 ficheros** |
-| Backend (guiones de contrato con TestClient) | **22/22**, base SQLite efímera |
+| Frontend (Vitest + Testing Library) | **65/65 pruebas en 30 ficheros** |
+| Backend (guiones de contrato con TestClient) | **23/23**, base SQLite efímera |
 | Regresión visual (Playwright + pixelmatch) | **4/4 pantallas, 0 píxeles** distintos |
 | PWA instalada (Chrome, ventana `--app`) | `display-mode: standalone`, service worker controlando, **arranque sin cobertura** (`onLine: false`, `transferSize: 0`, `workerStart > 0`) |
 | Contraste y escala tipográfica | 52 pares AA, espaciado dentro de la escala |
@@ -98,7 +102,9 @@ después, y la corrección posterior a entrenar tiene su propio guion de contrat
 
 ## 6. Estado
 
-**Funcionando hoy:** onboarding de primera visita, ajustes con unidades (kg/lb), tema y aviso
+**Funcionando hoy:** panel de progreso por ejercicio y semana (volumen, series, mejor
+serie y gráfico), plantillas reutilizables (guardar una sesión como plantilla, aplicar a un
+día concreto), onboarding de primera visita, ajustes con unidades (kg/lb), tema y aviso
 sin conexión, exportar/importar planes en JSON, biblioteca de planes (crear, listar, buscar,
 filtrar por foco y fecha, duplicar), editor de pesos por serie rápido (copiar serie anterior,
 peso en bloque, guardado automático), historial completo con fecha/duración/volumen/series y

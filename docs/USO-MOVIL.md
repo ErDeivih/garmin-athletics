@@ -38,6 +38,10 @@ pendiente»). Pasos completos y criterios de aprobado: `PENDIENTE-PRUEBA-RELOJ.m
   la app funciona sin conexión.
 - En **Biblioteca** puedes **exportar** todos los planes a un JSON y **volver a importarlos**
   (útil como copia de seguridad o para pasar los planes a otro móvil).
+- **Progreso** (desde Gimnasio) muestra por ejercicio y semana el volumen, las series y la
+  mejor serie, con un gráfico de barras semanal.
+- En **Biblioteca** puedes **aplicar una plantilla a un día concreto** (crea el evento del
+  calendario) y, desde una sesión entrenada, **guardarla como plantilla** reutilizable.
 - **Gimnasio** es el punto de partida: tarjeta «Reloj real · pendiente», «Hoy toca» con el
   entreno del día, bloque «Enviar al reloj», plantillas y últimas sesiones.
 - Flujo normal: **Empezar sesión**, marcar las series (los pesos del plan ya están puestos:

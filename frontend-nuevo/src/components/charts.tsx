@@ -164,8 +164,7 @@ export function MuscleVolumeChart({ rows }: { rows: GymStatsMuscle[] }) {
   );
 }
 
-/** Barras verticales de TSS por semana (T-27). */
-export function WeeklyTssChart({ weeks }: { weeks: LoadWeek[] }) {
+/** Barras verticales de TSS por semana (T-27). */export function WeeklyTssChart({ weeks }: { weeks: LoadWeek[] }) {
   const withTss = weeks.filter((week) => week.tss > 0);
   if (withTss.length === 0) {
     return (

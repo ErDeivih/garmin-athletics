@@ -1,0 +1,18 @@
+Producto: progreso por ejercicio/semana y plantillas reutilizables
+
+- Panel de progreso `/gimnasio/progreso`: selector de ejercicio, volumen total
+  (kg×reps), series, mejor serie (peso×reps, desempate por peso) y gráfico de barras
+  semanal con las semanas vacías incluidas. Endpoint nuevo
+  `GET /strength/progress` (ventana configurable, solo series de trabajo) y prueba
+  `tests/test_gym_progress.py` en rojo → verde.
+- Plantillas: desde una sesión entrenada, «Guardar como plantilla» crea la plantilla
+  con los pesos reales por serie (`plantilla-desde-sesion.test.tsx`); en la biblioteca,
+  «Aplicar al día» crea el evento de calendario en la fecha elegida con la plantilla
+  (`aplicar-dia.test.tsx`).
+- Frontend: `progreso.test.tsx` (rojo → verde) con gráfico accesible, totales y cambio
+  de ejercicio.
+- Capturas nuevas a 390 px: `21-progreso`, `22-aplicar-dia`, `23-guardar-plantilla`;
+  regresión visual 4/4 con la línea base de la sesión actualizada por el botón nuevo.
+- PORTFOLIO (competencias, galería y contadores), WALL, estado y USO-MOVIL al día.
+
+Suites: frontend 65/65 en 30 ficheros, backend 23/23 scripts, visual 4/4.
