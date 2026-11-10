@@ -237,10 +237,23 @@ try {
   checks.envio_confirmado_simulado = true;
   await pagina.unroute('**/api/v1/strength/push-to-garmin');
 
-  // 8. Entrenar: marcar las tres series (60 / 65 / 70) y terminar.
+  // 8. Entrenar: modo enfocado (una serie a la vista), registro rápido de la
+  //    primera serie y luego el resto desde la lista.
   await pagina.getByRole('link', { name: /empezar sesión/i }).click();
   await pagina.getByRole('heading', { name: 'Entrenar', exact: true }).waitFor({ timeout: 20000 });
-  for (const serie of [1, 2, 3]) {
+  await pagina.getByRole('button', { name: /modo enfocado/i }).click();
+  await pagina.getByRole('heading', { name: 'Serie en curso', exact: true }).waitFor({ timeout: 20000 });
+  await captura('26-sesion-enfocada', { espera: 600 });
+  checks.modo_enfocado = true;
+  await pagina.getByRole('button', { name: /^serie hecha$/i }).click();
+  await pagina.getByText(/registro rápido/i).waitFor({ timeout: 20000 });
+  await captura('27-registro-rapido', { espera: 500 });
+  checks.registro_rapido = true;
+  await pagina.getByRole('button', { name: /confirmar serie/i }).click();
+  await pagina.getByRole('button', { name: /saltar descanso/i }).click().catch(() => {});
+  await pagina.getByRole('button', { name: /volver a la lista/i }).click();
+  await pagina.getByRole('heading', { name: 'Entrenar', exact: true }).waitFor({ timeout: 20000 });
+  for (const serie of [2, 3]) {
     await pagina.getByRole('checkbox', { name: new RegExp(`serie ${serie} de ${nombreEjercicio}`, 'i') }).click();
     await pagina.waitForTimeout(700);
   }

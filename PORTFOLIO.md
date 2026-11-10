@@ -36,6 +36,7 @@ como historial fiable**.
 | **Plantillas reutilizables** | Guardar una sesión entrenada como plantilla, lista en la biblioteca y **aplicar la plantilla a un día concreto** creando el evento de calendario |
 | **Exportación para análisis** | El historial completo sale a **CSV** (una fila por serie, lista para hoja de cálculo) o **JSON** con sus series, pesos y reps, desde la propia app |
 | **Resumen semanal** | Volumen total, sesiones, series y repeticiones de la semana, **series por grupo muscular** y **adherencia al plan** (sesiones hechas frente a entrenos planificados en el calendario) |
+| **Modo enfocado en el gimnasio** | Una sola serie a la vista con **peso objetivo grande**, botón de «Serie hecha», **registro rápido** de reps reales y RPE opcional y **temporizador de descanso**; uso con una mano, sin listas ni distracciones |
 | **Integración con hardware real** | API de Garmin Connect y watch-app propia en Connect IQ (Monkey C) para el Forerunner 255: mapeo de ejercicios y enums, envío del workout con objetivos por serie, series idempotentes desde el reloj, `dry_run` para validar sin tocar la cuenta |
 | **Offline y PWA** | HTTPS con certificado del tailnet; la app se instala (ventana en `display-mode: standalone`, sin barra del navegador) y **arranca sin cobertura**: recarga servida por el service worker con `onLine: false`, `transferSize: 0` y `workerStart > 0`. El borrador de la sesión se guarda en el móvil |
 | **Backend de datos** | FastAPI + SQLAlchemy async + SQLite, migraciones idempotentes, 21 guiones de contrato sobre una base efímera |
@@ -66,6 +67,7 @@ Todas están tomadas a 390 × 844 (viewport real de móvil) contra la app desple
 | **Progreso** — volumen y mejor serie por ejercicio y semana. [21-progreso.png](docs/capturas-movil/21-progreso.png) | **Aplicar a un día** — plan al calendario en la fecha elegida. [22-aplicar-dia.png](docs/capturas-movil/22-aplicar-dia.png) |
 | **Sesión → plantilla** — guardar lo entrenado como plantilla. [23-guardar-plantilla.png](docs/capturas-movil/23-guardar-plantilla.png) | **Exportar historial** — CSV o JSON desde la lista de sesiones. [24-exportar-historial.png](docs/capturas-movil/24-exportar-historial.png) |
 | **Resumen semanal** — volumen, series por grupo y adherencia al plan. [25-resumen-semanal.png](docs/capturas-movil/25-resumen-semanal.png) | |
+| **Modo enfocado** — serie actual, peso objetivo y botón grande. [26-sesion-enfocada.png](docs/capturas-movil/26-sesion-enfocada.png) | **Registro rápido** — reps reales y RPE opcional por serie. [27-registro-rapido.png](docs/capturas-movil/27-registro-rapido.png) |
 
 Los datos de las capturas son de una ejecución real contra el despliegue (copia
 desechable de la base, sin tocar la cuenta de Garmin). Informe:
@@ -75,7 +77,7 @@ desechable de la base, sin tocar la cuenta de Garmin). Informe:
 
 | Suite | Resultado |
 |---|---|
-| Frontend (Vitest + Testing Library) | **68/68 pruebas en 32 ficheros** |
+| Frontend (Vitest + Testing Library) | **69/69 pruebas en 33 ficheros** |
 | Backend (guiones de contrato con TestClient) | **24/24**, base SQLite efímera |
 | Regresión visual (Playwright + pixelmatch) | **4/4 pantallas, 0 píxeles** distintos |
 | PWA instalada (Chrome, ventana `--app`) | `display-mode: standalone`, service worker controlando, **arranque sin cobertura** (`onLine: false`, `transferSize: 0`, `workerStart > 0`) |
@@ -105,7 +107,7 @@ después, y la corrección posterior a entrenar tiene su propio guion de contrat
 
 ## 6. Estado
 
-**Funcionando hoy:** exportación del historial a CSV/JSON, resumen semanal con adherencia, panel de progreso por ejercicio y semana (volumen, series, mejor
+**Funcionando hoy:** modo enfocado de entrenamiento (serie a la vista, registro rápido de reps/RPE y descanso), exportación del historial a CSV/JSON, resumen semanal con adherencia, panel de progreso por ejercicio y semana (volumen, series, mejor
 serie y gráfico), plantillas reutilizables (guardar una sesión como plantilla, aplicar a un
 día concreto), onboarding de primera visita, ajustes con unidades (kg/lb), tema y aviso
 sin conexión, exportar/importar planes en JSON, biblioteca de planes (crear, listar, buscar,

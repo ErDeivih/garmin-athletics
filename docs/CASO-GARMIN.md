@@ -32,7 +32,7 @@ fiable**, con una interfaz de una mano pensada para el gimnasio.
 |---|---|
 | Planificación | Plantillas con nombre, foco, día y **peso/reps por serie**; editor rápido (copiar serie anterior, peso en bloque, guardado automático); búsqueda, filtros por foco y fecha; duplicar; **exportar/importar planes en JSON** |
 | Reloj | Envío del entreno a Garmin con `dry_run`; **watch-app propia en Connect IQ** que muestra el peso objetivo de cada serie, cierra la serie sola y devuelve las series al backend de forma idempotente |
-| Entrenar | Pantalla de sesión con peso, reps, esfuerzo y «Hecha»; borrador guardado en el móvil (sobrevive a recargas y a quedarse sin cobertura); resumen con volumen y reparto muscular |
+| Entrenar | Pantalla de sesión por serie y **modo enfocado** de una mano (peso objetivo, «Serie hecha», registro rápido de reps/RPE y descanso); borrador guardado en el móvil (sobrevive a recargas y a quedarse sin cobertura); resumen con volumen y reparto muscular |
 | Historial | Lista con fecha, duración, volumen y series; detalle con **planificado frente a real**; corrección de pesos posterior; exportación **CSV/JSON** |
 | Análisis | Progreso por ejercicio y semana (volumen, series, mejor serie, gráfico); resumen semanal con volumen, **series por grupo muscular** y **adherencia al plan** |
 | Producto móvil | PWA instalable por HTTPS, arranque sin cobertura, onboarding de tres pasos, ajustes de unidades kg/lb, tema claro/oscuro y aviso de uso offline |
@@ -110,7 +110,7 @@ Actualizaciones por envío de imagen (`deploy/ship-image.ps1`) y verificación a
 | Producto móvil de punta a punta | 21 pantallas, PWA instalable por HTTPS y **arranque sin cobertura** verificado |
 | Integración con hardware real | Garmin Connect + watch-app Connect IQ para el fr255, con objetivos por serie e idempotencia |
 | Datos y análisis | Exportación CSV/JSON, progreso semanal y resumen con adherencia al plan |
-| Calidad y método | **68/68** pruebas frontend en 32 ficheros, **24/24** guiones de contrato backend, **4/4** pantallas de regresión visual, rojo → verde en cada arreglo, sin GitHub Actions |
+| Calidad y método | **69/69** pruebas frontend en 33 ficheros, **24/24** guiones de contrato backend, **4/4** pantallas de regresión visual, rojo → verde en cada arreglo, sin GitHub Actions |
 | Despliegue y operación | Docker, HTTPS del tailnet, verificación automática del despliegue, sin exponer la app a Internet |
 | Comunicación | Documentación operativa, guía de uso en 3 pasos, dossier de interfaz y este caso |
 

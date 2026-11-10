@@ -69,6 +69,11 @@ crear entrenamientos de gimnasio, llevarlos al reloj y analizar todo.
   al plan** (hechas frente a planificadas en el calendario). Pruebas rojo → verde:
   `exportar-historial`, `semana`, `tests/test_gym_export.py`. Capturas
   `24-exportar-historial`, `25-resumen-semanal`.
+- [x] Modo enfocado de sesión y registro rápido. — 2026-11-10. Modo de una mano con
+  serie actual, peso objetivo grande, botón de «Serie hecha», **registro rápido** de reps
+  reales y RPE opcional por serie y **temporizador de descanso**; la nota de la sesión se
+  guarda con el registro final. Prueba rojo → verde: `sesion-enfocada` (falla sin el botón
+  «Modo enfocado»). Capturas `26-sesion-enfocada`, `27-registro-rapido`.
 - [ ] Watch-app Connect IQ propia (después del camino A). — **en curso**: `watch/lyfta-watch/`
   diseñada, implementada y compilada para fr255 y 4 perfiles más; backend `/watch/today` y
   `/watch/sets` probado; sensor de repeticiones y estimación de fuerza añadidos. Capturas del
@@ -79,13 +84,13 @@ reloj y el análisis está completo.
 
 ## Evidencia
 
-- Frontend: 68/68 pruebas en 32 ficheros (incluye PWA, servido SPA, pesos por serie, aviso del reloj real, biblioteca con filtros/duplicado, editor rápido, historial, JSON de planes, unidades, onboarding, progreso, exportación y resumen semanal).
+- Frontend: 69/69 pruebas en 33 ficheros (incluye PWA, servido SPA, pesos por serie, aviso del reloj real, biblioteca con filtros/duplicado, editor rápido, historial, JSON de planes, unidades, onboarding, progreso, exportación, resumen semanal y modo enfocado).
 - Backend: 24/24 scripts (incluye perfil IMU en seco, auto-carga, watch-app, rutas, calendario recurrente, servido del frontend, corrección de pesos, biblioteca/planificado, progreso semanal y exportación del historial).
 - Despliegue: `deploy/verify-server.sh` en verde el 2026-11-09 — salud, rutas profundas, cabeceras del service worker y datos migrados. Captura del móvil contra la URL desplegada: `frontend-nuevo/screenshots/30-despliegue-login.png`.
 - Flujo móvil contra el despliegue: `scripts/flujo-movil-desplegado.mjs` recorre plan (60/65/70) → edición guardada en servidor → `dry_run` con `unmapped: []` → envío sin credencial (400 limpio) → 3 series → sesión guardada **con 60/65/70** (`coincide: true`); 8 capturas a 390 px e informe en `docs/capturas-movil/`, con las de antes en `antes/`.
 - Revisión de interfaz: `docs/revision-interfaz-movil.md` — inventario de las 6 pantallas del flujo, 17 capturas a 390 px, 10 problemas con evidencia y su arreglo CSS/texto, y el antes/después del arreglo de pesos por serie.
 - Regresión visual: 4/4 pantallas, 0 píxeles distintos, con la línea base regenerada por los cambios de esta tanda (editor rápido, enlace al historial y «Reloj real») en la instancia de verificación.
-- Capturas de la tanda de producto: `docs/capturas-movil/11`–`17` (historial, planificado vs real, biblioteca con filtros, duplicar, copia, editor rápido y aplicado), `00`, `18`–`20` (onboarding, JSON de planes, ajustes y unidades en lb) y `21`–`25` (progreso, aplicar a un día, sesión como plantilla, exportar historial y resumen semanal), a 390 × 844.
+- Capturas de la tanda de producto: `docs/capturas-movil/11`–`17` (historial, planificado vs real, biblioteca con filtros, duplicar, copia, editor rápido y aplicado), `00`, `18`–`20` (onboarding, JSON de planes, ajustes y unidades en lb), `21`–`25` (progreso, aplicar a un día, sesión como plantilla, exportar historial y resumen semanal) y `26`–`27` (modo enfocado y registro rápido), a 390 × 844.
 - Instalación PWA verificada: ventana de aplicación (`display-mode: standalone`, sin barra
   del navegador) con service worker controlando y **arranque sin cobertura**
   (`onLine: false`, `transferSize: 0`, `workerStart > 0`). Informe

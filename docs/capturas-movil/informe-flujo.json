@@ -1,7 +1,7 @@
 {
   "app": "http://192.168.1.139:8011",
-  "cuenta": "flujo+1794327542564@example.com",
-  "plantilla": "d4cd20eb-4be2-4e18-95cc-4d9383cde2dc",
+  "cuenta": "flujo+1794339383637@example.com",
+  "plantilla": "1d83e0e5-474b-4f27-aa13-2deb0a132cca",
   "checks": {
     "plantilla_creada": "set_targets=60/65/70",
     "titulo": "Lyfta",
@@ -18,13 +18,15 @@
       "esperado": 400
     },
     "envio_confirmado_simulado": true,
+    "modo_enfocado": true,
+    "registro_rapido": true,
     "sin_conexion": {
       "borrador_guardado": true,
       "recarga_sin_red": "falla (sin HTTPS no hay service worker que sirva el shell)",
       "peso_restaurado_al_volver": "61"
     },
     "sesion_guardada": {
-      "id": "ce8b43e6-f5c9-4ea7-bde7-597eca3c590d",
+      "id": "a41796ad-c9ff-4468-ac02-fea2706db74e",
       "series": 3,
       "pesos": [
         60,
@@ -83,6 +85,8 @@
     "04-envio-pendiente.png",
     "05-envio-error.png",
     "04b-envio-enviado.png",
+    "26-sesion-enfocada.png",
+    "27-registro-rapido.png",
     "06-entrenar.png",
     "07-sesion-terminada.png",
     "08-sesion-guardada.png",

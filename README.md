@@ -12,7 +12,7 @@ progreso y resumen semanal exportable.
 |---|---|
 | Producto | En uso: planificar → enviar al reloj → entrenar → corregir → historial |
 | PWA | Instalable por HTTPS y con **arranque sin cobertura** (verificado) |
-| Pruebas | **68/68** frontend (32 ficheros) · **24/24** guiones de backend · **4/4** pantallas de regresión visual |
+| Pruebas | **69/69** frontend (33 ficheros) · **24/24** guiones de backend · **4/4** pantallas de regresión visual |
 | Pendiente | **Prueba física con el reloj** (único punto que requiere el fr255 y el 2FA de Garmin) |
 
 ## Capturas
@@ -33,7 +33,9 @@ historial, exportación CSV/JSON, progreso, ajustes y arranque sin cobertura).
 - **Reloj**: envío del entreno a Garmin con objetivos por serie y `dry_run` para validar sin
   tocar la cuenta; **watch-app propia en Connect IQ** que muestra el peso de cada serie, cierra
   la serie sola y devuelve las series de forma idempotente.
-- **Entrenar**: peso, reps, esfuerzo y «Hecha» por serie; borrador guardado en el móvil que
+- **Entrenar**: pantalla de sesión con peso, reps, esfuerzo y «Hecha» por serie; **modo
+  enfocado** de una mano (serie actual, peso objetivo grande, botón de «Serie hecha»,
+  registro rápido de reps/RPE y descanso con temporizador); borrador guardado en el móvil que
   sobrevive a recargas y a quedarse sin cobertura; resumen con volumen y reparto muscular.
 - **Historial y análisis**: lista con fecha/duración/volumen/series; detalle con
   **planificado frente a real**; corrección posterior; exportación **CSV/JSON**; progreso por

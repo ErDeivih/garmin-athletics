@@ -6,6 +6,7 @@ import { useCreateSession, useLastMarks, useTemplate } from '../api/queries';
 import type { SessionDetail, SessionSetInput } from '../api/types';
 import { Badge, Button, Card, EmptyState, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../components/ui';
 import { ExerciseIllustration } from '../components/ExerciseIllustration';
+import { FocusedSession } from './FocusedSession';
 import { formatWeight, fromKg, toKg, useWeightUnit, type WeightUnit } from '../lib/units';
 
 interface DraftSet {
@@ -262,6 +263,8 @@ export function SessionPage() {
   const [finishError, setFinishError] = useState<string | null>(null);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [finished, setFinished] = useState<SessionDetail | null>(null);
+  const [focused, setFocused] = useState(false);
+  const [nota, setNota] = useState('');
   const userId = user?.id ?? 'anon';
 
   // Recupera el borrador del navegador o lo crea desde la plantilla y la última marca.
@@ -363,10 +366,39 @@ export function SessionPage() {
     });
   };
 
-  const finish = () => {
-    if (!draft) return;
-    setFinishError(null);
-    const sets: SessionSetInput[] = draft.exercises.flatMap((exercise) =>
+  /** Serie hecha desde el modo enfocado: registra reps/RPE y arranca el descanso. */
+  const completeSet = (exerciseIndex: number, setIndex: number, patch: Partial<DraftSet>) => {
+    setDraft((current) => {
+      if (!current) return current;
+      const exercise = current.exercises[exerciseIndex];
+      if (!exercise || !exercise.sets[setIndex]) return current;
+      const completedAt = new Date().toISOString();
+      const restEndsAt = exercise.restSeconds > 0
+        ? new Date(Date.now() + exercise.restSeconds * 1000).toISOString()
+        : current.restEndsAt;
+      return {
+        ...current,
+        restEndsAt,
+        exercises: current.exercises.map((entry, index) =>
+          index === exerciseIndex
+            ? {
+                ...entry,
+                sets: entry.sets.map((set, indexSet) =>
+                  indexSet === setIndex ? { ...set, ...patch, done: true, completedAt } : set,
+                ),
+              }
+            : entry,
+        ),
+      };
+    });
+  };
+
+  const skipRest = () => {
+    setDraft((current) => (current ? { ...current, restEndsAt: null } : current));
+  };
+
+  const finish = () => {    if (!draft) return;
+    setFinishError(null);    const sets: SessionSetInput[] = draft.exercises.flatMap((exercise) =>
       exercise.sets.flatMap((item, index) => {
         // Los campos están en la unidad elegida; al backend va siempre en kg.
         const weight = toKg(toNumber(item.weight), unit);
@@ -394,6 +426,7 @@ export function SessionPage() {
         template_id: draft.templateId,
         started_at: draft.startedAt,
         finished_at: new Date().toISOString(),
+        notes: nota.trim() ? nota.trim() : null,
         sets,
       },
       {
@@ -448,6 +481,24 @@ export function SessionPage() {
     return <LoadingBlock label="Preparando la sesión" />;
   }
 
+  if (focused) {
+    return (
+      <FocusedSession
+        draft={draft}
+        now={now}
+        unit={unit}
+        saving={createSession.isPending}
+        finishError={finishError}
+        nota={nota}
+        onNota={setNota}
+        onExit={() => setFocused(false)}
+        onComplete={completeSet}
+        onSkipRest={skipRest}
+        onFinish={finish}
+      />
+    );
+  }
+
   return (
     <>
       <PageHeader
@@ -455,6 +506,9 @@ export function SessionPage() {
         description={`${draft.templateName} · ${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, '0')} · ${doneCount} ${doneCount === 1 ? 'serie hecha' : 'series hechas'}`}
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" onClick={() => setFocused(true)} disabled={doneCount === draft.exercises.reduce((sum, item) => sum + item.sets.length, 0)}>
+              Modo enfocado
+            </Button>
             <Button
               variant="danger"
               onClick={() => setConfirmDiscard(true)}
