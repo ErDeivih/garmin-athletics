@@ -23,7 +23,7 @@ export function SessionHistoryPage() {
     exportar.mutate({}, {
       onSuccess: (datos) => {
         if (formato === 'csv') {
-          downloadText(nombreExportacion('csv'), buildHistoryCsv(datos), 'text/csv;charset=utf-8');
+          downloadText(nombreExportacion('csv'), buildHistoryCsv(datos, unit), 'text/csv;charset=utf-8');
         } else {
           downloadText(nombreExportacion('json'), JSON.stringify(datos, null, 2), 'application/json');
         }
@@ -76,7 +76,8 @@ export function SessionHistoryPage() {
         <p role="alert" className="mb-2 text-body text-danger">{errorExportacion}</p>
       ) : null}
       <p className="mb-2 text-caption text-ink-faint">
-        El CSV lleva una fila por serie con el peso y las reps <strong>previstos frente a los reales</strong>.
+        El CSV lleva una fila por serie con sesión, ejercicio, unidad, peso y reps
+        <strong> previstos frente a los reales</strong>.
       </p>
 
       {items.length === 0 ? (

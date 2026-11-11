@@ -64,16 +64,43 @@ describe('exportar el historial', () => {
     await waitFor(() => expect(descargas.length).toBeGreaterThan(0));
     const csv = await descargas[0]!.blob.text();
     const lineas = csv.trim().split('\n');
-    expect(lineas[0]).toContain('peso_previsto_kg');
-    expect(lineas[0]).toContain('peso_real_kg');
-    expect(lineas[0]).toContain('reps_previstas');
-    // Cabecera + 3 series.
+    const cabecera = lineas[0]!.split(',');
+    expect(cabecera).toEqual([
+      'fecha', 'sesion_id', 'sesion', 'ejercicio', 'grupo_muscular', 'serie',
+      'unidad', 'peso_previsto', 'peso_real', 'reps_previstas', 'reps_reales',
+      'dif', 'rpe', 'calentamiento', 'duracion_min', 'volumen_sesion',
+    ]);
+    // Cabecera + 3 series = 3 filas correctas.
     expect(lineas.length).toBe(4);
-    expect(csv).toContain('Press de banca');
-    expect(csv).toContain('2026-11-10');
-    // Previsto vs real: dos series iguales y una con diferencia.
-    expect(lineas[1]).toContain(',60,60,8,8,0,');
-    expect(lineas[3]).toContain(',70,70,6,6,0,');
+    const fila = (numero: number) => {
+      const valores = lineas[numero]!.split(',');
+      return Object.fromEntries(cabecera.map((columna, indice) => [columna, valores[indice]]));
+    };
+    expect(fila(1)).toMatchObject({
+      fecha: '2026-11-10', sesion_id: 's-1', sesion: 'Empuje A',
+      ejercicio: 'Press de banca', grupo_muscular: 'pecho', serie: '1', unidad: 'kg',
+      peso_previsto: '60', peso_real: '60', reps_previstas: '8', reps_reales: '8', dif: '0',
+    });
+    expect(fila(2)).toMatchObject({ serie: '2', peso_previsto: '65', peso_real: '65', dif: '0' });
+    expect(fila(3)).toMatchObject({ serie: '3', peso_previsto: '70', peso_real: '70', reps_previstas: '6', reps_reales: '6' });
+
+    click.mockRestore();
+  });
+
+  it('con la app en libras el CSV sale en lb y lo dice en la columna unidad', async () => {
+    localStorage.setItem(TOKEN_KEY, 'test-token');
+    localStorage.setItem('lyfta.units', 'lb');
+    apiHistorial();
+    const { descargas, click } = prepararDescargas();
+    const user = userEvent.setup();
+    renderApp('/gimnasio/historial');
+
+    await screen.findByRole('heading', { name: 'Historial' });
+    await user.click(screen.getByRole('button', { name: /exportar csv/i }));
+    await waitFor(() => expect(descargas.length).toBeGreaterThan(0));
+    const lineas = (await descargas[0]!.blob.text()).trim().split('\n');
+    expect(lineas[1]).toContain(',lb,132.3,132.3,8,8,0,');
+    expect(lineas[3]).toContain(',lb,154.3,154.3,6,6,0,');
 
     click.mockRestore();
   });

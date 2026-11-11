@@ -1,22 +1,22 @@
 titulo: Lyfta — entrenamiento, reloj y análisis
 estado: producto completo y desplegado; en-espera de la prueba física del reloj
-tarea: aplicar feedback GA-U1/U2/I1/I2/F1 (edición en fila, estados del envío, controles 44 px medidos, descanso no bloqueante e integridad de pesos)
+tarea: criterios de sesión (serie grande, ±2,5 kg/±1 rep, «anterior», descanso automático), historial con «60 → 62,5 kg» y CSV por serie con sesión, unidad, previsto y real
 nivel: 2
 siguiente: David instala la PWA desde https://servidor.tail4263a0.ts.net (3 pasos) y ejecuta la prueba del reloj de docs/USO-MOVIL.md
 bloqueado: prueba física del fr255 (2FA/reloj de David)
 fecha: 2026-11-11
-resumen: Feedback GA aplicado con medición real (44×44, 0 solapes a 390 px), estados Solicitado/Enviado/Confirmado sin «Recibido» sin acuse, edición de peso en la propia fila, descanso al pie que no bloquea y prueba de integridad 50/52,5/55 kg plan → reloj → guardado; 78/78 frontend y 25/25 backend.
+resumen: Serie actual grande con ±2,5 kg/±1 rep, «anterior» por serie y descanso automático; historial «60 → 62,5 kg» con diferencia marcada; CSV por serie con sesión, unidad, previsto y real (tres series → tres filas); 79/79 frontend y 25/25 backend.
 
 ## Bloqueo
 
-**Situación (2026-11-11, 13:35):** feedback aplicado y desplegado. Sigue abierta solo la
-aceptación con el reloj físico.
+**Situación (2026-11-11, 14:10):** los tres criterios están cumplidos y desplegados. Lo
+único abierto es la aceptación con el reloj físico.
 
-**(a) Dónde me quedé.** GA-U1 (edición en fila), GA-U2 (tres estados, sin «Recibido»),
-GA-I1 (44×44 medido: 24 controles, mínimo 44×44, 0 solapes, página 390 px),
-GA-I2 (banda de descanso al pie, edición verificada con contador en marcha) y GA-F1
-(prueba `tests/test_integridad_pesos.py` con tabla plan → reloj → guardado y localización
-de diferencias). 78/78 frontend, 25/25 backend, visual 4/4 con líneas base actualizadas.
+**(a) Dónde me quedé.** Sesión (modo enfocado y lista con ±2,5 kg/±1 rep, «Anterior» por
+serie, discos, descanso automático; una serie se completa sin salir), historial con
+«60 → 62,5 kg» y +2,5 kg resaltado, y CSV por serie con `sesion_id`, `sesion`, `unidad`,
+`peso_previsto`, `peso_real`, `reps_previstas`, `reps_reales` y `dif`. Suites: 79/79
+frontend (38 ficheros), 25/25 backend, visual 4/4.
 
 **(b) Qué falta revisar.**
 1. **Prueba física del fr255**: envío real, peso por serie en el reloj, vuelta de una serie

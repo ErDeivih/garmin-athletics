@@ -38,7 +38,7 @@ como historial fiable**.
 | **Resumen semanal** | Volumen total, sesiones, series y repeticiones de la semana, **series por grupo muscular** y **adherencia al plan** (sesiones hechas frente a entrenos planificados en el calendario) |
 | **Modo enfocado en el gimnasio** | Una sola serie a la vista con **peso objetivo grande**, botón de «Serie hecha», **registro rápido** de reps reales y RPE opcional y **temporizador de descanso**; uso con una mano, sin listas ni distracciones |
 | **Calculadora de discos** | Dado el peso objetivo, reparte barra y discos por lado (20 k + 10 + 2.5…) y avisa si el inventario no llega; visible en la sesión y en el modo enfocado |
-| **CSV previsto vs real** | Una fila por serie con peso y reps **previstos frente a los reales**, diferencia en kg y volumen de la sesión, exportable desde Historial |
+| **CSV previsto vs real** | Una fila por serie con **sesión (id y nombre), ejercicio, unidad**, peso y reps **previstos frente a los reales** y diferencia, exportable desde Historial; tres series exportan tres filas exactas |
 | **Integración con hardware real** | API de Garmin Connect y watch-app propia en Connect IQ (Monkey C) para el Forerunner 255: mapeo de ejercicios y enums, envío del workout con objetivos por serie, series idempotentes desde el reloj, `dry_run` para validar sin tocar la cuenta, **estados honestos del envío** (Solicitado → Enviado → Confirmado, sin «Recibido» sin acuse) y **prueba de integridad plan → reloj → guardado** con tres pesos distintos (`docs/PRUEBA-INTEGRIDAD.md`) |
 | **Offline y PWA** | HTTPS con certificado del tailnet; la app se instala (ventana en `display-mode: standalone`, sin barra del navegador) y **arranca sin cobertura**: recarga servida por el service worker con `onLine: false`, `transferSize: 0` y `workerStart > 0`. El borrador de la sesión se guarda en el móvil |
 | **Backend de datos** | FastAPI + SQLAlchemy async + SQLite, migraciones idempotentes, 21 guiones de contrato sobre una base efímera |
@@ -81,7 +81,7 @@ desechable de la base, sin tocar la cuenta de Garmin). Informe:
 
 | Suite | Resultado |
 |---|---|
-| Frontend (Vitest + Testing Library) | **78/78 pruebas en 38 ficheros** |
+| Frontend (Vitest + Testing Library) | **79/79 pruebas en 38 ficheros** |
 | Backend (guiones de contrato con TestClient) | **25/25**, base SQLite efímera |
 | Regresión visual (Playwright + pixelmatch) | **4/4 pantallas, 0 píxeles** distintos |
 | PWA instalada (Chrome, ventana `--app`) | `display-mode: standalone`, service worker controlando, **arranque sin cobertura** (`onLine: false`, `transferSize: 0`, `workerStart > 0`) |

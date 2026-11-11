@@ -110,7 +110,7 @@ Actualizaciones por envío de imagen (`deploy/ship-image.ps1`) y verificación a
 | Producto móvil de punta a punta | 21 pantallas, PWA instalable por HTTPS y **arranque sin cobertura** verificado |
 | Integración con hardware real | Garmin Connect + watch-app Connect IQ para el fr255, con objetivos por serie e idempotencia |
 | Datos y análisis | Exportación CSV/JSON, progreso semanal y resumen con adherencia al plan |
-| Calidad y método | **78/78** pruebas frontend en 38 ficheros, **25/25** guiones de contrato backend, **4/4** pantallas de regresión visual, rojo → verde en cada arreglo, sin GitHub Actions |
+| Calidad y método | **79/79** pruebas frontend en 38 ficheros, **25/25** guiones de contrato backend, **4/4** pantallas de regresión visual, rojo → verde en cada arreglo, sin GitHub Actions |
 | Despliegue y operación | Docker, HTTPS del tailnet, verificación automática del despliegue, sin exponer la app a Internet |
 | Comunicación | Documentación operativa, guía de uso en 3 pasos, dossier de interfaz y este caso |
 
