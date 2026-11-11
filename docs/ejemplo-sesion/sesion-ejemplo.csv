@@ -1,0 +1,4 @@
+fecha,sesion_id,sesion,ejercicio,grupo_muscular,serie,unidad,peso_previsto,peso_real,reps_previstas,reps_reales,dif,rpe,calentamiento,duracion_min,volumen_sesion
+2026-11-11,fab9406e-d311-4e58-b98e-e4f47a9e3ce5,Empuje ejemplo,Press de banca con barra,pecho,1,kg,60,62.5,8,8,2.5,8,no,0,1440
+2026-11-11,fab9406e-d311-4e58-b98e-e4f47a9e3ce5,Empuje ejemplo,Press de banca con barra,pecho,2,kg,65,65,8,8,0,8,no,0,1440
+2026-11-11,fab9406e-d311-4e58-b98e-e4f47a9e3ce5,Empuje ejemplo,Press de banca con barra,pecho,3,kg,70,70,6,6,0,8,no,0,1440

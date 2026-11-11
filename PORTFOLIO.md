@@ -145,6 +145,7 @@ necesario (FastAPI sirve el build), scripts de verificación propios.
 - `DESPLIEGUE.md` — cómo está desplegado, cómo se actualiza y cómo se comprueba.
 - `docs/CASO-GARMIN.md` — **caso técnico**: producto, arquitectura (PWA + Connect IQ), decisiones y qué demuestra.
 - `docs/PRUEBA-INTEGRIDAD.md` — **prueba de integridad de pesos**: plan → reloj → guardado, con la tabla de las tres etapas.
+- `docs/EJEMPLO-SESION.md` — **sesión de ejemplo real** de punta a punta, con capturas a 390 px, CSV y JSON guardados.
 - `docs/VIA-ENVIO-RELOJ.md` — **vía de envío al reloj**: API Personal y Training API de Garmin, plan B con Connect IQ, con fuentes y fechas.
 - `docs/USO-MOVIL.md` — bloque único con los 3 pasos de instalación y lo que falta para el reloj.
 - `docs/revision-interfaz-movil.md` — dossier de interfaz: 17 capturas y 10 problemas con su arreglo.

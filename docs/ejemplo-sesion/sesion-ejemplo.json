@@ -1,0 +1,115 @@
+{
+  "segunExportacion": {
+    "id": "fab9406e-d311-4e58-b98e-e4f47a9e3ce5",
+    "name": "Empuje ejemplo",
+    "date": "2026-11-11",
+    "started_at": "2026-11-11T14:02:20.560000",
+    "finished_at": "2026-11-11T14:02:21.719000",
+    "duration_min": 0,
+    "total_tonnage_kg": 1440,
+    "template_id": "7272a58b-0db5-4eaf-8a6e-34287078e693",
+    "sets_count": 3,
+    "exercises_count": 1,
+    "exercises": [
+      {
+        "exercise_id": "142816bb-e7df-4926-b2ed-8542e475067b",
+        "exercise_name": "Press de banca con barra",
+        "muscle_group": "pecho",
+        "sets": [
+          {
+            "set_number": 1,
+            "weight_kg": 62.5,
+            "reps": 8,
+            "rpe": 8,
+            "is_warmup": false,
+            "set_type": "normal",
+            "rest_seconds": 45,
+            "completed_at": "2026-11-11T14:02:21.119000",
+            "planned_weight_kg": 60,
+            "planned_reps": 8
+          },
+          {
+            "set_number": 2,
+            "weight_kg": 65,
+            "reps": 8,
+            "rpe": 8,
+            "is_warmup": false,
+            "set_type": "normal",
+            "rest_seconds": 45,
+            "completed_at": "2026-11-11T14:02:21.318000",
+            "planned_weight_kg": 65,
+            "planned_reps": 8
+          },
+          {
+            "set_number": 3,
+            "weight_kg": 70,
+            "reps": 6,
+            "rpe": 8,
+            "is_warmup": false,
+            "set_type": "normal",
+            "rest_seconds": 45,
+            "completed_at": "2026-11-11T14:02:21.471000",
+            "planned_weight_kg": 70,
+            "planned_reps": 6
+          }
+        ]
+      }
+    ]
+  },
+  "filas": [
+    {
+      "fecha": "2026-11-11",
+      "sesion_id": "fab9406e-d311-4e58-b98e-e4f47a9e3ce5",
+      "sesion": "Empuje ejemplo",
+      "ejercicio": "Press de banca con barra",
+      "grupo_muscular": "pecho",
+      "serie": 1,
+      "unidad": "kg",
+      "peso_previsto": 60,
+      "peso_real": 62.5,
+      "reps_previstas": 8,
+      "reps_reales": 8,
+      "dif": 2.5,
+      "rpe": 8,
+      "calentamiento": "no",
+      "duracion_min": 0,
+      "volumen_sesion": 1440
+    },
+    {
+      "fecha": "2026-11-11",
+      "sesion_id": "fab9406e-d311-4e58-b98e-e4f47a9e3ce5",
+      "sesion": "Empuje ejemplo",
+      "ejercicio": "Press de banca con barra",
+      "grupo_muscular": "pecho",
+      "serie": 2,
+      "unidad": "kg",
+      "peso_previsto": 65,
+      "peso_real": 65,
+      "reps_previstas": 8,
+      "reps_reales": 8,
+      "dif": 0,
+      "rpe": 8,
+      "calentamiento": "no",
+      "duracion_min": 0,
+      "volumen_sesion": 1440
+    },
+    {
+      "fecha": "2026-11-11",
+      "sesion_id": "fab9406e-d311-4e58-b98e-e4f47a9e3ce5",
+      "sesion": "Empuje ejemplo",
+      "ejercicio": "Press de banca con barra",
+      "grupo_muscular": "pecho",
+      "serie": 3,
+      "unidad": "kg",
+      "peso_previsto": 70,
+      "peso_real": 70,
+      "reps_previstas": 6,
+      "reps_reales": 6,
+      "dif": 0,
+      "rpe": 8,
+      "calentamiento": "no",
+      "duracion_min": 0,
+      "volumen_sesion": 1440
+    }
+  ]
+}

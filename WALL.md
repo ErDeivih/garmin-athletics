@@ -114,6 +114,11 @@ crear entrenamientos de gimnasio, llevarlos al reloj y analizar todo.
   tres pasos y la nota del fr255/2FA; el envío añade **Reenviar al reloj** también cuando ya
   está «Enviado» (reintento sin salir de la tarjeta). Pruebas `onboarding` y `envio-estados`;
   capturas `00-onboarding` y `04b-envio-enviado` regeneradas.
+- [x] Sesión de ejemplo guardada en docs. — 2026-11-11. `docs/EJEMPLO-SESION.md` con una
+  sesión real ejecutada contra la instancia desechable (plan 60/65/70, modo enfocado, RPE
+  8, corrección de la serie 1 a 62,5 kg), **5 capturas a 390 px**, `sesion-ejemplo.csv` (3
+  series → 3 filas) y `sesion-ejemplo.json`; script reproducible
+  `frontend-nuevo/scripts/ejemplo-sesion.mjs`.
 - [ ] Watch-app Connect IQ propia (después del camino A). — **en curso**: `watch/lyfta-watch/`
   diseñada, implementada y compilada para fr255 y 4 perfiles más; backend `/watch/today` y
   `/watch/sets` probado; sensor de repeticiones y estimación de fuerza añadidos. Capturas del
