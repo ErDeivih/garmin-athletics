@@ -10,9 +10,11 @@ const COLUMNAS = [
   'ejercicio',
   'grupo_muscular',
   'serie',
-  'peso_kg',
-  'reps',
-  'tonelaje_kg',
+  'peso_previsto_kg',
+  'peso_real_kg',
+  'reps_previstas',
+  'reps_reales',
+  'dif_kg',
   'rpe',
   'calentamiento',
   'duracion_min',
@@ -30,16 +32,21 @@ export function buildHistoryCsv(datos: HistoryExportResponse): string {
   for (const sesion of datos.sessions) {
     for (const ejercicio of sesion.exercises) {
       for (const serie of ejercicio.sets) {
-        const tonelaje = Number(((serie.weight_kg ?? 0) * (serie.reps ?? 0)).toFixed(2));
+        const planificado = serie.planned_weight_kg;
+        const diferencia = planificado === null || planificado === undefined
+          ? ''
+          : Number((serie.weight_kg - planificado).toFixed(2));
         filas.push([
           sesion.date ?? '',
           sesion.name,
           ejercicio.exercise_name,
           ejercicio.muscle_group ?? '',
           serie.set_number,
+          planificado ?? '',
           serie.weight_kg,
+          serie.planned_reps ?? '',
           serie.reps,
-          tonelaje,
+          diferencia,
           serie.rpe ?? '',
           serie.is_warmup ? 'si' : 'no',
           sesion.duration_min ?? '',

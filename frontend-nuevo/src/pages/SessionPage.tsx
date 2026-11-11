@@ -6,6 +6,8 @@ import { useCreateSession, useLastMarks, useTemplate } from '../api/queries';
 import type { SessionDetail, SessionSetInput } from '../api/types';
 import { Badge, Button, Card, EmptyState, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../components/ui';
 import { ExerciseIllustration } from '../components/ExerciseIllustration';
+import { PlateBreakdown } from '../components/PlateBreakdown';
+import { repartirDiscos } from '../lib/discos';
 import { FocusedSession } from './FocusedSession';
 import { formatWeight, fromKg, toKg, useWeightUnit, type WeightUnit } from '../lib/units';
 
@@ -570,6 +572,10 @@ export function SessionPage() {
                 Objetivo {exercise.targetSets}×{exercise.targetReps} · descanso {exercise.restSeconds}s
                 {exercise.previous ? ` · ${exercise.previous}` : ' · sin marca anterior'}
               </p>
+              <PlateBreakdown
+                compact
+                reparto={repartirDiscos(toKg(toNumber(exercise.sets[0]?.weight ?? ''), unit))}
+              />
               <div className="mb-3">
                 <ExerciseIllustration name={exercise.name} muscleGroup={exercise.muscleGroup} compact />
               </div>

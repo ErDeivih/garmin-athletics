@@ -39,14 +39,14 @@ pendiente»). Pasos completos y criterios de aprobado: `PENDIENTE-PRUEBA-RELOJ.m
 - En **Biblioteca** puedes **exportar** todos los planes a un JSON y **volver a importarlos**
   (útil como copia de seguridad o para pasar los planes a otro móvil).
 - En **Entrenar** puedes pulsar **«Modo enfocado»**: una sola serie a la vista, peso objetivo
-  grande, botón de «Serie hecha», registro rápido de reps reales y RPE, y descanso con
-  temporizador. Se maneja con una mano.
+  grande, **calculadora de discos** (barra y discos por lado), botón de «Serie hecha», registro
+  rápido de reps reales y RPE, y descanso con temporizador. Se maneja con una mano.
 - **Progreso** (desde Gimnasio) muestra por ejercicio y semana el volumen, las series y la
   mejor serie, con un gráfico de barras semanal.
 - **Semana** (desde Gimnasio) resume la semana en curso: volumen, sesiones, series por grupo
   muscular y adherencia al plan (hechas frente a planificadas en el calendario).
-- En **Historial** puedes descargar todo el historial en **CSV** (una fila por serie) o
-  **JSON**, para analizarlo fuera de la app.
+- En **Historial** puedes descargar todo el historial en **CSV** (una fila por serie, con peso
+  y reps **previstos frente a los reales**) o **JSON**, para analizarlo fuera de la app.
 - En **Biblioteca** puedes **aplicar una plantilla a un día concreto** (crea el evento del
   calendario) y, desde una sesión entrenada, **guardarla como plantilla** reutilizable.
 - **Gimnasio** es el punto de partida: tarjeta «Reloj real · pendiente», «Hoy toca» con el

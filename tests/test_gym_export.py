@@ -8,9 +8,13 @@ Cubre el contrato de `GET /strength/export`:
   `exercises_count`;
 - cada ejercicio con `exercise_id`, `exercise_name`, `muscle_group` y sus series
   (`set_number`, `weight_kg`, `reps`, `rpe`, `is_warmup`, `set_type`,
-  `rest_seconds`, `completed_at`);
+  `rest_seconds`, `completed_at`) más el plan por serie: `planned_weight_kg` y
+  `planned_reps` (objetivo de la plantilla para ese `set_number`, `null` cuando
+  no hay plan; el detalle de sesión devuelve los mismos valores);
 - filtros `from`/`to` sobre `started_at`; rango inválido -> 422;
-- otro usuario no ve las sesiones y sin datos la lista sale vacía con 200.
+- otro usuario no ve las sesiones y sin datos la lista sale vacía con 200;
+- una sesión que apunta a una plantilla que ya no existe no rompe: sus series
+  salen con el plan a `null`.
 
 Script standalone, como el resto de `tests/`: BD SQLite efímera con TestClient,
 sin tocar la base real ni Garmin. Ejecutar:
@@ -45,7 +49,7 @@ CLAVES_SESION = {
 CLAVES_EJERCICIO = {"exercise_id", "exercise_name", "muscle_group", "sets"}
 CLAVES_SERIE = {
     "set_number", "weight_kg", "reps", "rpe", "is_warmup", "set_type",
-    "rest_seconds", "completed_at",
+    "rest_seconds", "completed_at", "planned_weight_kg", "planned_reps",
 }
 
 
@@ -83,6 +87,23 @@ def _export(headers: dict, **params) -> dict:
     return res.json()
 
 
+def _plan(series: list) -> list:
+    """Pares (planned_weight_kg, planned_reps) en orden: el plan que exporta cada serie."""
+    return [(s["planned_weight_kg"], s["planned_reps"]) for s in series]
+
+
+def _serie(set_number: int, weight: float, reps: int, rpe, rest, completed: str,
+           planned_weight, planned_reps, **extra) -> dict:
+    serie = {
+        "set_number": set_number, "weight_kg": weight, "reps": reps, "rpe": rpe,
+        "is_warmup": False, "set_type": "normal", "rest_seconds": rest,
+        "completed_at": completed,
+        "planned_weight_kg": planned_weight, "planned_reps": planned_reps,
+    }
+    serie.update(extra)
+    return serie
+
+
 # ---------------------------------------------------------------------------
 # Caso completo
 # ---------------------------------------------------------------------------
@@ -94,15 +115,28 @@ def run():
     bench = _pick(BENCH)
     row = _pick(ROW)
 
-    # Plantilla para comprobar que `template_id` viaja en la exportación.
+    # Plantilla con plan por serie (60/65/70 × 8 en banca) y, a propósito, menos
+    # objetivos que series en el remo (1 objetivo): así se comprueba el `null`
+    # de la serie que el plan no cubre.
     res = client.post(f"{API}/strength/templates", headers=h, json={
         "name": "Banca 5x5", "focus": "empuje",
-        "exercises": [{"exercise_id": bench["id"], "sets": 2, "reps": 5,
-                       "weight_kg": 80}]})
+        "exercises": [
+            {"exercise_id": bench["id"], "sets": 3, "reps": 5, "weight_kg": 80,
+             "set_targets": [
+                 {"weight_kg": 60, "reps": 8},
+                 {"weight_kg": 65, "reps": 8},
+                 {"weight_kg": 70, "reps": 8},
+             ]},
+            {"exercise_id": row["id"], "sets": 1, "reps": 10, "weight_kg": 50},
+        ]})
     assert res.status_code == 201, res.text
     plantilla = res.json()
+    # La plantilla normaliza los objetivos por `set_number` (1..3).
+    assert [t["set_number"] for t in plantilla["exercises"][0]["set_targets"]] == [1, 2, 3], \
+        plantilla["exercises"][0]["set_targets"]
 
     # --- Dos sesiones en fechas distintas, creadas de la nueva a la vieja ----
+    # Con plantilla: la banca tiene plan para sus 3 series; el remo solo para la 1ª.
     s2 = _session(h, {
         "name": "Empuje B", "template_id": plantilla["id"],
         "started_at": "2026-11-05T07:30:00",
@@ -112,7 +146,14 @@ def run():
              "rpe": 9, "rest_seconds": 180, "completed_at": "2026-11-05T07:33:00"},
             {"exercise_id": bench["id"], "set_number": 2, "weight_kg": 82.5, "reps": 3,
              "rpe": 10, "rest_seconds": 180, "completed_at": "2026-11-05T07:36:00"},
+            {"exercise_id": bench["id"], "set_number": 3, "weight_kg": 85, "reps": 2,
+             "rpe": 10, "rest_seconds": 180, "completed_at": "2026-11-05T07:40:00"},
+            {"exercise_id": row["id"], "set_number": 1, "weight_kg": 50, "reps": 10,
+             "rpe": 8, "rest_seconds": 90, "completed_at": "2026-11-05T07:50:00"},
+            {"exercise_id": row["id"], "set_number": 2, "weight_kg": 47.5, "reps": 8,
+             "rpe": 9, "rest_seconds": 90, "completed_at": "2026-11-05T07:55:00"},
         ]})
+    # Sin plantilla: no hay plan que exportar, todas las series a `null`.
     s1 = _session(h, {
         "name": "Empuje A",
         "started_at": "2026-11-03T18:00:00",
@@ -161,6 +202,9 @@ def run():
     assert banca["exercise_name"] == BENCH, banca
     assert banca["muscle_group"] == bench["muscle_group"], banca
 
+    # Sesión sin plantilla: el plan de cada serie es `null` (no se inventa).
+    assert _plan(banca["sets"]) == [(None, None), (None, None)], banca["sets"]
+
     calentamiento, trabajo = banca["sets"]
     assert set(calentamiento) == CLAVES_SERIE, calentamiento
     assert calentamiento["is_warmup"] is True, calentamiento
@@ -171,23 +215,20 @@ def run():
     assert calentamiento["completed_at"] == "2026-11-03T18:03:00", calentamiento
 
     assert set(trabajo) == CLAVES_SERIE, trabajo
-    assert trabajo == {
-        "set_number": 2, "weight_kg": 60.0, "reps": 8, "rpe": 8,
-        "is_warmup": False, "set_type": "normal", "rest_seconds": 150,
-        "completed_at": "2026-11-03T18:10:00",
-    }, trabajo
+    assert trabajo == _serie(2, 60.0, 8, 8, 150, "2026-11-03T18:10:00", None, None), trabajo
+    # El calentamiento y el trabajo sin plan también van con las claves nuevas.
+    assert calentamiento == _serie(
+        1, 40.0, 10, None, None, "2026-11-03T18:03:00", None, None,
+        is_warmup=True, set_type="warmup"), calentamiento
 
     assert set(remo) == CLAVES_EJERCICIO, remo
     assert remo["exercise_id"] == row["id"], remo
     assert remo["exercise_name"] == ROW, remo
     assert remo["muscle_group"] == row["muscle_group"], remo
-    assert remo["sets"] == [{
-        "set_number": 1, "weight_kg": 50.0, "reps": 10, "rpe": 7,
-        "is_warmup": False, "set_type": "normal", "rest_seconds": 90,
-        "completed_at": "2026-11-03T18:20:00",
-    }], remo["sets"]
+    assert remo["sets"] == [_serie(
+        1, 50.0, 10, 7, 90, "2026-11-03T18:20:00", None, None)], remo["sets"]
 
-    # --- 2. Segunda sesión: duración, tonelaje, plantilla y series ----------
+    # --- 2. Segunda sesión: plan por serie, duración, tonelaje y plantilla ---
     segunda = sesiones[1]
     assert set(segunda) == CLAVES_SESION, segunda
     assert segunda["name"] == "Empuje B", segunda["name"]
@@ -195,18 +236,38 @@ def run():
     assert segunda["started_at"] == "2026-11-05T07:30:00", segunda["started_at"]
     assert segunda["finished_at"] == "2026-11-05T08:00:00", segunda["finished_at"]
     assert segunda["duration_min"] == 30.0, segunda["duration_min"]
-    # 80×5 + 82.5×3 = 647.5 kg.
-    assert segunda["total_tonnage_kg"] == 647.5, segunda["total_tonnage_kg"]
+    # 80×5 + 82.5×3 + 85×2 + 50×10 + 47.5×8 = 1697.5 kg.
+    assert segunda["total_tonnage_kg"] == 1697.5, segunda["total_tonnage_kg"]
     assert segunda["template_id"] == plantilla["id"], segunda["template_id"]
-    assert segunda["sets_count"] == 2, segunda["sets_count"]
-    assert segunda["exercises_count"] == 1, segunda["exercises_count"]
+    assert segunda["sets_count"] == 5, segunda["sets_count"]
+    assert segunda["exercises_count"] == 2, segunda["exercises_count"]
 
-    series_b = segunda["exercises"][0]["sets"]
-    assert [s["set_number"] for s in series_b] == [1, 2], series_b
-    assert [s["weight_kg"] for s in series_b] == [80.0, 82.5], series_b
-    assert [s["reps"] for s in series_b] == [5, 3], series_b
-    assert [s["completed_at"] for s in series_b] == [
-        "2026-11-05T07:33:00", "2026-11-05T07:36:00"], series_b
+    banca_b, remo_b = segunda["exercises"]
+    series_b = banca_b["sets"]
+    assert [s["set_number"] for s in series_b] == [1, 2, 3], series_b
+    # Plan de la banca: objetivos 60/65/70 × 8 emparejados por `set_number`.
+    assert _plan(series_b) == [(60.0, 8), (65.0, 8), (70.0, 8)], series_b
+    assert isinstance(series_b[0]["planned_weight_kg"], float), series_b[0]
+    assert isinstance(series_b[0]["planned_reps"], int), series_b[0]
+    assert series_b == [
+        _serie(1, 80.0, 5, 9, 180, "2026-11-05T07:33:00", 60.0, 8),
+        _serie(2, 82.5, 3, 10, 180, "2026-11-05T07:36:00", 65.0, 8),
+        _serie(3, 85.0, 2, 10, 180, "2026-11-05T07:40:00", 70.0, 8),
+    ], series_b
+    assert all(set(s) == CLAVES_SERIE for s in series_b), series_b
+
+    # El plan del remo solo fija la 1ª serie: la 2ª no tiene objetivo -> null.
+    assert _plan(remo_b["sets"]) == [(50.0, 10), (None, None)], remo_b["sets"]
+    assert remo_b["sets"] == [
+        _serie(1, 50.0, 10, 8, 90, "2026-11-05T07:50:00", 50.0, 10),
+        _serie(2, 47.5, 8, 9, 90, "2026-11-05T07:55:00", None, None),
+    ], remo_b["sets"]
+
+    # El detalle de sesión ya calculaba el plan: la exportación no puede divergir.
+    detalle = client.get(f"{API}/strength/sessions/{s2['id']}", headers=h)
+    assert detalle.status_code == 200, detalle.text
+    detalle_series = [s for ex in detalle.json()["exercises"] for s in ex["sets"]]
+    assert _plan(detalle_series) == _plan(series_b) + _plan(remo_b["sets"]), detalle_series
 
     # --- 3. Filtros from/to sobre `started_at` ------------------------------
     assert [s["id"] for s in _export(h, **{"from": "2026-11-04"})["sessions"]] == \
@@ -237,10 +298,32 @@ def run():
 
     assert client.get(f"{API}/strength/export").status_code == 401
 
-    print("SUCCESS: exportación cronológica con dos sesiones (980 y 647.5 kg), "
-          "calentamiento excluido del tonelaje, series con peso/reps/set_number, "
-          "ejercicio y grupo muscular, template_id, filtros from/to, 422 en rango "
-          "inválido y lista vacía para usuario ajeno y sin datos.")
+    # --- 5. Sesión que apunta a una plantilla que ya no existe --------------
+    # No debe romper la exportación: el plan de sus series es `null`.
+    huerfana = _session(h, {
+        "name": "Huérfana",
+        "template_id": "00000000-0000-0000-0000-000000000000",
+        "started_at": "2026-11-07T10:00:00",
+        "finished_at": "2026-11-07T10:20:00",
+        "sets": [
+            {"exercise_id": bench["id"], "set_number": 1, "weight_kg": 70, "reps": 8,
+             "rpe": 8, "rest_seconds": 120,
+             "completed_at": "2026-11-07T10:05:00"},
+        ]})
+    huerfana_exp = _export(h, **{"from": "2026-11-07", "to": "2026-11-07"})["sessions"]
+    assert [s["id"] for s in huerfana_exp] == [huerfana["id"]], huerfana_exp
+    assert huerfana_exp[0]["template_id"] == "00000000-0000-0000-0000-000000000000", \
+        huerfana_exp[0]["template_id"]
+    assert _plan(huerfana_exp[0]["exercises"][0]["sets"]) == [(None, None)], \
+        huerfana_exp[0]["exercises"][0]["sets"]
+
+    print("SUCCESS: exportación cronológica con dos sesiones (980 y 1697.5 kg), plan "
+          "por serie desde la plantilla (banca 60/65/70×8, remo con la 2ª serie sin "
+          "objetivo), `null` en la sesión sin plantilla y en la que apunta a una "
+          "plantilla borrada, mismo plan que el detalle de sesión, calentamiento "
+          "excluido del tonelaje, series con peso/reps/set_number, ejercicio y grupo "
+          "muscular, template_id, filtros from/to, 422 en rango inválido y lista "
+          "vacía para usuario ajeno y sin datos.")
 
 
 if __name__ == "__main__":

@@ -110,7 +110,7 @@ Actualizaciones por envío de imagen (`deploy/ship-image.ps1`) y verificación a
 | Producto móvil de punta a punta | 21 pantallas, PWA instalable por HTTPS y **arranque sin cobertura** verificado |
 | Integración con hardware real | Garmin Connect + watch-app Connect IQ para el fr255, con objetivos por serie e idempotencia |
 | Datos y análisis | Exportación CSV/JSON, progreso semanal y resumen con adherencia al plan |
-| Calidad y método | **69/69** pruebas frontend en 33 ficheros, **24/24** guiones de contrato backend, **4/4** pantallas de regresión visual, rojo → verde en cada arreglo, sin GitHub Actions |
+| Calidad y método | **73/73** pruebas frontend en 34 ficheros, **24/24** guiones de contrato backend, **4/4** pantallas de regresión visual, rojo → verde en cada arreglo, sin GitHub Actions |
 | Despliegue y operación | Docker, HTTPS del tailnet, verificación automática del despliegue, sin exponer la app a Internet |
 | Comunicación | Documentación operativa, guía de uso en 3 pasos, dossier de interfaz y este caso |
 
@@ -148,6 +148,7 @@ historial con exportación CSV/JSON, progreso, ajustes y arranque sin cobertura�
 - Repositorio: <https://github.com/ErDeivih/garmin-athletics>
 - Demo privada (tailnet): `https://servidor.tail4263a0.ts.net` — se enseña en directo.
 - `PORTFOLIO.md` · `DESPLIEGUE.md` · `docs/USO-MOVIL.md` ·
+  `docs/VIA-ENVIO-RELOJ.md` (vías de envío a Garmin, con fuentes y fechas) ·
   `docs/revision-interfaz-movil.md` · `PENDIENTE-PRUEBA-RELOJ.md`
 - Código: `frontend-nuevo/` (React), `backend/` (FastAPI), `watch/lyfta-watch/` (Connect IQ),
   `deploy/` (Docker y operación).

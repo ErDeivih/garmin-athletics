@@ -75,6 +75,9 @@ export function SessionHistoryPage() {
       {errorExportacion ? (
         <p role="alert" className="mb-2 text-body text-danger">{errorExportacion}</p>
       ) : null}
+      <p className="mb-2 text-caption text-ink-faint">
+        El CSV lleva una fila por serie con el peso y las reps <strong>previstos frente a los reales</strong>.
+      </p>
 
       {items.length === 0 ? (
         <EmptyState

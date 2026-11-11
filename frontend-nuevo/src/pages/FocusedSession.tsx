@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { ChevronLeft, Check, X } from 'lucide-react';
 import { Button, Card, PageHeader, SectionTitle } from '../components/ui';
+import { PlateBreakdown } from '../components/PlateBreakdown';
+import { repartirDiscos } from '../lib/discos';
 import { formatNumber } from '../lib/format';
-import { formatWeight, type WeightUnit } from '../lib/units';
+import { formatWeight, toKg, type WeightUnit } from '../lib/units';
 
 /**
  * Modo enfocado para el gimnasio: una sola serie a la vista, botón grande de
@@ -153,6 +155,7 @@ export function FocusedSession({
                 {formatWeight(numero(set.weight), unit)}
               </span>
               <span className="mt-1 block text-body text-ink-muted">× {set.reps} reps</span>
+              <PlateBreakdown reparto={repartirDiscos(toKg(numero(set.weight), unit))} />
             </div>
           </Card>
 

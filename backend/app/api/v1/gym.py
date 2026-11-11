@@ -316,6 +316,42 @@ async def _template_out(db: AsyncSession, tpl: WorkoutTemplate) -> Dict[str, Any
     }
 
 
+async def _load_planned_targets(
+        db: AsyncSession, sessions: List[WorkoutSession]
+) -> Dict[str, Dict[str, Dict[int, Dict[str, Any]]]]:
+    """Objetivo por serie de la plantilla de cada sesión, para comparar planificado y real.
+
+    Devuelve `{template_id: {exercise_id: {set_number: target}}}` con los
+    `set_targets` tal cual los guardó la plantilla (misma fuente y mismo
+    emparejamiento por ejercicio + `set_number` que usa el detalle de sesión).
+    Una sesión sin plantilla, cuya plantilla ya no existe o cuya plantilla es de
+    otro atleta no aparece en el mapa: sus series quedan con el plan a `null`.
+
+    Se resuelve en una sola consulta para no hacer N+1 al exportar el historial.
+    """
+    template_ids = {s.template_id for s in sessions if s.template_id}
+    if not template_ids:
+        return {}
+    user_ids = {s.user_id for s in sessions}
+    # Solo la plantilla del propio atleta: una sesión que apunte a un
+    # `template_id` ajeno no debe enseñar el plan de otra persona.
+    tpl_rows = (await db.execute(
+        select(TemplateExercise)
+        .join(WorkoutTemplate, TemplateExercise.template_id == WorkoutTemplate.id)
+        .where(TemplateExercise.template_id.in_(template_ids),
+               WorkoutTemplate.user_id.in_(user_ids))
+    )).scalars().all()
+    planned: Dict[str, Dict[str, Dict[int, Dict[str, Any]]]] = {}
+    for row in tpl_rows:
+        por_serie = planned.setdefault(row.template_id, {}).setdefault(
+            row.exercise_id, {})
+        for target in (row.set_targets or []):
+            if not isinstance(target, dict) or target.get("set_number") is None:
+                continue
+            por_serie[int(target["set_number"])] = target
+    return planned
+
+
 async def _session_out(db: AsyncSession, sess: WorkoutSession) -> Dict[str, Any]:
     res = await db.execute(
         select(SessionSet).where(SessionSet.session_id == sess.id)
@@ -325,21 +361,7 @@ async def _session_out(db: AsyncSession, sess: WorkoutSession) -> Dict[str, Any]
 
     # Plan por serie: se lee de la plantilla de la sesión y se empareja por
     # ejercicio + número de serie. Sin plantilla no hay plan que comparar.
-    planned: Dict[tuple, Dict[str, Any]] = {}
-    if sess.template_id:
-        # Solo la plantilla del propio atleta: una sesión que apunte a un
-        # `template_id` ajeno no debe enseñar el plan de otra persona.
-        tpl_rows = (await db.execute(
-            select(TemplateExercise)
-            .join(WorkoutTemplate, TemplateExercise.template_id == WorkoutTemplate.id)
-            .where(TemplateExercise.template_id == sess.template_id,
-                   WorkoutTemplate.user_id == sess.user_id)
-        )).scalars().all()
-        for row in tpl_rows:
-            for target in (row.set_targets or []):
-                if not isinstance(target, dict) or target.get("set_number") is None:
-                    continue
-                planned[(row.exercise_id, int(target["set_number"]))] = target
+    planned = (await _load_planned_targets(db, [sess])).get(sess.template_id, {})
 
     grouped: Dict[str, List[SessionSet]] = {}
     for s in sets:
@@ -350,9 +372,10 @@ async def _session_out(db: AsyncSession, sess: WorkoutSession) -> Dict[str, Any]
         ss.sort(key=lambda x: (x.set_number, x.id))
         ordered = sorted(ss, key=lambda x: (x.position, x.set_number))
         sets_out = []
+        plan_ejercicio = planned.get(ex_id, {})
         for x in ordered:
             serie = _set_out(x)
-            serie.update(_planned_target(planned.get((ex_id, int(x.set_number)))))
+            serie.update(_planned_target(plan_ejercicio.get(int(x.set_number))))
             sets_out.append(serie)
         exercises.append({
             "exercise": _exercise_brief(ex_map.get(ex_id)),
@@ -1420,21 +1443,32 @@ CAMPOS_SERIE_EXPORT = (
 )
 
 
-def _export_set(serie: SessionSet) -> Dict[str, Any]:
-    """Serie con los campos del contrato, en el formato de `_set_out`."""
+def _export_set(serie: SessionSet,
+                planned: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Serie con los campos del contrato, en el formato de `_set_out`, más su plan.
+
+    El plan se pinta con `_planned_target`, el mismo helper del detalle de sesión:
+    así el CSV «previsto vs real» no puede divergir de la ficha de la sesión.
+    """
     completa = _set_out(serie)
-    return {campo: completa[campo] for campo in CAMPOS_SERIE_EXPORT}
+    item = {campo: completa[campo] for campo in CAMPOS_SERIE_EXPORT}
+    item.update(_planned_target(planned))
+    return item
 
 
 def _export_exercise(exercise_id: str, exercise: Optional[Exercise],
-                     series: List[SessionSet]) -> Dict[str, Any]:
+                     series: List[SessionSet],
+                     planned: Optional[Dict[int, Dict[str, Any]]] = None,
+                     ) -> Dict[str, Any]:
     """Ejercicio de la exportación: nombre y grupo planos, con sus series ordenadas."""
     brief = _exercise_brief(exercise) or {}
+    programado = planned or {}
     return {
         "exercise_id": exercise_id,
         "exercise_name": brief.get("name") or "Ejercicio ya borrado",
         "muscle_group": brief.get("muscle_group") or "sin_clasificar",
-        "sets": [_export_set(s) for s in series],
+        "sets": [_export_set(s, programado.get(int(s.set_number)))
+                 for s in series],
     }
 
 
@@ -1451,6 +1485,8 @@ async def export_history(
 
     Es una foto plana para exportar (CSV/backup), no una vista de pantalla: no
     pagina y solo filtra por dueño de la sesión y por el rango de `started_at`.
+    Cada serie lleva además `planned_weight_kg`/`planned_reps` (el objetivo de la
+    plantilla para esa serie), para poder comparar previsto contra real.
     """
     if from_date and to_date and from_date > to_date:
         raise HTTPException(status_code=422,
@@ -1482,9 +1518,14 @@ async def export_history(
     exercises_by_id = await _load_exercises_by_id(
         db, [f.exercise_id for filas in series_por_sesion.values() for f in filas])
 
+    # Plan por serie de todas las plantillas implicadas, en una sola consulta.
+    planned_por_plantilla = await _load_planned_targets(db, sesiones)
+
     items = []
     for sesion in sesiones:
         series = series_por_sesion.get(sesion.id, [])
+        # Sin plantilla (o con una plantilla borrada/ajena) no hay plan: series a null.
+        plan_sesion = planned_por_plantilla.get(sesion.template_id, {})
         agrupadas: Dict[str, List[SessionSet]] = {}
         posiciones: Dict[str, int] = {}
         for serie in series:
@@ -1495,7 +1536,8 @@ async def export_history(
         for exercise_id, ss in agrupadas.items():
             ss.sort(key=lambda x: (x.position, x.set_number, x.id))
             ejercicios.append(
-                _export_exercise(exercise_id, exercises_by_id.get(exercise_id), ss))
+                _export_exercise(exercise_id, exercises_by_id.get(exercise_id), ss,
+                                 plan_sesion.get(exercise_id)))
         # Mismo criterio que el detalle: orden de aparición del ejercicio en la sesión.
         ejercicios.sort(key=lambda e: (posiciones[e["exercise_id"]], e["exercise_id"]))
         resumen = _session_summary(sesion, len(series), len(ejercicios))

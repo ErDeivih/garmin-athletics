@@ -12,7 +12,7 @@ progreso y resumen semanal exportable.
 |---|---|
 | Producto | En uso: planificar → enviar al reloj → entrenar → corregir → historial |
 | PWA | Instalable por HTTPS y con **arranque sin cobertura** (verificado) |
-| Pruebas | **69/69** frontend (33 ficheros) · **24/24** guiones de backend · **4/4** pantallas de regresión visual |
+| Pruebas | **73/73** frontend (34 ficheros) · **24/24** guiones de backend · **4/4** pantallas de regresión visual |
 | Pendiente | **Prueba física con el reloj** (único punto que requiere el fr255 y el 2FA de Garmin) |
 
 ## Capturas
@@ -35,7 +35,8 @@ historial, exportación CSV/JSON, progreso, ajustes y arranque sin cobertura).
   la serie sola y devuelve las series de forma idempotente.
 - **Entrenar**: pantalla de sesión con peso, reps, esfuerzo y «Hecha» por serie; **modo
   enfocado** de una mano (serie actual, peso objetivo grande, botón de «Serie hecha»,
-  registro rápido de reps/RPE y descanso con temporizador); borrador guardado en el móvil que
+  registro rápido de reps/RPE y descanso con temporizador); **calculadora de discos** (barra y
+  discos por lado, con aviso si el inventario no llega); borrador guardado en el móvil que
   sobrevive a recargas y a quedarse sin cobertura; resumen con volumen y reparto muscular.
 - **Historial y análisis**: lista con fecha/duración/volumen/series; detalle con
   **planificado frente a real**; corrección posterior; exportación **CSV/JSON**; progreso por
@@ -105,6 +106,7 @@ El backend sirve `frontend-nuevo/dist` cuando existe (una sola URL en producció
 
 - [`PORTFOLIO.md`](PORTFOLIO.md) — resumen de candidatura: problema, competencias y enlaces.
 - [`docs/CASO-GARMIN.md`](docs/CASO-GARMIN.md) — caso técnico: producto, arquitectura y decisiones.
+- [`docs/VIA-ENVIO-RELOJ.md`](docs/VIA-ENVIO-RELOJ.md) — **vía de envío al reloj** (API Personal, Training API y plan B con Connect IQ) con fuentes y fechas.
 - [`docs/USO-MOVIL.md`](docs/USO-MOVIL.md) — instalación en 3 pasos y lo que falta para el reloj.
 - [`DESPLIEGUE.md`](DESPLIEGUE.md) — despliegue, HTTPS del tailnet y operación.
 - [`docs/revision-interfaz-movil.md`](docs/revision-interfaz-movil.md) — dossier de interfaz con 10 problemas y su arreglo.

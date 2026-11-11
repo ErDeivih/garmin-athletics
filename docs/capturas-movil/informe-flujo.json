@@ -1,7 +1,7 @@
 {
   "app": "http://192.168.1.139:8011",
-  "cuenta": "flujo+1794339383637@example.com",
-  "plantilla": "1d83e0e5-474b-4f27-aa13-2deb0a132cca",
+  "cuenta": "flujo+1794394183165@example.com",
+  "plantilla": "9e465a35-c26e-45ca-bb7c-5e40ed1b38f8",
   "checks": {
     "plantilla_creada": "set_targets=60/65/70",
     "titulo": "Lyfta",
@@ -20,13 +20,14 @@
     "envio_confirmado_simulado": true,
     "modo_enfocado": true,
     "registro_rapido": true,
+    "discos": true,
     "sin_conexion": {
       "borrador_guardado": true,
       "recarga_sin_red": "falla (sin HTTPS no hay service worker que sirva el shell)",
       "peso_restaurado_al_volver": "61"
     },
     "sesion_guardada": {
-      "id": "a41796ad-c9ff-4468-ac02-fea2706db74e",
+      "id": "4b051c7a-fca8-416b-bb2f-f2bcecaac1e6",
       "series": 3,
       "pesos": [
         60,
@@ -74,7 +75,7 @@
     "plantilla_desde_sesion": true,
     "exportar_historial": true,
     "resumen_semanal": true,
-    "errores_consola_esperados": 1
+    "errores_consola_esperados": 2
   },
   "capturas": [
     "01-login-movil.png",
@@ -87,6 +88,7 @@
     "04b-envio-enviado.png",
     "26-sesion-enfocada.png",
     "27-registro-rapido.png",
+    "28-discos-en-sesion.png",
     "06-entrenar.png",
     "07-sesion-terminada.png",
     "08-sesion-guardada.png",
@@ -109,6 +111,7 @@
     "25-resumen-semanal.png"
   ],
   "erroresConsola": [
+    "Failed to load resource: the server responded with a status of 400 (Bad Request)",
     "Failed to load resource: the server responded with a status of 400 (Bad Request)"
   ],
   "resultado": "OK"

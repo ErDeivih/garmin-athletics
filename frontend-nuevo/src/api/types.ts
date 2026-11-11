@@ -400,6 +400,8 @@ export interface HistoryExportSet {
   set_number: number;
   weight_kg: number;
   reps: number;
+  planned_weight_kg: number | null;
+  planned_reps: number | null;
   rpe: number | null;
   is_warmup: boolean;
   set_type: string;

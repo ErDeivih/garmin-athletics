@@ -253,6 +253,9 @@ try {
   await pagina.getByRole('button', { name: /saltar descanso/i }).click().catch(() => {});
   await pagina.getByRole('button', { name: /volver a la lista/i }).click();
   await pagina.getByRole('heading', { name: 'Entrenar', exact: true }).waitFor({ timeout: 20000 });
+  await pagina.getByText(/discos:/i).first().waitFor({ timeout: 20000 });
+  await captura('28-discos-en-sesion', { espera: 500 });
+  checks.discos = true;
   for (const serie of [2, 3]) {
     await pagina.getByRole('checkbox', { name: new RegExp(`serie ${serie} de ${nombreEjercicio}`, 'i') }).click();
     await pagina.waitForTimeout(700);

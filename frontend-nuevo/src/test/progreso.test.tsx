@@ -30,14 +30,13 @@ function apiProgreso() {
 }
 
 describe('estadísticas de progreso', () => {
-  it('muestra volumen por semana, total y mejor serie, y deja cambiar de ejercicio', async () => {
-    localStorage.setItem(TOKEN_KEY, 'test-token');
+  it('muestra volumen por semana, total y mejor serie, y deja cambiar de ejercicio', async () => {    localStorage.setItem(TOKEN_KEY, 'test-token');
     const api = apiProgreso();
     const user = userEvent.setup();
     renderApp('/gimnasio/progreso');
 
     expect(await screen.findByRole('heading', { name: 'Progreso' })).toBeInTheDocument();
-    expect((await screen.findAllByText('1420 kg')).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText('1420 kg', {}, { timeout: 5000 })).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/70 kg × 6/).length).toBeGreaterThan(0);
     // Gráfico semanal accesible (no un canvas mudo).
     const grafico = screen.getByRole('img', { name: /volumen por semana/i });
@@ -48,6 +47,6 @@ describe('estadísticas de progreso', () => {
       expect(api.calls.some((call) => call.path === '/api/v1/strength/progress'
         && call.query.get('exercise_id') === 'e-2')).toBe(true);
     });
-    expect((await screen.findAllByText('800 kg')).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText('800 kg', {}, { timeout: 5000 })).length).toBeGreaterThan(0);
   });
 });

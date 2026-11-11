@@ -74,6 +74,15 @@ crear entrenamientos de gimnasio, llevarlos al reloj y analizar todo.
   reales y RPE opcional por serie y **temporizador de descanso**; la nota de la sesión se
   guarda con el registro final. Prueba rojo → verde: `sesion-enfocada` (falla sin el botón
   «Modo enfocado»). Capturas `26-sesion-enfocada`, `27-registro-rapido`.
+- [x] Vía de envío al reloj documentada. — 2026-11-11. `docs/VIA-ENVIO-RELOJ.md` con la
+  **API Personal** (oct. 2026, solo lectura) y la **Training API** del programa Business,
+  decisión y **plan B con Connect IQ**; cada afirmación con fuente y fecha. Captura
+  `28-discos-en-sesion` y CSV con previsto frente a real por serie.
+- [x] Calculadora de discos y CSV previsto vs real. — 2026-11-11. Reparto de barra y discos
+  por lado en sesión y modo enfocado (`lib/discos.ts`, con aviso si falta peso) y CSV del
+  historial con **peso/reps previstos frente a reales** y diferencia en kg (`planned_weight_kg`
+  y `planned_reps` en el export). Pruebas rojo → verde: `discos`, `exportar-historial`,
+  `sesion-enfocada`; captura `28-discos-en-sesion`.
 - [ ] Watch-app Connect IQ propia (después del camino A). — **en curso**: `watch/lyfta-watch/`
   diseñada, implementada y compilada para fr255 y 4 perfiles más; backend `/watch/today` y
   `/watch/sets` probado; sensor de repeticiones y estimación de fuerza añadidos. Capturas del
@@ -84,13 +93,13 @@ reloj y el análisis está completo.
 
 ## Evidencia
 
-- Frontend: 69/69 pruebas en 33 ficheros (incluye PWA, servido SPA, pesos por serie, aviso del reloj real, biblioteca con filtros/duplicado, editor rápido, historial, JSON de planes, unidades, onboarding, progreso, exportación, resumen semanal y modo enfocado).
+- Frontend: 73/73 pruebas en 34 ficheros (incluye PWA, servido SPA, pesos por serie, aviso del reloj real, biblioteca con filtros/duplicado, editor rápido, historial, JSON de planes, unidades, onboarding, progreso, exportación, resumen semanal, modo enfocado y discos).
 - Backend: 24/24 scripts (incluye perfil IMU en seco, auto-carga, watch-app, rutas, calendario recurrente, servido del frontend, corrección de pesos, biblioteca/planificado, progreso semanal y exportación del historial).
 - Despliegue: `deploy/verify-server.sh` en verde el 2026-11-09 — salud, rutas profundas, cabeceras del service worker y datos migrados. Captura del móvil contra la URL desplegada: `frontend-nuevo/screenshots/30-despliegue-login.png`.
 - Flujo móvil contra el despliegue: `scripts/flujo-movil-desplegado.mjs` recorre plan (60/65/70) → edición guardada en servidor → `dry_run` con `unmapped: []` → envío sin credencial (400 limpio) → 3 series → sesión guardada **con 60/65/70** (`coincide: true`); 8 capturas a 390 px e informe en `docs/capturas-movil/`, con las de antes en `antes/`.
 - Revisión de interfaz: `docs/revision-interfaz-movil.md` — inventario de las 6 pantallas del flujo, 17 capturas a 390 px, 10 problemas con evidencia y su arreglo CSS/texto, y el antes/después del arreglo de pesos por serie.
 - Regresión visual: 4/4 pantallas, 0 píxeles distintos, con la línea base regenerada por los cambios de esta tanda (editor rápido, enlace al historial y «Reloj real») en la instancia de verificación.
-- Capturas de la tanda de producto: `docs/capturas-movil/11`–`17` (historial, planificado vs real, biblioteca con filtros, duplicar, copia, editor rápido y aplicado), `00`, `18`–`20` (onboarding, JSON de planes, ajustes y unidades en lb), `21`–`25` (progreso, aplicar a un día, sesión como plantilla, exportar historial y resumen semanal) y `26`–`27` (modo enfocado y registro rápido), a 390 × 844.
+- Capturas de la tanda de producto: `docs/capturas-movil/11`–`17` (historial, planificado vs real, biblioteca con filtros, duplicar, copia, editor rápido y aplicado), `00`, `18`–`20` (onboarding, JSON de planes, ajustes y unidades en lb), `21`–`25` (progreso, aplicar a un día, sesión como plantilla, exportar historial y resumen semanal), `26`–`27` (modo enfocado y registro rápido) y `28` (calculadora de discos), a 390 × 844.
 - Instalación PWA verificada: ventana de aplicación (`display-mode: standalone`, sin barra
   del navegador) con service worker controlando y **arranque sin cobertura**
   (`onLine: false`, `transferSize: 0`, `workerStart > 0`). Informe

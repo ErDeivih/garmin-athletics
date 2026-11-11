@@ -78,6 +78,9 @@ describe('modo enfocado en el gimnasio', () => {
     expect(screen.getByRole('heading', { name: 'Press de banca con barra' })).toBeInTheDocument();
     expect(screen.getByLabelText('Serie 1 de 2')).toBeInTheDocument();
     expect(screen.getByText('60 kg')).toBeInTheDocument();
+    // Calculadora de discos: 60 kg = barra de 20 + un disco de 20 por lado.
+    expect(screen.getByText(/discos:/i)).toBeInTheDocument();
+    expect(screen.getByText(/20 por lado/i)).toBeInTheDocument();
 
     // Registro rápido: reps reales (7 en vez de 8) y RPE opcional.
     await user.click(screen.getByRole('button', { name: /^serie hecha$/i }));

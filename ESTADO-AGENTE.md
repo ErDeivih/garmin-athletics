@@ -1,39 +1,34 @@
 titulo: Lyfta — entrenamiento, reloj y análisis
 estado: producto completo y desplegado; en-espera de la prueba física del reloj
-tarea: tanda repetida por tercera vez (caso, exportar CSV y resumen semanal ya entregados); verificada, sin cambios pendientes
+tarea: documentar la vía de envío al reloj (API Personal / Training API / plan B Connect IQ, con fuentes y fecha), calculadora de discos y CSV previsto vs real por serie
 nivel: 2
-siguiente: David entrega el resultado de la prueba del reloj o una tarea distinta; si no, no hay nada que hacer en esta tanda
-bloqueado: repetición del mismo encargo ya entregado + prueba física del fr255 (2FA/reloj de David)
-fecha: 2026-11-10
-resumen: Caso de portfolio (arquitectura PWA + Connect IQ, 69/69 y 24/24, pendiente reloj), exportación CSV y resumen semanal por grupo con adherencia ya están entregados y desplegados; la tanda ha vuelto a llegar repetida.
+siguiente: David instala la PWA desde https://servidor.tail4263a0.ts.net (3 pasos) y ejecuta la prueba del reloj de docs/USO-MOVIL.md
+bloqueado: prueba física del fr255 (2FA/reloj de David)
+fecha: 2026-11-11
+resumen: Vía de envío al reloj documentada con fuentes y fechas (API Personal solo lectura, Training API Business y plan B Connect IQ), calculadora de discos en sesión/modo enfocado y CSV con previsto frente a real; 73/73 frontend y 24/24 backend en verde, captura 28.
 
 ## Bloqueo
 
-**Situación (2026-11-10, 22:55):** llega por tercera vez una tanda ya entregada. Las tres
-tareas están cerradas y comprobadas ahora mismo; no rehago lo mismo en silencio.
+**Situación (2026-11-11, 11:45):** la tanda está entregada y desplegada. Lo único que no puedo
+cerrar es la aceptación con el reloj físico; el resto está verificado.
 
-**(a) Dónde me quedé.** Verificado contra el repositorio y el despliegue:
-- `docs/CASO-GARMIN.md` con arquitectura PWA + Connect IQ, qué demuestra, tres capturas clave y
-  pendiente del reloj; cifras actualizadas a **69/69** frontend (33 ficheros) y **24/24** backend
-  (commit `b5648ad`, actualizado en `a03e871`).
-- **Exportar historial** CSV/JSON: `GET /api/v1/strength/export` responde **401** (existe y pide
-  sesión) y la captura `24-exportar-historial.png` está en el repo (entrega `5ae6a0b`).
-- **Resumen semanal** con volumen, series por grupo muscular y adherencia al plan:
-  `GET /api/v1/strength/stats` responde **401** y `25-resumen-semanal.png` está en el repo
-  (entrega `5ae6a0b`).
-- Árbol limpio, `master` = `origin/master`, suites verdes en la última pasada (69/69 y 24/24).
+**(a) Dónde me quedé.** `docs/VIA-ENVIO-RELOJ.md` escrito y contrastado (Personal API de octubre
+de 2026: clave + token de 24 h, solo lectura; Training API del programa Business: push y
+aprobación; cliente no oficial en producción; plan B con Connect IQ vía Communications y
+ActivityRecording). Calculadora de discos integrada con prueba propia, y CSV del historial con
+`peso_previsto_kg`/`peso_real_kg`/`difs` (backend ampliado por el compañero). Suites: 73/73
+frontend, 24/24 backend. Captura `28-discos-en-sesion`.
 
 **(b) Qué falta revisar.**
-1. La **prueba física del fr255** (envío, peso por serie en el reloj, vuelta de una serie real y
-   medición del detector de repeticiones): único pendiente real del producto.
-2. El encargo vuelve a citar **65/65 y 23/23**, que son cifras de una tanda anterior; las reales
-   son **69/69** y **24/24**. No las cambio a las antiguas sin confirmación.
-3. Confirmar el **sufijo del tailnet** (`servidor.tail4263a0.ts.net` funciona; `ta4283ad.ts.net`
-   no resuelve).
+1. **Prueba física del fr255**: enviar, comprobar peso por serie en el reloj, que vuelva una serie
+   real y medir el detector de reps (≥95 % con error ≤1).
+2. Si conviene **migrar ya** la lectura de actividades a la Personal API (solo lectura) mientras
+   el envío sigue por el cliente no oficial.
+3. Sufijo del tailnet: `servidor.tail4263a0.ts.net` funciona; `ta4283ad.ts.net` no resuelve.
 
-**(c) Qué necesito de David u otro chat.** El resultado de la prueba del reloj (o una tarea
-distinta y concreta); y que confirme si mantengo las cifras reales en el README y en el caso.
+**(c) Qué necesito de David.** El resultado de la prueba del reloj (reloj cargado y 2FA delante),
+o una tarea distinta; y que confirme si quiere que empiece la migración a la Personal API.
 
-**(d) Siguiente paso concreto.** No hay cambios que aplicar sin información nueva: en cuanto
-llegue el resultado del reloj, importo la actividad, contrasto `sets_imported`/`unmapped` y apago
-el aviso «Reloj real»; si prefiere, ejecuto cualquier ajuste de texto que pida sobre el caso.
+**(d) Siguiente paso concreto.** Con el resultado del envío y las reps contadas: importar la
+actividad, contrastar `sets_imported`/`unmapped`, medir el detector y apagar la tarjeta «Reloj
+real». Si no, siguiente mejora acordada: leer actividades con la Personal API (API key propia).

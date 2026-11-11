@@ -19,9 +19,9 @@ const historial = {
         {
           exercise_id: 'e-1', exercise_name: 'Press de banca', muscle_group: 'pecho',
           sets: [
-            { set_number: 1, weight_kg: 60, reps: 8, rpe: null, is_warmup: false, set_type: 'normal', rest_seconds: 60, completed_at: null },
-            { set_number: 2, weight_kg: 65, reps: 8, rpe: null, is_warmup: false, set_type: 'normal', rest_seconds: 60, completed_at: null },
-            { set_number: 3, weight_kg: 70, reps: 6, rpe: null, is_warmup: false, set_type: 'normal', rest_seconds: 60, completed_at: null },
+            { set_number: 1, weight_kg: 60, reps: 8, planned_weight_kg: 60, planned_reps: 8, rpe: null, is_warmup: false, set_type: 'normal', rest_seconds: 60, completed_at: null },
+            { set_number: 2, weight_kg: 65, reps: 8, planned_weight_kg: 65, planned_reps: 8, rpe: null, is_warmup: false, set_type: 'normal', rest_seconds: 60, completed_at: null },
+            { set_number: 3, weight_kg: 70, reps: 6, planned_weight_kg: 70, planned_reps: 6, rpe: null, is_warmup: false, set_type: 'normal', rest_seconds: 60, completed_at: null },
           ],
         },
       ],
@@ -64,12 +64,16 @@ describe('exportar el historial', () => {
     await waitFor(() => expect(descargas.length).toBeGreaterThan(0));
     const csv = await descargas[0]!.blob.text();
     const lineas = csv.trim().split('\n');
-    expect(lineas[0]).toContain('fecha');
-    expect(lineas[0]).toContain('peso_kg');
+    expect(lineas[0]).toContain('peso_previsto_kg');
+    expect(lineas[0]).toContain('peso_real_kg');
+    expect(lineas[0]).toContain('reps_previstas');
     // Cabecera + 3 series.
     expect(lineas.length).toBe(4);
     expect(csv).toContain('Press de banca');
     expect(csv).toContain('2026-11-10');
+    // Previsto vs real: dos series iguales y una con diferencia.
+    expect(lineas[1]).toContain(',60,60,8,8,0,');
+    expect(lineas[3]).toContain(',70,70,6,6,0,');
 
     click.mockRestore();
   });
