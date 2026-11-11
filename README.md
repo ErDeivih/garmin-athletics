@@ -107,6 +107,7 @@ El backend sirve `frontend-nuevo/dist` cuando existe (una sola URL en producció
 - [`PORTFOLIO.md`](PORTFOLIO.md) — resumen de candidatura: problema, competencias y enlaces.
 - [`docs/CASO-GARMIN.md`](docs/CASO-GARMIN.md) — caso técnico: producto, arquitectura y decisiones.
 - [`docs/EJEMPLO-SESION.md`](docs/EJEMPLO-SESION.md) — **sesión de ejemplo real**: capturas a 390 px, CSV por serie y JSON guardados.
+- [`docs/CASO-USO-REAL.md`](docs/CASO-USO-REAL.md) — **caso de uso real**: un día de empuje con tres pesos distintos, contado de principio a fin.
 - [`docs/ENVIO-AL-RELOJ.md`](docs/ENVIO-AL-RELOJ.md) — **vía de envío al reloj** (API Personal, Training API y plan B con Connect IQ) con fuentes y fechas.
 - [`docs/USO-MOVIL.md`](docs/USO-MOVIL.md) — instalación en 3 pasos y lo que falta para el reloj.
 - [`DESPLIEGUE.md`](DESPLIEGUE.md) — despliegue, HTTPS del tailnet y operación.

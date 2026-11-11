@@ -1,23 +1,23 @@
 titulo: Lyfta — entrenamiento, reloj y análisis
 estado: producto completo y desplegado; en-espera de la prueba física del reloj
-tarea: capturas de sesión y descanso a 390 px sin solapes, historial «60 → 62,5 kg» y vía de envío documentada en docs/ENVIO-AL-RELOJ.md
+tarea: capturas de sesión a 390 px sin solapes, historial «60 → 62,5 kg» y caso de uso real con tres pesos guardado en docs/
 nivel: 2
 siguiente: David instala la PWA desde https://servidor.tail4263a0.ts.net (3 pasos) y ejecuta la prueba del reloj de docs/USO-MOVIL.md
 bloqueado: prueba física del fr255 (2FA/reloj de David)
 fecha: 2026-11-11
-resumen: Capturas de sesión a 390 px con 24 controles ≥44×44 y 0 solapes (incluida la del descanso), historial «60 → 62,5 kg» y vía de envío con fuentes y plan B en docs/ENVIO-AL-RELOJ.md; 79/79 frontend y 25/25 backend.
+resumen: Capturas de sesión/descanso a 390 px medidas sin solapes, historial «60 → 62,5 kg» y caso de uso real (60/65/70 kg) documentado en docs/CASO-USO-REAL.md con capturas y CSV/JSON; 79/79 frontend y 25/25 backend.
 
 ## Bloqueo
 
-**Situación (2026-11-11, 15:40):** las tres tareas están hechas. Lo único abierto es la
+**Situación (2026-11-11, 15:55):** las tres tareas están hechas. Lo único abierto es la
 aceptación con el reloj físico.
 
-**(a) Dónde me quedé.** Captura nueva `32-descanso-sesion` (serie 2 de 3 con temporizador,
-«Saltar descanso» y «Serie hecha» deshabilitado mientras corre) y capturas 26/27; medición
-real en navegador: **24 controles, mínimo 44×44, 0 solapes, página 390 px**. Historial
-«60 → 62,5 kg» en `30-historial-diferencias`. Vía de envío en `docs/ENVIO-AL-RELOJ.md`
-(antes `VIA-ENVIO-RELOJ.md`) con API Personal, Training API, cliente actual y plan B
-Connect IQ, con fuentes y fechas.
+**(a) Dónde me quedé.** Capturas 26/27/**32** (serie, registro y descanso) a 390 px con
+medición real (`24 controles, mínimo 44×44, 0 solapes, página 390 px`) y captura 30 con
+**«60 → 62,5 kg»** y `+2,5 kg`. Caso de uso real documentado en `docs/CASO-USO-REAL.md`:
+día de empuje con **tres pesos distintos** (60/65/70), resultados (62,5/65/70, volumen 1440
+kg), CSV de tres filas y enlaces a `docs/ejemplo-sesion/`; límites declarados (sin envío
+real al reloj en la instancia de verificación).
 
 **(b) Qué falta revisar.** La **prueba física del fr255** (envío real, peso por serie en el
 reloj, vuelta de una serie y medición del detector de reps ≥95 % con error ≤1).

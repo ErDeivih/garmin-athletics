@@ -124,6 +124,10 @@ crear entrenamientos de gimnasio, llevarlos al reloj y analizar todo.
   (temporizador y «Saltar descanso»); medido en navegador: 24 controles, mínimo 44×44,
   **0 solapes**, página 390 px sin desbordar. Historial con «60 → 62,5 kg» en
   `30-historial-diferencias`. Vía de envío en `docs/ENVIO-AL-RELOJ.md` con fuentes y fechas.
+- [x] Caso de uso real documentado. — 2026-11-11. `docs/CASO-USO-REAL.md`: un día de
+  empuje con **tres pesos distintos** (60/65/70), ejecutado de punta a punta y enlazado a
+  las capturas y al CSV/JSON de `docs/ejemplo-sesion/`, con los límites declarados (sin
+  envío real al reloj en la instancia de verificación).
 - [ ] Watch-app Connect IQ propia (después del camino A). — **en curso**: `watch/lyfta-watch/`
   diseñada, implementada y compilada para fr255 y 4 perfiles más; backend `/watch/today` y
   `/watch/sets` probado; sensor de repeticiones y estimación de fuerza añadidos. Capturas del
