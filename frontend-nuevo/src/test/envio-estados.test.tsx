@@ -59,17 +59,19 @@ describe('estados del envío al reloj', () => {
     renderApp('/gimnasio');
 
     await screen.findByRole('heading', { name: 'Gimnasio' });
-    await user.click(await screen.findByRole('button', { name: /enviar al reloj/i }));
+    await user.click(await screen.findByRole('button', { name: /^enviar al reloj$/i }));
 
     // Garmin acepta el entreno, pero el reloj aún no ha confirmado.
     expect(await screen.findByText('Enviado a Garmin')).toBeInTheDocument();
     expect(screen.queryByText(/^recibido$/i)).not.toBeInTheDocument();
     expect(screen.getByText(/falta que el reloj confirme/i)).toBeInTheDocument();
     expect(screen.getAllByText('Enviado').length).toBeGreaterThan(0);
+    // Reintento disponible también cuando ya está enviado (por si hay que reenviar).
+    expect(screen.getByRole('button', { name: /reenviar al reloj/i })).toBeInTheDocument();
 
     // Ahora el reloj devuelve series: la app puede confirmar.
     ackConfirmado = true;
-    await user.click(screen.getByRole('button', { name: /enviar al reloj/i }));
+    await user.click(screen.getByRole('button', { name: /^enviar al reloj$/i }));
     await waitFor(() => expect(screen.getAllByText('Confirmado').length).toBeGreaterThan(0), { timeout: 10000 });
     expect(screen.getByText(/confirmado por el reloj/i)).toBeInTheDocument();
     expect(screen.getByText(/ha devuelto 2 series/i)).toBeInTheDocument();

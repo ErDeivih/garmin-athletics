@@ -175,6 +175,9 @@ export function GymPage() {
                     ? `El reloj ha devuelto ${ack.data?.sets_count ?? 0} series de hoy.`
                     : 'Falta que el reloj confirme: hasta que devuelva una serie no se da por recibido.'}
                 </p>
+                <Button variant="secondary" className="mt-2" onClick={startSend} disabled={push.isPending}>
+                  Reenviar al reloj
+                </Button>
               </div>
             ) : null}
             <p className="text-caption text-ink-faint">

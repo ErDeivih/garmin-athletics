@@ -109,6 +109,11 @@ crear entrenamientos de gimnasio, llevarlos al reloj y analizar todo.
   `peso_previsto`, `peso_real`, `dif`…): tres series → tres filas, verificado en `kg` y en
   `lb`. Pruebas `sesion-enfocada`, `historial-diferencias`, `exportar-historial` (3).
   Capturas `26`, `30` y `24` a 390 px.
+- [x] Onboarding visual del envío y reintento. — 2026-11-11. El paso 2 incluye un
+  **esquema Móvil → series (60/65/70 kg) → Reloj** que se entiende sin leer, además de los
+  tres pasos y la nota del fr255/2FA; el envío añade **Reenviar al reloj** también cuando ya
+  está «Enviado» (reintento sin salir de la tarjeta). Pruebas `onboarding` y `envio-estados`;
+  capturas `00-onboarding` y `04b-envio-enviado` regeneradas.
 - [ ] Watch-app Connect IQ propia (después del camino A). — **en curso**: `watch/lyfta-watch/`
   diseñada, implementada y compilada para fr255 y 4 perfiles más; backend `/watch/today` y
   `/watch/sets` probado; sensor de repeticiones y estimación de fuerza añadidos. Capturas del

@@ -31,6 +31,11 @@ describe('onboarding', () => {
     expect(screen.getByText(/2\..*env[ií]a/i)).toBeInTheDocument();
     expect(screen.getByText(/3\..*entrena/i)).toBeInTheDocument();
     expect(screen.getByText(/forerunner 255/i)).toBeInTheDocument();
+    // Esquema visual del envío: el plan sale del móvil y llega al reloj con sus series.
+    expect(screen.getByLabelText(/esquema: el plan sale del móvil/i)).toBeInTheDocument();
+    expect(screen.getByText('Móvil')).toBeInTheDocument();
+    expect(screen.getByText('Reloj')).toBeInTheDocument();
+    expect(screen.getByText(/serie · 60 kg/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /empezar/i }));
     expect(await screen.findByRole('heading', { name: 'Hoy' })).toBeInTheDocument();

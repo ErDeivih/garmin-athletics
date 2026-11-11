@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, CalendarCheck, Check, Send, Watch } from 'lucide-react';
+import { ArrowRight, CalendarCheck, Check, Send, Smartphone, Watch } from 'lucide-react';
 import { Button, Card, PageHeader } from '../components/ui';
 import { markOnboardingSeen } from '../lib/onboarding';
 
@@ -59,14 +59,39 @@ export function OnboardingPage({ onDone }: { onDone?: () => void }) {
       <div className="flex flex-col gap-3">
         {PASOS.map((paso) => {
           const Icono = paso.icono;
+          const esEnvio = paso.icono === Send;
           return (
             <Card key={paso.texto} className="flex items-start gap-3">
               <span className="mt-0.5 rounded-md bg-accent-soft p-2 text-accent">
                 <Icono aria-hidden="true" className="size-5" />
               </span>
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-body font-semibold text-ink">{paso.texto}</p>
                 <p className="mt-1 text-caption text-ink-muted">{paso.detalle}</p>
+                {esEnvio ? (
+                  <div
+                    aria-label="Esquema: el plan sale del móvil y llega al reloj"
+                    className="mt-2 flex items-center justify-center gap-2 rounded-md border border-line bg-raised px-2 py-2"
+                  >
+                    <span className="flex flex-col items-center gap-1">
+                      <Smartphone aria-hidden="true" className="size-5 text-accent" />
+                      <span className="text-caption text-ink-muted">Móvil</span>
+                    </span>
+                    <ArrowRight aria-hidden="true" className="size-4 text-ink-faint" />
+                    <span className="flex flex-col gap-1">
+                      {[60, 65, 70].map((kg) => (
+                        <span key={kg} className="tnum rounded-sm border border-line px-1.5 py-0.5 text-caption text-ink">
+                          Serie · {kg} kg
+                        </span>
+                      ))}
+                    </span>
+                    <ArrowRight aria-hidden="true" className="size-4 text-ink-faint" />
+                    <span className="flex flex-col items-center gap-1">
+                      <Watch aria-hidden="true" className="size-5 text-accent" />
+                      <span className="text-caption text-ink-muted">Reloj</span>
+                    </span>
+                  </div>
+                ) : null}
               </div>
             </Card>
           );

@@ -1,7 +1,7 @@
 {
   "app": "http://192.168.1.139:8011",
-  "cuenta": "flujo+1794402221880@example.com",
-  "plantilla": "7329cf45-388c-4bd0-afc8-d7473fea8014",
+  "cuenta": "flujo+1794404026771@example.com",
+  "plantilla": "35201113-bb08-40f2-99fa-3ba07e132cf3",
   "checks": {
     "plantilla_creada": "set_targets=60/65/70",
     "titulo": "Lyfta",
@@ -40,7 +40,7 @@
       "peso_restaurado_al_volver": "61"
     },
     "sesion_guardada": {
-      "id": "85143941-e04d-426e-83ea-1723bf147d67",
+      "id": "58faecee-2550-461d-aa5b-383d39181c44",
       "series": 3,
       "pesos": [
         60,
