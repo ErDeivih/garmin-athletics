@@ -140,29 +140,36 @@ function buildDraft(
   };
 }
 
-function RestTimer({ endsAt, now }: { endsAt: string | null; now: number }) {
+function RestTimer({ endsAt, now, onSkip }: { endsAt: string | null; now: number; onSkip?: () => void }) {
   if (!endsAt) return null;
   const ends = new Date(endsAt).getTime();
   const remaining = Math.max(0, Math.ceil((ends - now) / 1000));
   const minutes = Math.floor(remaining / 60);
   const seconds = remaining % 60;
   return (
-    <div
-      role="status"
-      className={`sticky top-14 z-10 mb-4 flex items-center justify-between gap-3 rounded-md border px-3 py-2 ${
-        remaining > 0 ? 'border-line-strong bg-raised' : 'border-success bg-success-soft'
-      }`}
-    >
-      <span className="flex items-center gap-2 text-caption uppercase tracking-wider text-ink-muted">
-        <TimerReset aria-hidden="true" className="size-4" />
-        Descanso
-      </span>
-      <span className={`tnum font-display text-title ${remaining > 0 ? 'text-ink' : 'text-success'}`}>
-        {remaining > 0 ? `${minutes}:${String(seconds).padStart(2, '0')}` : 'Listo'}
-      </span>
-      <span className="text-caption text-ink-faint">
-        {remaining > 0 ? 'Sigue aunque bloquees el móvil' : 'Puedes empezar la siguiente serie'}
-      </span>
+    <div className="pointer-events-none fixed inset-x-0 bottom-16 z-30 mx-auto w-full max-w-md px-4">
+      <div
+        role="status"
+        className={`pointer-events-auto flex items-center justify-between gap-2 rounded-lg border px-3 py-2 shadow-lg ${
+          remaining > 0 ? 'border-line-strong bg-raised' : 'border-success bg-success-soft'
+        }`}
+      >
+        <span className="flex items-center gap-1 text-caption uppercase tracking-wider text-ink-muted">
+          <TimerReset aria-hidden="true" className="size-4" />
+          Descanso
+        </span>
+        <span className={`tnum font-display text-title ${remaining > 0 ? 'text-ink' : 'text-success'}`}>
+          {remaining > 0 ? `${minutes}:${String(seconds).padStart(2, '0')}` : 'Listo'}
+        </span>
+        <button
+          type="button"
+          aria-label="Saltar descanso"
+          onClick={onSkip}
+          className="focus-ring min-h-11 min-w-11 rounded-md border border-line-strong px-2 text-caption font-semibold text-ink"
+        >
+          Saltar
+        </button>
+      </div>
     </div>
   );
 }
@@ -605,7 +612,7 @@ export function SessionPage() {
         </p>
       ) : null}
 
-      <RestTimer endsAt={draft.restEndsAt} now={now} />
+      <RestTimer endsAt={draft.restEndsAt} now={now} onSkip={skipRest} />
 
       <div className="flex flex-col gap-4">
         {draft.exercises.map((exercise, exerciseIndex) => {
@@ -636,16 +643,17 @@ export function SessionPage() {
                 {exercise.sets.map((item, setIndex) => (
                   <li
                     key={`${exercise.exerciseId}-${setIndex}`}
+                    data-controles-serie="true"
                     className={`rounded-md px-1 py-1 ${item.done ? 'bg-accent-soft/40' : ''}`}
                   >
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <div className="flex items-center justify-between gap-2">
                       <span className="tnum w-5 text-caption text-ink-muted">{setIndex + 1}</span>
                       <div className="flex items-center gap-1">
                         <button
                           type="button"
                           aria-label={`Restar ${step} ${unit} a la serie ${setIndex + 1} de ${exercise.name}`}
                           onClick={() => changeWeight(exerciseIndex, setIndex, -step)}
-                          className="focus-ring grid size-9 place-items-center rounded-md border border-line-strong text-title text-ink"
+                          className="focus-ring grid size-11 place-items-center rounded-md border border-line-strong text-title text-ink"
                         >
                           −
                         </button>
@@ -660,17 +668,19 @@ export function SessionPage() {
                           type="button"
                           aria-label={`Sumar ${step} ${unit} a la serie ${setIndex + 1} de ${exercise.name}`}
                           onClick={() => changeWeight(exerciseIndex, setIndex, step)}
-                          className="focus-ring grid size-9 place-items-center rounded-md border border-line-strong text-title text-ink"
+                          className="focus-ring grid size-11 place-items-center rounded-md border border-line-strong text-title text-ink"
                         >
                           +
                         </button>
                       </div>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1">
                         <button
                           type="button"
                           aria-label={`Quitar una repetición a la serie ${setIndex + 1} de ${exercise.name}`}
                           onClick={() => changeReps(exerciseIndex, setIndex, -1)}
-                          className="focus-ring grid size-9 place-items-center rounded-md border border-line-strong text-title text-ink"
+                          className="focus-ring grid size-11 place-items-center rounded-md border border-line-strong text-title text-ink"
                         >
                           −
                         </button>
@@ -685,38 +695,40 @@ export function SessionPage() {
                           type="button"
                           aria-label={`Añadir una repetición a la serie ${setIndex + 1} de ${exercise.name}`}
                           onClick={() => changeReps(exerciseIndex, setIndex, 1)}
-                          className="focus-ring grid size-9 place-items-center rounded-md border border-line-strong text-title text-ink"
+                          className="focus-ring grid size-11 place-items-center rounded-md border border-line-strong text-title text-ink"
                         >
                           +
                         </button>
                       </div>
-                      <select
-                        aria-label={`Esfuerzo serie ${setIndex + 1} de ${exercise.name}`}
-                        className="focus-ring min-h-11 w-14 rounded-md border border-line-strong bg-raised px-1 text-body text-ink"
-                        value={item.rpe}
-                        onChange={(event) => updateSet(exerciseIndex, setIndex, { rpe: event.target.value })}
-                      >
-                        <option value="">—</option>
-                        {[6, 7, 8, 9, 10].map((value) => (
-                          <option key={value} value={String(value)}>
-                            {value}
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        type="button"
-                        role="checkbox"
-                        aria-checked={item.done}
-                        aria-label={`Serie ${setIndex + 1} de ${exercise.name}`}
-                        onClick={() => toggleSet(exerciseIndex, setIndex)}
-                        className={`focus-ring grid size-10 place-items-center rounded-md border ${
-                          item.done
-                            ? 'border-success bg-success text-on-accent'
-                            : 'border-line-strong bg-raised text-ink-muted'
-                        }`}
-                      >
-                        {item.done ? <Check aria-hidden="true" className="size-5" /> : <span aria-hidden="true" className="size-5" />}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <select
+                          aria-label={`Esfuerzo serie ${setIndex + 1} de ${exercise.name}`}
+                          className="focus-ring min-h-11 w-14 rounded-md border border-line-strong bg-raised px-1 text-body text-ink"
+                          value={item.rpe}
+                          onChange={(event) => updateSet(exerciseIndex, setIndex, { rpe: event.target.value })}
+                        >
+                          <option value="">—</option>
+                          {[6, 7, 8, 9, 10].map((value) => (
+                            <option key={value} value={String(value)}>
+                              {value}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          role="checkbox"
+                          aria-checked={item.done}
+                          aria-label={`Serie ${setIndex + 1} de ${exercise.name}`}
+                          onClick={() => toggleSet(exerciseIndex, setIndex)}
+                          className={`focus-ring grid size-11 place-items-center rounded-md border ${
+                            item.done
+                              ? 'border-success bg-success text-on-accent'
+                              : 'border-line-strong bg-raised text-ink-muted'
+                          }`}
+                        >
+                          {item.done ? <Check aria-hidden="true" className="size-5" /> : <span aria-hidden="true" className="size-5" />}
+                        </button>
+                      </div>
                     </div>
                     {exercise.previous ? (
                       <p className="pl-6 text-caption text-ink-faint">{exercise.previous}</p>
@@ -738,6 +750,8 @@ export function SessionPage() {
           {createSession.isPending ? 'Guardando…' : 'Terminar sesión'}
         </Button>
       </div>
+      {/* Espacio para que la banda de descanso no tape el último control. */}
+      {draft.restEndsAt ? <div className="h-24" aria-hidden="true" /> : null}
     </>
   );
 }

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { CalendarCheck } from 'lucide-react';
-import { usePushWorkout, useSessions, useTemplate, useTemplates } from '../api/queries';
+import { usePushWorkout, useSessions, useTemplate, useTemplates, useWatchAck } from '../api/queries';
 import { Badge, Button, Card, EmptyState, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../components/ui';
 import { PendingWatchCard } from '../components/PendingWatchCard';
 import { AVISO_RELOJ_REAL } from '../config/features';
@@ -21,6 +21,19 @@ export function GymPage() {
   const todaysTemplate = templates.data?.items.find((template) => template.weekday === today) ?? null;
   const template = useTemplate(todaysTemplate?.id ?? null);
   const push = usePushWorkout();
+  // El acuse solo se consulta cuando ya hay un envío aceptado por Garmin.
+  const ack = useWatchAck(push.data?.status === 'sent');
+  const enviado = push.data?.status === 'sent';
+  const confirmado = enviado && ack.data?.confirmed === true;
+  const estadoEnvio = push.isPending
+    ? 'Solicitado'
+    : push.isError
+      ? 'Error'
+      : confirmado
+        ? 'Confirmado'
+        : enviado
+          ? 'Enviado'
+          : 'Solicitado';
 
   const startSend = () => {
     if (!template.data) return;
@@ -139,20 +152,36 @@ export function GymPage() {
             <div className="flex items-center justify-between gap-2">
               <span className="text-caption text-ink-muted">Estado del envío</span>
               <span role="status">
-                <Badge tone={push.isError ? 'stop' : push.data?.status === 'sent' ? 'go' : 'idle'}>
-                  {push.isPending ? 'Enviando…' : push.isError ? 'Error' : push.data?.status === 'sent' ? 'Enviado' : 'Pendiente'}
+                <Badge tone={push.isError ? 'stop' : confirmado ? 'go' : enviado ? 'warn' : 'idle'}>
+                  {estadoEnvio}
                 </Badge>
               </span>
             </div>
             <Button onClick={startSend} disabled={push.isPending} className="min-h-12 w-full">
               {push.isPending ? 'Enviando…' : 'Enviar al reloj'}
             </Button>
-            {push.data?.status === 'sent' ? (
-              <div role="status" className="rounded-md border border-success/40 bg-success/10 p-3">
-                <p className="text-body font-semibold text-ink">Enviado al reloj</p>
-                <p className="text-caption text-ink-muted">Si no aparece, acerca el reloj y sincroniza.</p>
+            {enviado ? (
+              <div
+                role="status"
+                className={`rounded-md border p-3 ${
+                  confirmado ? 'border-success/40 bg-success/10' : 'border-warn/40 bg-warn-soft'
+                }`}
+              >
+                <p className="text-body font-semibold text-ink">
+                  {confirmado ? 'Confirmado por el reloj' : 'Enviado a Garmin'}
+                </p>
+                <p className="text-caption text-ink-muted">
+                  {confirmado
+                    ? `El reloj ha devuelto ${ack.data?.sets_count ?? 0} series de hoy.`
+                    : 'Falta que el reloj confirme: hasta que devuelva una serie no se da por recibido.'}
+                </p>
               </div>
             ) : null}
+            <p className="text-caption text-ink-faint">
+              Estados: <strong>Solicitado</strong> (petición en curso) → <strong>Enviado</strong> (Garmin
+              acepta el entreno) → <strong>Confirmado</strong> (el reloj devuelve series). Nunca se
+              muestra «Recibido» sin acuse.
+            </p>
             {push.isError ? (
               <div role="alert" className="rounded-md border border-danger/40 bg-danger/10 p-3">
                 <p className="text-body font-semibold text-ink">No se pudo enviar</p>

@@ -25,6 +25,7 @@ function install(overrides: Record<string, unknown> = {}) {
     'GET /api/v1/strength/templates': json(templates),
     'GET /api/v1/strength/templates/t-1': json(f.templates.items[0]),
     'GET /api/v1/strength/sessions': json(f.sessions),
+    'GET /api/v1/watch/ack': json({ confirmed: false, sets_count: 0, last_set_at: null, workout_id: null }),
     'POST /api/v1/strength/push-to-garmin': json(sent),
     ...overrides,
   });
@@ -37,10 +38,13 @@ describe('envío de la plantilla al reloj', () => {
     const user = userEvent.setup();
     renderApp('/gimnasio');
 
-    expect(await screen.findByText(/^pendiente$/i)).toBeInTheDocument();
+    expect((await screen.findAllByText(/^solicitado$/i)).length).toBeGreaterThan(0);
     await user.click(await screen.findByRole('button', { name: /^enviar al reloj$/i }));
-    expect(await screen.findByText(/enviado al reloj/i)).toBeInTheDocument();
-    expect(screen.getByText(/^enviado$/i)).toBeInTheDocument();
+    expect(await screen.findByText(/enviado a garmin/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/^enviado$/i).length).toBeGreaterThan(0);
+    // Sin acuse del reloj no se muestra la tarjeta de confirmación.
+    expect(screen.queryByText(/^recibido$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/confirmado por el reloj/i)).not.toBeInTheDocument();
 
     const sentCall = api.calls.find(
       (call) => call.method === 'POST' && call.path === '/api/v1/strength/push-to-garmin',

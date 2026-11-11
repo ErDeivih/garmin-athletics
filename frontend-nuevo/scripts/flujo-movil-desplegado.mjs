@@ -245,7 +245,7 @@ try {
     body: JSON.stringify({ status: 'sent', workout_id: 'simulado', mapped_exercises: 1, unmapped_exercises: [], pushed_to_device: true }),
   }));
   await botonEnviar.click();
-  await pagina.getByText(/enviado al reloj/i).first().waitFor({ timeout: 20000 });
+  await pagina.getByText(/enviado a garmin|confirmado por el reloj/i).first().waitFor({ timeout: 20000 });
   await captura('04b-envio-enviado', { espera: 600 });
   checks.envio_confirmado_simulado = true;
   await pagina.unroute('**/api/v1/strength/push-to-garmin');
@@ -271,9 +271,50 @@ try {
   checks.discos = true;
   await captura('31-sesion-controles', { espera: 400 });
   checks.controles_sesion = true;
+
+  // GA-I1: medido en el navegador real: mínimo 44×44 px y sin solapes a 390 px.
+  const medida = await pagina.evaluate(() => {
+    const filas = Array.from(document.querySelectorAll('[data-controles-serie]'));
+    const controles = filas.flatMap((fila) => Array.from(fila.querySelectorAll('button, input, select')));
+    const rects = controles.map((el) => {
+      const r = el.getBoundingClientRect();
+      return { w: Math.round(r.width), h: Math.round(r.height), left: r.left, right: r.right, top: r.top, bottom: r.bottom };
+    });
+    let solapes = 0;
+    for (let i = 0; i < rects.length; i += 1) {
+      for (let j = i + 1; j < rects.length; j += 1) {
+        const ancho = Math.min(rects[i].right, rects[j].right) - Math.max(rects[i].left, rects[j].left);
+        const alto = Math.min(rects[i].bottom, rects[j].bottom) - Math.max(rects[i].top, rects[j].top);
+        if (ancho > 1 && alto > 1) solapes += 1;
+      }
+    }
+    return {
+      controles: rects.length,
+      minAncho: rects.length ? Math.min(...rects.map((r) => r.w)) : 0,
+      minAlto: rects.length ? Math.min(...rects.map((r) => r.h)) : 0,
+      solapes,
+      anchoPagina: document.documentElement.scrollWidth,
+      viewport: window.innerWidth,
+    };
+  });
+  checks.medida_44 = medida;
+  if (medida.controles < 6) throw new Error(`No se midieron controles: ${JSON.stringify(medida)}`);
+  if (medida.minAncho < 44 || medida.minAlto < 44) throw new Error(`Control menor de 44 px: ${JSON.stringify(medida)}`);
+  if (medida.solapes > 0) throw new Error(`Controles solapados: ${JSON.stringify(medida)}`);
+  if (medida.anchoPagina > medida.viewport) throw new Error(`Desborda el ancho: ${JSON.stringify(medida)}`);
+
+  // GA-I2: con el descanso en marcha, la siguiente serie se puede editar.
   for (const serie of [2, 3]) {
     await pagina.getByRole('checkbox', { name: new RegExp(`serie ${serie} de ${nombreEjercicio}`, 'i') }).click();
     await pagina.waitForTimeout(700);
+    if (serie === 2) {
+      const enMarcha = await pagina.getByRole('button', { name: /saltar descanso/i }).isVisible();
+      const pesoSiguiente = pagina.getByLabel(new RegExp(`peso serie 3 de ${nombreEjercicio}`, 'i'));
+      await pesoSiguiente.fill('70');
+      const leido = await pesoSiguiente.inputValue();
+      checks.edicion_con_descanso = { descanso_visible: enMarcha, peso_editado: leido === '70' };
+      if (!enMarcha || leido !== '70') throw new Error(`No se puede editar con descanso: ${JSON.stringify(checks.edicion_con_descanso)}`);
+    }
   }
   await captura('06-entrenar', { espera: 500 });
 

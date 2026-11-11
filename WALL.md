@@ -94,6 +94,14 @@ crear entrenamientos de gimnasio, llevarlos al reloj y analizar todo.
   semanas por defecto** (selector 4/8/12) y gráfico de barras; onboarding con **flujo visual
   Planifica → Envía → Entrena** y el envío al reloj explicado. Pruebas actualizadas
   (`historial-diferencias`, `progreso`, `onboarding`) y capturas `00`, `21`, `30` regeneradas.
+- [x] Feedback GA-U1/U2/I1/I2/F1 aplicado. — 2026-11-11. Peso **editable en la fila**
+  (tocar campo y salir guarda), estados del envío **Solicitado → Enviado → Confirmado**
+  (sin «Recibido» sin acuse; `GET /watch/ack`), controles de serie **≥44×44 px medidos**
+  (24 controles, mínimo 44×44, 0 solapes, 390 px sin desbordar), **banda de descanso al
+  pie que no bloquea** la edición (verificado: peso de la serie siguiente editable con el
+  contador en marcha) y **prueba de integridad** plan → reloj → guardado con 50/52,5/55 kg
+  (`docs/PRUEBA-INTEGRIDAD.md`). Pruebas: `editor-fila`, `envio-estados`, `sesion-controles`
+  (2), `test_integridad_pesos.py`; capturas `04b`, `17`, `31` regeneradas.
 - [ ] Watch-app Connect IQ propia (después del camino A). — **en curso**: `watch/lyfta-watch/`
   diseñada, implementada y compilada para fr255 y 4 perfiles más; backend `/watch/today` y
   `/watch/sets` probado; sensor de repeticiones y estimación de fuerza añadidos. Capturas del
@@ -104,8 +112,8 @@ reloj y el análisis está completo.
 
 ## Evidencia
 
-- Frontend: 75/75 pruebas en 36 ficheros (incluye PWA, servido SPA, pesos por serie, aviso del reloj real, biblioteca con filtros/duplicado, editor rápido, historial, JSON de planes, unidades, onboarding, progreso, exportación, resumen semanal, modo enfocado, discos, controles ± y diferencias planificado vs real).
-- Backend: 24/24 scripts (incluye perfil IMU en seco, auto-carga, watch-app, rutas, calendario recurrente, servido del frontend, corrección de pesos, biblioteca/planificado, progreso semanal y exportación del historial).
+- Frontend: 78/78 pruebas en 38 ficheros (incluye PWA, servido SPA, pesos por serie, aviso del reloj real, biblioteca con filtros/duplicado, editor rápido y edición en fila, historial, JSON de planes, unidades, onboarding, progreso, exportación, resumen semanal, modo enfocado, discos, controles ±, diferencias planificado vs real, estados del envío y edición con descanso).
+- Backend: 25/25 scripts (incluye perfil IMU en seco, auto-carga, watch-app, rutas, calendario recurrente, servido del frontend, corrección de pesos, biblioteca/planificado, progreso semanal, exportación del historial, acuse del reloj e integridad plan → reloj → guardado).
 - Despliegue: `deploy/verify-server.sh` en verde el 2026-11-09 — salud, rutas profundas, cabeceras del service worker y datos migrados. Captura del móvil contra la URL desplegada: `frontend-nuevo/screenshots/30-despliegue-login.png`.
 - Flujo móvil contra el despliegue: `scripts/flujo-movil-desplegado.mjs` recorre plan (60/65/70) → edición guardada en servidor → `dry_run` con `unmapped: []` → envío sin credencial (400 limpio) → 3 series → sesión guardada **con 60/65/70** (`coincide: true`); 8 capturas a 390 px e informe en `docs/capturas-movil/`, con las de antes en `antes/`.
 - Revisión de interfaz: `docs/revision-interfaz-movil.md` — inventario de las 6 pantallas del flujo, 17 capturas a 390 px, 10 problemas con evidencia y su arreglo CSS/texto, y el antes/después del arreglo de pesos por serie.

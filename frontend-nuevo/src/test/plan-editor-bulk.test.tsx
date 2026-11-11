@@ -25,11 +25,25 @@ const plantilla = {
 };
 
 function apiEditor() {
+  // El PUT real devuelve la plantilla guardada y el GET la sirve igual: si el
+  // falso devolviera siempre la original, la pantalla revertiría el cambio.
+  let actual = plantilla;
   return installFakeApi({
     'GET /api/v1/auth/me': json(f.me),
-    'GET /api/v1/strength/templates/t-pesos': json(plantilla),
+    'GET /api/v1/strength/templates/t-pesos': () => json(actual),
     'GET /api/v1/strength/last-marks': json({ marks: {} }),
-    'PUT /api/v1/strength/templates/t-pesos': (req) => json(req.body),
+    'PUT /api/v1/strength/templates/t-pesos': (req) => {
+      const body = req.body as { exercises: { sets: number; reps: number; weight_kg: number; rest_seconds: number; set_targets: { set_number: number; reps: number; weight_kg: number }[] }[] };
+      actual = {
+        ...plantilla,
+        exercises: plantilla.exercises.map((item, index) => ({
+          ...item,
+          ...body.exercises[index],
+          exercise: item.exercise,
+        })),
+      };
+      return json(actual);
+    },
   });
 }
 
@@ -40,14 +54,14 @@ describe('editor de pesos más rápido', () => {
     const user = userEvent.setup();
     renderApp('/gimnasio/plantillas/t-pesos');
 
-    expect(await screen.findByText('65 kg')).toBeInTheDocument();
+    expect(await screen.findByDisplayValue('65')).toBeInTheDocument();
     await user.click(screen.getByRole('button', {
       name: /copiar peso de la serie anterior a la serie 2 de press de banca/i,
     }));
 
     await waitFor(() => {
-      expect(screen.getAllByText('60 kg').length).toBeGreaterThanOrEqual(2);
-      expect(screen.queryByText('65 kg')).not.toBeInTheDocument();
+      expect(screen.getAllByDisplayValue('60').length).toBeGreaterThanOrEqual(2);
+      expect(screen.queryAllByDisplayValue('65')).toHaveLength(0);
     });
   });
 
@@ -63,7 +77,8 @@ describe('editor de pesos más rápido', () => {
     await user.click(screen.getByRole('button', { name: /aplicar a todas/i }));
 
     await waitFor(() => {
-      expect(screen.getAllByText('80 kg').length).toBe(3);
+      const valores = screen.getAllByLabelText(/^peso serie \d de/i).map((input) => (input as HTMLInputElement).value);
+      expect(valores).toEqual(['80', '80', '80']);
     });
 
     // Se guarda solo, sin botón de guardar y sin salir de la pantalla.

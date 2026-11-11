@@ -90,6 +90,40 @@ async def watch_today(
     return await _template_payload(db, template)
 
 
+@router.get("/ack", summary="Acuse de recibo del reloj: últimas series recibidas hoy")
+async def watch_ack(
+    user: User = Depends(require_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """Confirma solo con evidencia: el reloj ha enviado series hoy.
+
+    Sin series recibidas no hay confirmación; la app no debe mostrar «Recibido».
+    """
+    from app.db.models import SessionSet, WorkoutSession
+
+    marker = f"watch:{date.today().isoformat()}"
+    session = (await db.execute(select(WorkoutSession).where(
+        WorkoutSession.user_id == user.id,
+        WorkoutSession.activity_id == marker,
+    ))).scalar_one_or_none()
+    if session is None:
+        return {"confirmed": False, "sets_count": 0, "last_set_at": None, "workout_id": None}
+
+    sets = (await db.execute(select(SessionSet).where(
+        SessionSet.session_id == session.id,
+    ).order_by(SessionSet.set_number, SessionSet.id))).scalars().all()
+    ultima = sets[-1] if sets else None
+    workout_id = None
+    if session.notes and " · " in session.notes:
+        workout_id = session.notes.split(" · ", 1)[1] or None
+    return {
+        "confirmed": bool(sets),
+        "sets_count": len(sets),
+        "last_set_at": ultima.completed_at.isoformat() if ultima and ultima.completed_at else None,
+        "workout_id": workout_id,
+    }
+
+
 class WatchSetIn(BaseModel):
     client_set_id: str = Field(..., min_length=8, max_length=64)
     workout_id: str = Field(..., min_length=1, max_length=120)

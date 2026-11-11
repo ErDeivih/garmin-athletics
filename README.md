@@ -12,7 +12,7 @@ progreso y resumen semanal exportable.
 |---|---|
 | Producto | En uso: planificar → enviar al reloj → entrenar → corregir → historial |
 | PWA | Instalable por HTTPS y con **arranque sin cobertura** (verificado) |
-| Pruebas | **75/75** frontend (36 ficheros) · **24/24** guiones de backend · **4/4** pantallas de regresión visual |
+| Pruebas | **78/78** frontend (38 ficheros) · **25/25** guiones de backend · **4/4** pantallas de regresión visual |
 | Pendiente | **Prueba física con el reloj** (único punto que requiere el fr255 y el 2FA de Garmin) |
 
 ## Capturas

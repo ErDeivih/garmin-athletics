@@ -156,7 +156,7 @@ try {
   await page.setViewportSize({ width: 390, height: 1200 });
   await capture('gimnasio-envio');
   await page.getByRole('button', { name: /^enviar al reloj$/i }).click();
-  await page.getByText(/enviado al reloj/i).waitFor({ timeout: 10000 });
+  await page.getByText(/enviado a garmin|confirmado por el reloj/i).waitFor({ timeout: 10000 });
   await capture('envio-enviado');
 
   // 3. Registro guardado y corrección.

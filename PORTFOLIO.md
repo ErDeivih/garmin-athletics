@@ -30,7 +30,7 @@ como historial fiable**.
 
 | Competencia | Cómo se ve en el proyecto |
 |---|---|
-| **Producto móvil de punta a punta** | 21 pantallas (React 19 + Vite + TypeScript): **onboarding** de tres pasos en la primera visita (con flujo visual Planifica → Envía → Entrena), biblioteca con búsqueda, filtro por foco/fecha, **duplicar plan** y **exportar/importar en JSON**; editor de pesos con copiar-serie-anterior y peso en bloque; historial con fecha, duración, volumen y series, y detalle con **planificado vs real** en formato «60 → 62,5 kg» con diferencia resaltada y corrección posterior; flujo planificar → enviar → entrenar → corregir → historial |
+| **Producto móvil de punta a punta** | 21 pantallas (React 19 + Vite + TypeScript): **onboarding** de tres pasos en la primera visita (con flujo visual Planifica → Envía → Entrena), biblioteca con búsqueda, filtro por foco/fecha, **duplicar plan** y **exportar/importar en JSON**; editor de pesos con **peso editable en la propia fila**, copiar-serie-anterior y peso en bloque; historial con fecha, duración, volumen y series, y detalle con **planificado vs real** en formato «60 → 62,5 kg» con diferencia resaltada y corrección posterior; flujo planificar → enviar → entrenar → corregir → historial |
 | **Preferencias y portabilidad** | Ajustes con **unidades kg/lb** (los pesos se muestran y editan en la unidad elegida; al reloj va siempre kg), **tema claro/oscuro** persistente y aviso de uso sin conexión; los planes salen y entran en un **JSON versionado** para no perderlos o pasarlos a otro móvil |
 | **Análisis de progreso** | Panel por ejercicio y semana: **volumen** (kg×reps), series, **mejor serie** (peso×reps) y gráfico de barras semanal (4 semanas por defecto, ampliable a 8 y 12), con selector de ejercicio y semanas vacías incluidas |
 | **Plantillas reutilizables** | Guardar una sesión entrenada como plantilla, lista en la biblioteca y **aplicar la plantilla a un día concreto** creando el evento de calendario |
@@ -39,7 +39,7 @@ como historial fiable**.
 | **Modo enfocado en el gimnasio** | Una sola serie a la vista con **peso objetivo grande**, botón de «Serie hecha», **registro rápido** de reps reales y RPE opcional y **temporizador de descanso**; uso con una mano, sin listas ni distracciones |
 | **Calculadora de discos** | Dado el peso objetivo, reparte barra y discos por lado (20 k + 10 + 2.5…) y avisa si el inventario no llega; visible en la sesión y en el modo enfocado |
 | **CSV previsto vs real** | Una fila por serie con peso y reps **previstos frente a los reales**, diferencia en kg y volumen de la sesión, exportable desde Historial |
-| **Integración con hardware real** | API de Garmin Connect y watch-app propia en Connect IQ (Monkey C) para el Forerunner 255: mapeo de ejercicios y enums, envío del workout con objetivos por serie, series idempotentes desde el reloj, `dry_run` para validar sin tocar la cuenta |
+| **Integración con hardware real** | API de Garmin Connect y watch-app propia en Connect IQ (Monkey C) para el Forerunner 255: mapeo de ejercicios y enums, envío del workout con objetivos por serie, series idempotentes desde el reloj, `dry_run` para validar sin tocar la cuenta, **estados honestos del envío** (Solicitado → Enviado → Confirmado, sin «Recibido» sin acuse) y **prueba de integridad plan → reloj → guardado** con tres pesos distintos (`docs/PRUEBA-INTEGRIDAD.md`) |
 | **Offline y PWA** | HTTPS con certificado del tailnet; la app se instala (ventana en `display-mode: standalone`, sin barra del navegador) y **arranca sin cobertura**: recarga servida por el service worker con `onLine: false`, `transferSize: 0` y `workerStart > 0`. El borrador de la sesión se guarda en el móvil |
 | **Backend de datos** | FastAPI + SQLAlchemy async + SQLite, migraciones idempotentes, 21 guiones de contrato sobre una base efímera |
 | **Diseño y sistema de diseño** | Tokens de color/tipografía, contraste AA comprobado, escala de espaciado, regresión visual con `pixelmatch` (4 pantallas, 0 píxeles) |
@@ -81,8 +81,8 @@ desechable de la base, sin tocar la cuenta de Garmin). Informe:
 
 | Suite | Resultado |
 |---|---|
-| Frontend (Vitest + Testing Library) | **75/75 pruebas en 36 ficheros** |
-| Backend (guiones de contrato con TestClient) | **24/24**, base SQLite efímera |
+| Frontend (Vitest + Testing Library) | **78/78 pruebas en 38 ficheros** |
+| Backend (guiones de contrato con TestClient) | **25/25**, base SQLite efímera |
 | Regresión visual (Playwright + pixelmatch) | **4/4 pantallas, 0 píxeles** distintos |
 | PWA instalada (Chrome, ventana `--app`) | `display-mode: standalone`, service worker controlando, **arranque sin cobertura** (`onLine: false`, `transferSize: 0`, `workerStart > 0`) |
 | Contraste y escala tipográfica | 52 pares AA, espaciado dentro de la escala |
@@ -144,6 +144,7 @@ necesario (FastAPI sirve el build), scripts de verificación propios.
 - `README.md` — qué es, arquitectura, pruebas y estado, con las capturas clave.
 - `DESPLIEGUE.md` — cómo está desplegado, cómo se actualiza y cómo se comprueba.
 - `docs/CASO-GARMIN.md` — **caso técnico**: producto, arquitectura (PWA + Connect IQ), decisiones y qué demuestra.
+- `docs/PRUEBA-INTEGRIDAD.md` — **prueba de integridad de pesos**: plan → reloj → guardado, con la tabla de las tres etapas.
 - `docs/VIA-ENVIO-RELOJ.md` — **vía de envío al reloj**: API Personal y Training API de Garmin, plan B con Connect IQ, con fuentes y fechas.
 - `docs/USO-MOVIL.md` — bloque único con los 3 pasos de instalación y lo que falta para el reloj.
 - `docs/revision-interfaz-movil.md` — dossier de interfaz: 17 capturas y 10 problemas con su arreglo.

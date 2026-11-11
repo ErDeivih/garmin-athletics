@@ -28,6 +28,7 @@ import type {
   RoutePoint,
   PushWorkoutPreview,
   PushWorkoutSent,
+  WatchAck,
   SessionDetail,
   SessionInput,
   SessionList,
@@ -339,7 +340,18 @@ export function useExerciseDetail(exerciseId: string | null) {
 
 /** Terminar la sesión: el borrador vive en el navegador y se manda una vez (D-02). */
 /** Previsualiza o envía una plantilla al reloj de Garmin (T-31). */
+/** Acuse de recibo del reloj: solo se confirma con series recibidas hoy. */
+export function useWatchAck(enabled: boolean) {
+  return useQuery({
+    queryKey: ['watch', 'ack'],
+    queryFn: () => apiFetch<WatchAck>('/api/v1/watch/ack'),
+    enabled,
+    staleTime: 15_000,
+  });
+}
+
 export function usePushWorkout() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: {
       routineName: string;
@@ -356,6 +368,10 @@ export function usePushWorkout() {
           push_to_device: input.pushToDevice ?? true,
         },
       }),
+    onSuccess: async () => {
+      // Tras cada envío se vuelve a mirar el acuse: sin series del reloj no hay confirmación.
+      await queryClient.invalidateQueries({ queryKey: ['watch', 'ack'] });
+    },
   });
 }
 

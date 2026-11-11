@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Copy, Minus, Plus } from 'lucide-react';
 import { useLastMarks, useTemplate, useUpdateTemplate } from '../api/queries';
 import { Button, Card, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../components/ui';
-import { fromKg, formatWeight, stepFor, toKg, useWeightUnit } from '../lib/units';
+import { fromKg, stepFor, toKg, useWeightUnit } from '../lib/units';
 
 type Target = { set_number: number; reps: number; weight_kg: number };
 type DraftExercise = {
@@ -23,6 +23,8 @@ export function PlanEditorPage() {
   const [draft, setDraft] = useState<DraftExercise[] | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [enBloque, setEnBloque] = useState<Record<string, string>>({});
+  // Texto en edición por fila: tocar el peso y salir del campo lo guarda.
+  const [textos, setTextos] = useState<Record<string, string>>({});
   const unit = useWeightUnit();
   const step = stepFor(unit);
   const first = useRef(true);
@@ -86,6 +88,39 @@ export function PlanEditorPage() {
     }, 450);
     return () => window.clearTimeout(timer);
   }, [payload]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** Peso editable en la propia fila (sin abrir otra pantalla). */
+  const claveTexto = (exerciseIndex: number, setIndex: number) => `${exerciseIndex}-${setIndex}`;
+
+  const textoPeso = (exerciseIndex: number, setIndex: number, target: Target): string =>
+    textos[claveTexto(exerciseIndex, setIndex)]
+    ?? String(fromKg(target.weight_kg, unit)).replace('.', ',');
+
+  const escribirPeso = (exerciseIndex: number, setIndex: number, value: string) => {
+    setTextos((current) => ({ ...current, [claveTexto(exerciseIndex, setIndex)]: value }));
+  };
+
+  const guardarPesoEscrito = (exerciseIndex: number, setIndex: number) => {
+    const clave = claveTexto(exerciseIndex, setIndex);
+    const crudo = textos[clave];
+    setTextos((current) => {
+      const copia = { ...current };
+      delete copia[clave];
+      return copia;
+    });
+    if (crudo === undefined) return;
+    const valor = Number(crudo.replace(',', '.').trim());
+    if (!Number.isFinite(valor) || valor < 0) return;
+    const enKg = toKg(valor, unit);
+    setDraft((current) => current?.map((item, index) => {
+      if (index !== exerciseIndex) return item;
+      return {
+        ...item,
+        targets: item.targets.map((target, targetIndex) =>
+          targetIndex === setIndex ? { ...target, weight_kg: enKg } : target),
+      };
+    }) ?? null);
+  };
 
   const changeWeight = (exerciseIndex: number, setIndex: number, delta: number) => {
     setDraft((current) => current?.map((item, index) => {
@@ -203,9 +238,17 @@ export function PlanEditorPage() {
                     >
                       <Minus aria-hidden="true" className="size-5" />
                     </Button>
-                    <span className="tnum min-w-20 text-center font-display text-title text-ink">
-                      {formatWeight(target.weight_kg, unit)}
-                    </span>
+                    <input
+                      aria-label={`Peso serie ${target.set_number} de ${exercise.name}`}
+                      inputMode="decimal"
+                      value={textoPeso(exerciseIndex, setIndex, target)}
+                      onChange={(event) => escribirPeso(exerciseIndex, setIndex, event.target.value)}
+                      onBlur={() => guardarPesoEscrito(exerciseIndex, setIndex)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') event.currentTarget.blur();
+                      }}
+                      className="tnum focus-ring min-h-11 w-24 rounded-md border border-line-strong bg-raised px-2 text-center font-display text-title text-ink"
+                    />
                     <Button
                       variant="secondary"
                       className="size-11 p-0"

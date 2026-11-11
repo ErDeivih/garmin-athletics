@@ -70,4 +70,29 @@ describe('controles de la pantalla de sesión', () => {
     await user.click(screen.getByLabelText('Quitar una repetición a la serie 1 de Press de banca con barra'));
     expect(reps).toHaveValue('8');
   });
+
+  it('deja editar la siguiente serie con el descanso en marcha', async () => {
+    localStorage.setItem(TOKEN_KEY, 'test-token');
+    installFakeApi({
+      'GET /api/v1/auth/me': json(f.me),
+      'GET /api/v1/strength/templates/t-controles': json(plantilla),
+      'GET /api/v1/strength/last-marks': json(marcas),
+    });
+    const user = userEvent.setup();
+    renderApp('/gimnasio/entrenar?template=t-controles');
+
+    await screen.findByRole('heading', { name: 'Entrenar' });
+    await user.click(await screen.findByRole('checkbox', { name: /serie 1 de press de banca/i }));
+
+    // Banda de descanso visible (al pie, sin bloquear) y edición posible.
+    expect(await screen.findByRole('status')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /saltar descanso/i })).toBeInTheDocument();
+
+    const siguiente = screen.getByLabelText('Peso serie 2 de Press de banca con barra');
+    await user.clear(siguiente);
+    await user.type(siguiente, '66');
+    expect(siguiente).toHaveValue('66');
+    // La banda sigue ahí: el descanso no se interrumpe al editar.
+    expect(screen.getByRole('button', { name: /saltar descanso/i })).toBeInTheDocument();
+  });
 });

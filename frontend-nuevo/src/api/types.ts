@@ -307,6 +307,14 @@ export interface PushWorkoutSent {
   note: string;
 }
 
+/** Acuse del reloj: solo es `confirmed` si hoy ha enviado series. */
+export interface WatchAck {
+  confirmed: boolean;
+  sets_count: number;
+  last_set_at: string | null;
+  workout_id: string | null;
+}
+
 // --- Gimnasio ---------------------------------------------------------------
 
 export interface ExerciseBrief {

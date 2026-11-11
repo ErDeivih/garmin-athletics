@@ -1,32 +1,32 @@
 titulo: Lyfta — entrenamiento, reloj y análisis
 estado: producto completo y desplegado; en-espera de la prueba física del reloj
-tarea: cumplir criterios de historial («60 → 62,5 kg» + corrección), progreso (4 semanas por defecto) y onboarding (flujo visual Planifica → Envía → Entrena)
+tarea: aplicar feedback GA-U1/U2/I1/I2/F1 (edición en fila, estados del envío, controles 44 px medidos, descanso no bloqueante e integridad de pesos)
 nivel: 2
 siguiente: David instala la PWA desde https://servidor.tail4263a0.ts.net (3 pasos) y ejecuta la prueba del reloj de docs/USO-MOVIL.md
 bloqueado: prueba física del fr255 (2FA/reloj de David)
 fecha: 2026-11-11
-resumen: Historial con «60 → 62,5 kg» y diferencia resaltada (corrección ya existente), progreso con 4 semanas por defecto y selector 4/8/12, y onboarding con flujo visual; 75/75 frontend y 24/24 backend, capturas 00/21/30.
+resumen: Feedback GA aplicado con medición real (44×44, 0 solapes a 390 px), estados Solicitado/Enviado/Confirmado sin «Recibido» sin acuse, edición de peso en la propia fila, descanso al pie que no bloquea y prueba de integridad 50/52,5/55 kg plan → reloj → guardado; 78/78 frontend y 25/25 backend.
 
 ## Bloqueo
 
-**Situación (2026-11-11, 13:00):** la tanda está entregada y desplegada. Lo único que no puedo
-cerrar es la aceptación con el reloj físico.
+**Situación (2026-11-11, 13:35):** feedback aplicado y desplegado. Sigue abierta solo la
+aceptación con el reloj físico.
 
-**(a) Dónde me quedé.** Criterios cumplidos y verificados en captura: historial «60 → 62,5 kg»
-con `+2,5 kg` resaltado (`historial-diferencias` rojo → verde); progreso con **4 semanas por
-defecto** y selector 4/8/12 (`progreso`); onboarding con **flujo visual** y envío al reloj
-explicado (`onboarding`). 75/75 frontend, 24/24 backend, visual 4/4 (línea base del detalle
-actualizada). Flujo desplegado OK.
+**(a) Dónde me quedé.** GA-U1 (edición en fila), GA-U2 (tres estados, sin «Recibido»),
+GA-I1 (44×44 medido: 24 controles, mínimo 44×44, 0 solapes, página 390 px),
+GA-I2 (banda de descanso al pie, edición verificada con contador en marcha) y GA-F1
+(prueba `tests/test_integridad_pesos.py` con tabla plan → reloj → guardado y localización
+de diferencias). 78/78 frontend, 25/25 backend, visual 4/4 con líneas base actualizadas.
 
 **(b) Qué falta revisar.**
-1. **Prueba física del fr255**: envío, peso por serie en el reloj, vuelta de una serie real y
-   medición del detector de reps (≥95 % con error ≤1).
+1. **Prueba física del fr255**: envío real, peso por serie en el reloj, vuelta de una serie
+   y medición del detector de reps (≥95 % con error ≤1).
 2. Sufijo del tailnet (`servidor.tail4263a0.ts.net` funciona; `ta4283ad.ts.net` no resuelve).
 3. Decidir si el alta de plan vacío con ejercicios desde catálogo entra en la biblioteca.
 
-**(c) Qué necesito de David.** El resultado de la prueba del reloj (reloj cargado y 2FA delante)
-o una tarea distinta; y si quiere el alta de planes desde cero.
+**(c) Qué necesito de David.** El resultado de la prueba del reloj (reloj cargado y 2FA
+delante) o una tarea distinta; y si quiere el alta de planes desde cero.
 
-**(d) Siguiente paso concreto.** Con el resultado del envío: importar la actividad, contrastar
-`sets_imported`/`unmapped`, medir el detector y apagar la tarjeta «Reloj real». Si no, siguiente
-mejora acordada: alta de plan vacío + añadir ejercicios desde el catálogo.
+**(d) Siguiente paso concreto.** Con el resultado del envío: importar la actividad,
+contrastar `sets_imported`/`unmapped`, medir el detector y apagar la tarjeta «Reloj real».
+Si no, siguiente mejora acordada: alta de plan vacío + añadir ejercicios desde el catálogo.

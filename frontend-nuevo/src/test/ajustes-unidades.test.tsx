@@ -42,10 +42,11 @@ describe('ajustes: unidades', () => {
     await user.click(screen.getByRole('button', { name: /libras/i }));
     expect(localStorage.getItem(UNITS_KEY)).toBe('lb');
 
-    // En el editor del plan, 60 kg se muestran como 132,3 lb.
+    // En el editor del plan, 60 kg se muestran como 132,3 lb en el campo de la fila.
     renderApp('/gimnasio/plantillas/t-pesos');
-    expect(await screen.findByText('132,3 lb')).toBeInTheDocument();
-    expect(screen.queryByText('60 kg')).not.toBeInTheDocument();
+    const campo = await screen.findByLabelText(/^peso serie 1 de/i);
+    expect(campo).toHaveValue('132,3');
+    expect(screen.queryByDisplayValue('60')).not.toBeInTheDocument();
   });
 
   it('avisa de que la app funciona sin conexión', async () => {
