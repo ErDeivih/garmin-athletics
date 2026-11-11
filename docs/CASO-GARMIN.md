@@ -148,7 +148,7 @@ historial con exportación CSV/JSON, progreso, ajustes y arranque sin cobertura�
 - Repositorio: <https://github.com/ErDeivih/garmin-athletics>
 - Demo privada (tailnet): `https://servidor.tail4263a0.ts.net` — se enseña en directo.
 - `PORTFOLIO.md` · `DESPLIEGUE.md` · `docs/USO-MOVIL.md` ·
-  `docs/VIA-ENVIO-RELOJ.md` (vías de envío a Garmin, con fuentes y fechas) ·
+  `docs/ENVIO-AL-RELOJ.md` (vías de envío a Garmin, con fuentes y fechas) ·
   `docs/revision-interfaz-movil.md` · `PENDIENTE-PRUEBA-RELOJ.md`
 - Código: `frontend-nuevo/` (React), `backend/` (FastAPI), `watch/lyfta-watch/` (Connect IQ),
   `deploy/` (Docker y operación).

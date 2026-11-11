@@ -70,6 +70,7 @@ Todas están tomadas a 390 × 844 (viewport real de móvil) contra la app desple
 | **Sesión → plantilla** — guardar lo entrenado como plantilla. [23-guardar-plantilla.png](docs/capturas-movil/23-guardar-plantilla.png) | **Exportar historial** — CSV o JSON desde la lista de sesiones. [24-exportar-historial.png](docs/capturas-movil/24-exportar-historial.png) |
 | **Resumen semanal** — volumen, series por grupo y adherencia al plan. [25-resumen-semanal.png](docs/capturas-movil/25-resumen-semanal.png) | |
 | **Modo enfocado** — serie actual, peso objetivo y botón grande. [26-sesion-enfocada.png](docs/capturas-movil/26-sesion-enfocada.png) | **Registro rápido** — reps reales y RPE opcional por serie. [27-registro-rapido.png](docs/capturas-movil/27-registro-rapido.png) |
+| **Descanso** — temporizador en modo enfocado y «Saltar descanso». [32-descanso-sesion.png](docs/capturas-movil/32-descanso-sesion.png) | |
 | **Calculadora de discos** — barra y discos por lado. [28-discos-en-sesion.png](docs/capturas-movil/28-discos-en-sesion.png) | **Biblioteca** — nombre, búsqueda, foco y fechas. [29-biblioteca.png](docs/capturas-movil/29-biblioteca.png) |
 | **Planificado vs real** — diferencias marcadas por serie. [30-historial-diferencias.png](docs/capturas-movil/30-historial-diferencias.png) | **Controles de sesión** — ±2,5 kg, ±1 rep y «anterior» por serie. [31-sesion-controles.png](docs/capturas-movil/31-sesion-controles.png) |
 
@@ -146,7 +147,7 @@ necesario (FastAPI sirve el build), scripts de verificación propios.
 - `docs/CASO-GARMIN.md` — **caso técnico**: producto, arquitectura (PWA + Connect IQ), decisiones y qué demuestra.
 - `docs/PRUEBA-INTEGRIDAD.md` — **prueba de integridad de pesos**: plan → reloj → guardado, con la tabla de las tres etapas.
 - `docs/EJEMPLO-SESION.md` — **sesión de ejemplo real** de punta a punta, con capturas a 390 px, CSV y JSON guardados.
-- `docs/VIA-ENVIO-RELOJ.md` — **vía de envío al reloj**: API Personal y Training API de Garmin, plan B con Connect IQ, con fuentes y fechas.
+- `docs/ENVIO-AL-RELOJ.md` — **vía de envío al reloj**: API Personal y Training API de Garmin, plan B con Connect IQ, con fuentes y fechas.
 - `docs/USO-MOVIL.md` — bloque único con los 3 pasos de instalación y lo que falta para el reloj.
 - `docs/revision-interfaz-movil.md` — dossier de interfaz: 17 capturas y 10 problemas con su arreglo.
 - `PENDIENTE-PRUEBA-RELOJ.md` — la única parte que depende del reloj físico.

@@ -263,6 +263,9 @@ try {
   await captura('27-registro-rapido', { espera: 500 });
   checks.registro_rapido = true;
   await pagina.getByRole('button', { name: /confirmar serie/i }).click();
+  await pagina.getByRole('button', { name: /saltar descanso/i }).waitFor({ timeout: 20000 });
+  await captura('32-descanso-sesion', { espera: 400 });
+  checks.descanso_visible = true;
   await pagina.getByRole('button', { name: /saltar descanso/i }).click().catch(() => {});
   await pagina.getByRole('button', { name: /volver a la lista/i }).click();
   await pagina.getByRole('heading', { name: 'Entrenar', exact: true }).waitFor({ timeout: 20000 });

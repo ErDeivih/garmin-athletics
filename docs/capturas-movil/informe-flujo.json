@@ -1,7 +1,7 @@
 {
   "app": "http://192.168.1.139:8011",
-  "cuenta": "flujo+1794404026771@example.com",
-  "plantilla": "35201113-bb08-40f2-99fa-3ba07e132cf3",
+  "cuenta": "flujo+1794407466552@example.com",
+  "plantilla": "183e67d4-eb4f-4722-aa79-e9f3ebbd4224",
   "checks": {
     "plantilla_creada": "set_targets=60/65/70",
     "titulo": "Lyfta",
@@ -20,6 +20,7 @@
     "envio_confirmado_simulado": true,
     "modo_enfocado": true,
     "registro_rapido": true,
+    "descanso_visible": true,
     "discos": true,
     "controles_sesion": true,
     "medida_44": {
@@ -40,7 +41,7 @@
       "peso_restaurado_al_volver": "61"
     },
     "sesion_guardada": {
-      "id": "58faecee-2550-461d-aa5b-383d39181c44",
+      "id": "7001fb44-3a04-477d-b278-059d7963dba3",
       "series": 3,
       "pesos": [
         60,
@@ -102,6 +103,7 @@
     "04b-envio-enviado.png",
     "26-sesion-enfocada.png",
     "27-registro-rapido.png",
+    "32-descanso-sesion.png",
     "28-discos-en-sesion.png",
     "31-sesion-controles.png",
     "06-entrenar.png",

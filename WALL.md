@@ -74,7 +74,7 @@ crear entrenamientos de gimnasio, llevarlos al reloj y analizar todo.
   reales y RPE opcional por serie y **temporizador de descanso**; la nota de la sesión se
   guarda con el registro final. Prueba rojo → verde: `sesion-enfocada` (falla sin el botón
   «Modo enfocado»). Capturas `26-sesion-enfocada`, `27-registro-rapido`.
-- [x] Vía de envío al reloj documentada. — 2026-11-11. `docs/VIA-ENVIO-RELOJ.md` con la
+- [x] Vía de envío al reloj documentada. — 2026-11-11. `docs/ENVIO-AL-RELOJ.md` con la
   **API Personal** (oct. 2026, solo lectura) y la **Training API** del programa Business,
   decisión y **plan B con Connect IQ**; cada afirmación con fuente y fecha. Captura
   `28-discos-en-sesion` y CSV con previsto frente a real por serie.
@@ -119,6 +119,11 @@ crear entrenamientos de gimnasio, llevarlos al reloj y analizar todo.
   8, corrección de la serie 1 a 62,5 kg), **5 capturas a 390 px**, `sesion-ejemplo.csv` (3
   series → 3 filas) y `sesion-ejemplo.json`; script reproducible
   `frontend-nuevo/scripts/ejemplo-sesion.mjs`.
+- [x] Capturas de sesión y descanso a 390 px. — 2026-11-11. `26-sesion-enfocada` (serie
+  grande, ±2,5 kg, «Anterior», discos), `27-registro-rapido` y `32-descanso-sesion`
+  (temporizador y «Saltar descanso»); medido en navegador: 24 controles, mínimo 44×44,
+  **0 solapes**, página 390 px sin desbordar. Historial con «60 → 62,5 kg» en
+  `30-historial-diferencias`. Vía de envío en `docs/ENVIO-AL-RELOJ.md` con fuentes y fechas.
 - [ ] Watch-app Connect IQ propia (después del camino A). — **en curso**: `watch/lyfta-watch/`
   diseñada, implementada y compilada para fr255 y 4 perfiles más; backend `/watch/today` y
   `/watch/sets` probado; sensor de repeticiones y estimación de fuerza añadidos. Capturas del
@@ -135,7 +140,7 @@ reloj y el análisis está completo.
 - Flujo móvil contra el despliegue: `scripts/flujo-movil-desplegado.mjs` recorre plan (60/65/70) → edición guardada en servidor → `dry_run` con `unmapped: []` → envío sin credencial (400 limpio) → 3 series → sesión guardada **con 60/65/70** (`coincide: true`); 8 capturas a 390 px e informe en `docs/capturas-movil/`, con las de antes en `antes/`.
 - Revisión de interfaz: `docs/revision-interfaz-movil.md` — inventario de las 6 pantallas del flujo, 17 capturas a 390 px, 10 problemas con evidencia y su arreglo CSS/texto, y el antes/después del arreglo de pesos por serie.
 - Regresión visual: 4/4 pantallas, 0 píxeles distintos, con la línea base regenerada por los cambios de esta tanda (editor rápido, enlace al historial y «Reloj real») en la instancia de verificación.
-- Capturas de la tanda de producto: `docs/capturas-movil/11`–`17` (historial, planificado vs real, biblioteca con filtros, duplicar, copia, editor rápido y aplicado), `00`, `18`–`20` (onboarding, JSON de planes, ajustes y unidades en lb), `21`–`25` (progreso, aplicar a un día, sesión como plantilla, exportar historial y resumen semanal), `26`–`28` (modo enfocado, registro rápido y discos) y `29`–`31` (biblioteca, diferencias planificado vs real y controles de sesión), a 390 × 844.
+- Capturas de la tanda de producto: `docs/capturas-movil/11`–`17` (historial, planificado vs real, biblioteca con filtros, duplicar, copia, editor rápido y aplicado), `00`, `18`–`20` (onboarding, JSON de planes, ajustes y unidades en lb), `21`–`25` (progreso, aplicar a un día, sesión como plantilla, exportar historial y resumen semanal), `26`–`28` (modo enfocado, registro rápido y discos), `29`–`31` (biblioteca, diferencias planificado vs real y controles de sesión) y `32` (descanso en modo enfocado), a 390 × 844.
 - Instalación PWA verificada: ventana de aplicación (`display-mode: standalone`, sin barra
   del navegador) con service worker controlando y **arranque sin cobertura**
   (`onLine: false`, `transferSize: 0`, `workerStart > 0`). Informe
