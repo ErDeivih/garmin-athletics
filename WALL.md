@@ -136,6 +136,11 @@ crear entrenamientos de gimnasio, llevarlos al reloj y analizar todo.
   `SessionBanners`), y medición **sin scroll** (844 = 844 px) y **sin solapes** (24 controles
   ≥44×44) en el flujo real. Prueba `sin-conexion-sesion`; USO-MOVIL con la **prueba de los
   tres pesos paso a paso** (8 pasos).
+- [x] Prototipo HTML de la sesión en curso. — 2026-11-11. `docs/prototipo-sesion.html`
+  autocontenido (sin dependencias) con la serie grande, ±2,5 kg, «Anterior», discos y
+  descanso; **datos ficticios marcados** dos veces (cinta superior y nota al pie). Captura
+  `33-prototipo-sesion` generada con `frontend-nuevo/scripts/captura-prototipo.mjs`, que
+  comprueba en navegador real que se abre y muestra la serie grande.
 - [ ] Watch-app Connect IQ propia (después del camino A). — **en curso**: `watch/lyfta-watch/`
   diseñada, implementada y compilada para fr255 y 4 perfiles más; backend `/watch/today` y
   `/watch/sets` probado; sensor de repeticiones y estimación de fuerza añadidos. Capturas del

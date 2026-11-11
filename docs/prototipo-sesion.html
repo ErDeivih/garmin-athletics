@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lyfta · prototipo de la sesión en curso (datos ficticios)</title>
+<style>
+  :root {
+    --fondo: #0b0f14;
+    --panel: #111821;
+    --panel-alto: #16202b;
+    --linea: #24303d;
+    --linea-fuerte: #35465a;
+    --tinta: #e8eef6;
+    --tinta-suave: #9fb0c3;
+    --tinta-tenue: #6b7d92;
+    --acento: #22d3ee;
+    --acento-suave: #0f3a44;
+    --aviso: #f2b84b;
+    --aviso-suave: #3a2f14;
+    --ok: #4ade80;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #05080c;
+    color: var(--tinta);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 24px 12px;
+  }
+  .marco { width: 390px; max-width: 100%; }
+  .cinta {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--aviso-suave); color: var(--aviso);
+    border: 1px dashed var(--aviso); border-radius: 8px;
+    padding: 8px 12px; font-size: 12px; font-weight: 700;
+    letter-spacing: .04em; text-transform: uppercase; margin-bottom: 10px;
+  }
+  .pantalla {
+    background: var(--fondo); border: 1px solid var(--linea);
+    border-radius: 18px; overflow: hidden; min-height: 780px;
+    display: flex; flex-direction: column;
+  }
+  header {
+    display: flex; align-items: baseline; gap: 8px;
+    padding: 14px 16px; border-bottom: 1px solid var(--linea);
+  }
+  .marca { font-size: 22px; font-weight: 900; letter-spacing: .06em; }
+  .marca span { color: var(--acento); font-size: 12px; font-weight: 700; letter-spacing: .12em; }
+  main { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .titulo { margin: 0; font-size: 26px; font-weight: 900; letter-spacing: .01em; }
+  .sub { margin: 2px 0 0; color: var(--tinta-suave); font-size: 13px; }
+  .tarjeta {
+    background: var(--panel); border: 1px solid var(--linea);
+    border-radius: 12px; padding: 14px;
+  }
+  .grupo { color: var(--tinta-tenue); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; margin: 0 0 4px; }
+  .ejercicio { margin: 0; font-size: 20px; font-weight: 800; }
+  .serie-linea { margin: 4px 0 0; color: var(--tinta-suave); font-size: 14px; }
+  .anterior { display: block; margin-top: 2px; color: var(--tinta-tenue); font-size: 12px; }
+  .objetivo {
+    margin-top: 12px; border: 1px solid var(--linea); border-radius: 10px;
+    background: var(--panel-alto); padding: 14px; text-align: center;
+  }
+  .etiqueta-grande { display: block; color: var(--tinta-tenue); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
+  .peso { display: block; margin-top: 4px; font-size: 44px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .reps { display: block; margin-top: 2px; color: var(--tinta-suave); font-size: 14px; }
+  .discos { display: block; margin-top: 8px; color: var(--tinta-suave); font-size: 13px; }
+  .fila-peso { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; }
+  .boton-paso {
+    width: 44px; height: 44px; border-radius: 8px; font-size: 24px; font-weight: 700;
+    background: transparent; color: var(--tinta); border: 1px solid var(--linea-fuerte);
+  }
+  .paso { color: var(--tinta-tenue); font-size: 12px; }
+  .descanso {
+    border: 1px solid var(--linea-fuerte); border-radius: 12px;
+    background: var(--panel); padding: 12px 14px;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .descanso .texto { color: var(--tinta-tenue); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
+  .descanso .reloj { font-size: 24px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .saltar {
+    min-height: 44px; padding: 0 14px; border-radius: 8px; background: transparent;
+    color: var(--tinta); border: 1px solid var(--linea-fuerte); font-weight: 600; font-size: 13px;
+  }
+  .hecha {
+    margin-top: 2px; width: 100%; min-height: 64px; border: 0; border-radius: 12px;
+    background: var(--acento); color: #041018; font-size: 20px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .hecha[disabled] { opacity: .45; }
+  .pie { color: var(--tinta-tenue); font-size: 12px; text-align: center; margin: 2px 0 0; }
+  .aviso-datos {
+    margin-top: 10px; border: 1px solid var(--aviso); border-radius: 8px;
+    color: var(--aviso); font-size: 12px; padding: 8px 10px; text-align: center;
+  }
+</style>
+</head>
+<body>
+  <div class="marco">
+    <div class="cinta">
+      <span aria-hidden="true">◆</span>
+      Prototipo · datos ficticios (no es una sesión real)
+    </div>
+
+    <div class="pantalla" role="img" aria-label="Prototipo de la pantalla de sesión en curso: serie 2 de 3 de press de banca con 65 kg objetivo y descanso en marcha">
+      <header>
+        <div class="marca">LYFTA <span>ENTRENA</span></div>
+      </header>
+
+      <main>
+        <div>
+          <h1 class="titulo">SERIE EN CURSO</h1>
+          <p class="sub">Empuje A · 1/3 series · <strong>datos ficticios</strong></p>
+        </div>
+
+        <section class="tarjeta" aria-label="Serie actual">
+          <p class="grupo">Pecho · prototipo</p>
+          <h2 class="ejercicio">Press de banca con barra</h2>
+          <p class="serie-linea">
+            Serie 2 de 3
+            <span class="anterior">Anterior: 82,5 kg × 6 <em style="font-style:normal;color:var(--aviso)">(ficticio)</em></span>
+          </p>
+
+          <div class="objetivo">
+            <span class="etiqueta-grande">Peso objetivo</span>
+            <span class="peso">65 kg</span>
+            <span class="discos">× 8 reps · discos: 20 + 2.5 por lado</span>
+            <div class="fila-peso">
+              <button class="boton-paso" type="button" aria-label="Bajar 2,5 kg">−</button>
+              <span class="paso">2.5 kg</span>
+              <button class="boton-paso" type="button" aria-label="Subir 2,5 kg">+</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="descanso" aria-label="Descanso en marcha">
+          <span class="texto">Descanso</span>
+          <span class="reloj">1:00</span>
+          <button class="saltar" type="button">Saltar</button>
+        </section>
+
+        <button class="hecha" type="button" disabled aria-label="Serie hecha (deshabilitado mientras corre el descanso)">
+          ✓ Serie hecha
+        </button>
+        <p class="pie">1 de 3 series · una mano, sin distracciones</p>
+      </main>
+    </div>
+
+    <p class="aviso-datos">
+      Todos los nombres, pesos y tiempos son ficticios y sirven solo para enseñar el diseño.
+      La app real usa tus datos.
+    </p>
+  </div>
+</body>
+</html>
