@@ -1,7 +1,7 @@
 {
   "app": "http://192.168.1.139:8011",
-  "cuenta": "flujo+1794396438181@example.com",
-  "plantilla": "50205c90-c1b6-450d-8219-860a6ccc50eb",
+  "cuenta": "flujo+1794398619582@example.com",
+  "plantilla": "664add8b-4799-462f-bffe-7e870d8a1df0",
   "checks": {
     "plantilla_creada": "set_targets=60/65/70",
     "titulo": "Lyfta",
@@ -28,7 +28,7 @@
       "peso_restaurado_al_volver": "61"
     },
     "sesion_guardada": {
-      "id": "5bb29ae4-dca6-4ed8-86df-561caad24fb6",
+      "id": "1656a6cf-fca1-4eda-b684-e5d82d693b32",
       "series": 3,
       "pesos": [
         60,
@@ -77,7 +77,7 @@
     "plantilla_desde_sesion": true,
     "exportar_historial": true,
     "resumen_semanal": true,
-    "errores_consola_esperados": 1
+    "errores_consola_esperados": 2
   },
   "capturas": [
     "01-login-movil.png",
@@ -116,6 +116,7 @@
     "25-resumen-semanal.png"
   ],
   "erroresConsola": [
+    "Failed to load resource: the server responded with a status of 400 (Bad Request)",
     "Failed to load resource: the server responded with a status of 400 (Bad Request)"
   ],
   "resultado": "OK"

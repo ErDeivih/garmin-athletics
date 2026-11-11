@@ -371,7 +371,7 @@ try {
   // 12. Detalle con el peso planificado frente al real.
   await pagina.goto(`${APP}/gimnasio/sesiones/${ultima.id}`, { waitUntil: 'domcontentloaded' });
   await pagina.getByRole('heading', { name: /editar pesos reales/i }).waitFor({ timeout: 20000 });
-  await pagina.getByText(/plan 65 kg/i).waitFor({ timeout: 15000 });
+  await pagina.getByText(/→/).first().waitFor({ timeout: 15000 });
   await captura('12-planificado-vs-real', { espera: 500 });
   checks.planificado_visible = true;
 

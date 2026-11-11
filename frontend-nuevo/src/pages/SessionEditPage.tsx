@@ -4,7 +4,7 @@ import { Minus, Plus } from 'lucide-react';
 import { useCreateTemplate, useSession, useUpdateSession } from '../api/queries';
 import type { SessionInput, SessionSetInput } from '../api/types';
 import { Button, Card, ErrorState, LoadingBlock, PageHeader } from '../components/ui';
-import { formatDate } from '../lib/format';
+import { formatDate, formatNumber } from '../lib/format';
 import { formatWeight, useWeightUnit } from '../lib/units';
 
 type EditableSet = SessionSetInput & {
@@ -176,8 +176,8 @@ export function SessionEditPage() {
                 <span className="ml-2 text-caption text-ink-faint">Serie {item.set_number}</span>
                 {item.planned_weight_kg != null ? (
                   <span className="ml-2 text-caption text-ink-faint">
-                    Plan {formatWeight(item.planned_weight_kg, unit)}
-                    {item.planned_reps != null ? ` × ${item.planned_reps}` : ''}
+                    {formatNumber(item.planned_weight_kg)} → {formatWeight(item.weight_kg, unit)}
+                    {item.planned_reps != null ? ` × ${item.planned_reps} reps de plan` : ''}
                   </span>
                 ) : null}
                 {item.planned_weight_kg != null ? (() => {

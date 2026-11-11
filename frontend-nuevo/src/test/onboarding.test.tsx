@@ -22,6 +22,11 @@ describe('onboarding', () => {
     renderApp('/', { onboarding: false });
 
     expect(await screen.findByRole('heading', { name: /cómo funciona/i })).toBeInTheDocument();
+    // Flujo visual de un vistazo: planifica → envía → entrena.
+    expect(screen.getByLabelText(/flujo: planifica/i)).toBeInTheDocument();
+    expect(screen.getByText('Planifica')).toBeInTheDocument();
+    expect(screen.getByText('Envía')).toBeInTheDocument();
+    expect(screen.getByText('Entrena')).toBeInTheDocument();
     expect(screen.getByText(/1\..*plan/i)).toBeInTheDocument();
     expect(screen.getByText(/2\..*env[ií]a/i)).toBeInTheDocument();
     expect(screen.getByText(/3\..*entrena/i)).toBeInTheDocument();

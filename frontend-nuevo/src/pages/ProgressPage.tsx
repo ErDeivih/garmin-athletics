@@ -12,7 +12,9 @@ import { formatWeight, useWeightUnit } from '../lib/units';
  */
 export function ProgressPage() {
   const [exerciseId, setExerciseId] = useState<string | null>(null);
-  const progreso = useProgress(exerciseId);
+  // Cuatro semanas por defecto: es la vista que se entiende de un vistazo.
+  const [semanas, setSemanas] = useState(4);
+  const progreso = useProgress(exerciseId, semanas);
   const unit = useWeightUnit();
 
   if (progreso.isPending) return <LoadingBlock label="Calculando el progreso" />;
@@ -50,19 +52,34 @@ export function ProgressPage() {
       />
 
       <Card>
-        <label className="flex flex-col gap-1 text-caption text-ink-muted">
-          Ejercicio
-          <select
-            aria-label="Ejercicio"
-            value={seleccionado}
-            onChange={(event) => setExerciseId(event.target.value)}
-            className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-2 text-body text-ink"
-          >
-            {datos.exercises.map((opcion) => (
-              <option key={opcion.id} value={opcion.id}>{opcion.name}</option>
-            ))}
-          </select>
-        </label>
+        <div className="flex flex-col gap-3">
+          <label className="flex flex-col gap-1 text-caption text-ink-muted">
+            Ejercicio
+            <select
+              aria-label="Ejercicio"
+              value={seleccionado}
+              onChange={(event) => setExerciseId(event.target.value)}
+              className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-2 text-body text-ink"
+            >
+              {datos.exercises.map((opcion) => (
+                <option key={opcion.id} value={opcion.id}>{opcion.name}</option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-caption text-ink-muted">
+            Semanas
+            <select
+              aria-label="Semanas"
+              value={String(semanas)}
+              onChange={(event) => setSemanas(Number(event.target.value))}
+              className="focus-ring min-h-11 rounded-md border border-line-strong bg-raised px-2 text-body text-ink"
+            >
+              {[4, 8, 12].map((valor) => (
+                <option key={valor} value={valor}>{valor} semanas</option>
+              ))}
+            </select>
+          </label>
+        </div>
 
         <div className="mt-3 grid grid-cols-2 gap-2" aria-label="Resumen del ejercicio">
           <div className="rounded-md border border-line bg-raised px-3 py-2">

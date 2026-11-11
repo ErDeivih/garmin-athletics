@@ -37,6 +37,25 @@ export function OnboardingPage({ onDone }: { onDone?: () => void }) {
         description="Lyfta lleva tus entrenamientos de fuerza del plan al reloj y de vuelta al historial."
       />
 
+      <div
+        aria-label="Flujo: planifica, envía al reloj, entrena"
+        className="mb-4 flex items-center justify-center gap-2 rounded-lg border border-line bg-raised px-2 py-3"
+      >
+        {[
+          { icono: CalendarCheck, etiqueta: 'Planifica' },
+          { icono: Send, etiqueta: 'Envía' },
+          { icono: Check, etiqueta: 'Entrena' },
+        ].map(({ icono: Icono, etiqueta }, indice) => (
+          <span key={etiqueta} className="flex items-center gap-2">
+            {indice > 0 ? <ArrowRight aria-hidden="true" className="size-4 text-ink-faint" /> : null}
+            <span className="flex flex-col items-center gap-1">
+              <Icono aria-hidden="true" className="size-5 text-accent" />
+              <span className="text-caption font-semibold text-ink">{etiqueta}</span>
+            </span>
+          </span>
+        ))}
+      </div>
+
       <div className="flex flex-col gap-3">
         {PASOS.map((paso) => {
           const Icono = paso.icono;

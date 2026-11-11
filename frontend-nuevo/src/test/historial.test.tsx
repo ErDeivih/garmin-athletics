@@ -80,8 +80,8 @@ describe('historial de sesiones', () => {
     renderApp('/gimnasio/sesiones/s-2');
 
     expect(await screen.findByRole('heading', { name: /editar pesos reales/i })).toBeInTheDocument();
-    expect(screen.getByText(/plan 65 kg × 8/i)).toBeInTheDocument();
-    expect(screen.getByText(/62,5 kg/i)).toBeInTheDocument();
-    expect(screen.getByText(/plan 60 kg × 8/i)).toBeInTheDocument();
+    expect(screen.getByText(/65 → 62,5 kg/)).toBeInTheDocument();
+    expect(screen.getAllByText(/62,5 kg/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/60 → 60 kg/)).toBeInTheDocument();
   });
 });

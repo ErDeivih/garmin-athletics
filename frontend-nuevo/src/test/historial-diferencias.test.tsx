@@ -45,9 +45,10 @@ describe('planificado frente a real con diferencias marcadas', () => {
     renderApp('/gimnasio/sesiones/s-dif');
 
     await screen.findByRole('heading', { name: /editar pesos reales/i });
-    // Serie 1: 62,5 real frente a 60 planificado → +2,5 kg marcado.
+    // Serie 1: 60 planificado → 62,5 real, con la diferencia resaltada.
+    expect(await screen.findByText(/60 → 62,5 kg/)).toBeInTheDocument();
     expect(await screen.findByText('+2,5 kg')).toBeInTheDocument();
-    // Serie 2: 62,5 frente a 62,5 → igual que el plan.
+    // Serie 2: 62,5 → 62,5 kg, igual que el plan.
     expect(screen.getByText('igual que el plan')).toBeInTheDocument();
     // Serie 3: mismo peso pero una repetición menos que el plan.
     expect(screen.getByText('-1 reps')).toBeInTheDocument();

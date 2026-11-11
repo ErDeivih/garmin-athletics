@@ -89,6 +89,11 @@ crear entrenamientos de gimnasio, llevarlos al reloj y analizar todo.
   plan / −1 reps** con color. Pruebas rojo → verde: `sesion-controles`, `historial-diferencias`,
   `sesion-enfocada`; capturas `29-biblioteca`, `30-historial-diferencias`,
   `31-sesion-controles`.
+- [x] Criterios de historial, progreso y onboarding. — 2026-11-11. Detalle en formato
+  **«60 → 62,5 kg»** con diferencia resaltada y corrección posterior; progreso con **4
+  semanas por defecto** (selector 4/8/12) y gráfico de barras; onboarding con **flujo visual
+  Planifica → Envía → Entrena** y el envío al reloj explicado. Pruebas actualizadas
+  (`historial-diferencias`, `progreso`, `onboarding`) y capturas `00`, `21`, `30` regeneradas.
 - [ ] Watch-app Connect IQ propia (después del camino A). — **en curso**: `watch/lyfta-watch/`
   diseñada, implementada y compilada para fr255 y 4 perfiles más; backend `/watch/today` y
   `/watch/sets` probado; sensor de repeticiones y estimación de fuerza añadidos. Capturas del
