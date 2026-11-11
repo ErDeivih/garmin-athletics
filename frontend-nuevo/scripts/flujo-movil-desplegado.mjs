@@ -258,6 +258,16 @@ try {
   await pagina.getByRole('heading', { name: 'Serie en curso', exact: true }).waitFor({ timeout: 20000 });
   await captura('26-sesion-enfocada', { espera: 600 });
   checks.modo_enfocado = true;
+
+  // Criterio de pantalla: cabe sin scroll a 390 × 844.
+  const scrollFoco = await pagina.evaluate(() => ({
+    alto: document.documentElement.scrollHeight,
+    ventana: window.innerHeight,
+  }));
+  checks.sin_scroll = { ...scrollFoco, cumple: scrollFoco.alto <= scrollFoco.ventana };
+  if (scrollFoco.alto > scrollFoco.ventana) {
+    throw new Error(`La pantalla de sesión hace scroll: ${JSON.stringify(checks.sin_scroll)}`);
+  }
   await pagina.getByRole('button', { name: /^serie hecha$/i }).click();
   await pagina.getByText(/registro rápido/i).waitFor({ timeout: 20000 });
   await captura('27-registro-rapido', { espera: 500 });

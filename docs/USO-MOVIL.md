@@ -40,7 +40,8 @@ pendiente»). Pasos completos y criterios de aprobado: `PENDIENTE-PRUEBA-RELOJ.m
   (útil como copia de seguridad o para pasar los planes a otro móvil).
 - En **Entrenar** puedes pulsar **«Modo enfocado»**: una sola serie a la vista, peso objetivo
   grande, **calculadora de discos** (barra y discos por lado), botón de «Serie hecha», registro
-  rápido de reps reales y RPE, y descanso con temporizador. Se maneja con una mano.
+  rápido de reps reales y RPE, y descanso con temporizador. Se maneja con una mano. Si no hay
+  cobertura, aparece **«Sin conexión: la sesión se guarda en el móvil»** y se puede seguir.
 - **Progreso** (desde Gimnasio) muestra por ejercicio y semana el volumen, las series y la
   mejor serie, con un gráfico de barras semanal.
 - **Semana** (desde Gimnasio) resume la semana en curso: volumen, sesiones, series por grupo
@@ -94,7 +95,40 @@ sin tocar la cuenta de Garmin):
 | Corregir después de entrenar | 60 → 62,5 en la serie 1, persistido en el servidor |
 | Verlo en el historial | «Últimas sesiones: 10 nov · 1420 kg · 3 series · Corregir pesos» |
 
-Capturas: `docs/capturas-movil/02` a `10`. Informe: `informe-flujo.json`.
+Capturas: `docs/capturas-movil/02` a `10` e informe `informe-flujo.json`.
+
+## Prueba de los tres pesos, paso a paso
+
+Objetivo: comprobar de una vez que un plan con **tres pesos distintos (60 / 65 / 70 kg)**
+llega bien al reloj, a la sesión, al historial y al CSV. Tarda unos 5 minutos.
+
+1. **Crea la cuenta** y entra en la app (primera vez: pulsa «Empezar» en la introducción).
+2. **Planifica**: Gimnasio → plantilla «Empuje A» → **Editar pesos** → deja la serie 1 a
+   **60 kg**, la 2 a **65 kg** y la 3 a **70 kg** (reps 8 / 8 / 6). Se guarda solo.
+3. **Entrena**: desde Gimnasio pulsa **Empezar sesión** y luego **Modo enfocado**.
+4. **Serie 1**: verifica que pone «Serie 1 de 3», «Peso objetivo 60 kg», «Anterior: …» y
+   los discos por lado; pulsa **Serie hecha**. En el registro rápido deja las reps reales y
+   el RPE si quieres, pulsa **Confirmar serie** y espera o salta el descanso.
+5. **Series 2 y 3**: repite el paso 4; deben mostrar **65 kg** y **70 kg**. Al terminar las
+   tres, escribe una nota y pulsa **Terminar y guardar**.
+6. **Corrige** (opcional, para ver la diferencia): en «Sesión terminada» → **Editar pesos
+   reales**, sube la serie 1 hasta **62,5 kg**. Debe verse
+   **«60 → 62,5 kg × 8 reps de plan»** con la etiqueta **+2,5 kg**.
+7. **Comprueba el historial**: Gimnasio → Historial → sesión; las tres series deben aparecer
+   con su plan, su real y la diferencia marcada.
+8. **Exporta**: en Historial pulsa **Exportar CSV** y abre el fichero: debe tener
+   **cabecera + 3 filas** (una por serie) con `sesion_id`, `unidad`, `peso_previsto`,
+   `peso_real` y `dif`.
+
+Notas de la prueba:
+
+- Si el móvil se queda **sin cobertura**, la sesión muestra el aviso **«Sin conexión: la
+  sesión se guarda en el móvil»** y puedes seguir entrenando; el borrador no se pierde.
+- La pantalla de modo enfocado **cabe a 390 × 844 sin scroll** y los controles miden al
+  menos **44 × 44 px** sin solaparse (medido con Chrome real; queda en
+  `docs/capturas-movil/informe-flujo.json`).
+- El único paso que necesita el reloj físico es el envío real a Garmin: hasta que se pruebe,
+  la app mantiene el aviso «Reloj real · pendiente».
 
 ## Cómo está montado el HTTPS
 

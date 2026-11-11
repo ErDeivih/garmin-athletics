@@ -128,6 +128,14 @@ crear entrenamientos de gimnasio, llevarlos al reloj y analizar todo.
   empuje con **tres pesos distintos** (60/65/70), ejecutado de punta a punta y enlazado a
   las capturas y al CSV/JSON de `docs/ejemplo-sesion/`, con los límites declarados (sin
   envío real al reloj en la instancia de verificación).
+- [x] Catálogo consultado y sesión sin conexión. — 2026-11-11. Consulta
+  `consultar.py "gestión de sesiones y temporizadores en PWA"` (5 candidatos: Termix, Holm,
+  DSCODE, RecipeSage, Lucius; ninguno de temporizadores de entreno). Ampliada con «tracker
+  offline»: **GymMane** (guardado de David) como idea transferible de entreno offline-only.
+  Incorporado: **aviso de sesión sin conexión** en lista y modo enfocado (`lib/online.ts` +
+  `SessionBanners`), y medición **sin scroll** (844 = 844 px) y **sin solapes** (24 controles
+  ≥44×44) en el flujo real. Prueba `sin-conexion-sesion`; USO-MOVIL con la **prueba de los
+  tres pesos paso a paso** (8 pasos).
 - [ ] Watch-app Connect IQ propia (después del camino A). — **en curso**: `watch/lyfta-watch/`
   diseñada, implementada y compilada para fr255 y 4 perfiles más; backend `/watch/today` y
   `/watch/sets` probado; sensor de repeticiones y estimación de fuerza añadidos. Capturas del
@@ -138,7 +146,7 @@ reloj y el análisis está completo.
 
 ## Evidencia
 
-- Frontend: 79/79 pruebas en 38 ficheros (incluye PWA, servido SPA, pesos por serie, aviso del reloj real, biblioteca con filtros/duplicado, editor rápido y edición en fila, historial, JSON de planes, unidades, onboarding, progreso, exportación CSV/JSON con unidad y sesión, resumen semanal, modo enfocado, discos, controles ±, diferencias planificado vs real, estados del envío y edición con descanso).
+- Frontend: 80/80 pruebas en 39 ficheros (incluye PWA, servido SPA, pesos por serie, aviso del reloj real, biblioteca con filtros/duplicado, editor rápido y edición en fila, historial, JSON de planes, unidades, onboarding, progreso, exportación CSV/JSON con unidad y sesión, resumen semanal, modo enfocado, discos, controles ±, diferencias planificado vs real, estados del envío, edición con descanso y aviso sin conexión).
 - Backend: 25/25 scripts (incluye perfil IMU en seco, auto-carga, watch-app, rutas, calendario recurrente, servido del frontend, corrección de pesos, biblioteca/planificado, progreso semanal, exportación del historial, acuse del reloj e integridad plan → reloj → guardado).
 - Despliegue: `deploy/verify-server.sh` en verde el 2026-11-09 — salud, rutas profundas, cabeceras del service worker y datos migrados. Captura del móvil contra la URL desplegada: `frontend-nuevo/screenshots/30-despliegue-login.png`.
 - Flujo móvil contra el despliegue: `scripts/flujo-movil-desplegado.mjs` recorre plan (60/65/70) → edición guardada en servidor → `dry_run` con `unmapped: []` → envío sin credencial (400 limpio) → 3 series → sesión guardada **con 60/65/70** (`coincide: true`); 8 capturas a 390 px e informe en `docs/capturas-movil/`, con las de antes en `antes/`.

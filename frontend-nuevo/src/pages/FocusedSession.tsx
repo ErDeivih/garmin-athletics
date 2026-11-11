@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ChevronLeft, Check, X } from 'lucide-react';
 import { Button, Card, PageHeader, SectionTitle } from '../components/ui';
+import { OfflineBanner } from '../components/SessionBanners';
 import { PlateBreakdown } from '../components/PlateBreakdown';
 import { repartirDiscos } from '../lib/discos';
 import { formatNumber } from '../lib/format';
@@ -40,6 +41,7 @@ interface Props {
   draft: FocusedDraft;
   now: number;
   unit: WeightUnit;
+  offline?: boolean;
   saving: boolean;
   finishError: string | null;
   nota: string;
@@ -78,7 +80,7 @@ function serieActual(draft: FocusedDraft): { exerciseIndex: number; setIndex: nu
 }
 
 export function FocusedSession({
-  draft, now, unit, saving, finishError, nota, onNota, onExit, onComplete, onWeight, onSkipRest, onFinish,
+  draft, now, unit, offline = false, saving, finishError, nota, onNota, onExit, onComplete, onWeight, onSkipRest, onFinish,
 }: Props) {
   const actual = serieActual(draft);
   const exercise = actual ? draft.exercises[actual.exerciseIndex]! : null;
@@ -136,6 +138,8 @@ export function FocusedSession({
           </button>
         }
       />
+
+      {offline ? <OfflineBanner compact /> : null}
 
       {actual && exercise && set ? (
         <>

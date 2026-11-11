@@ -6,8 +6,10 @@ import { useCreateSession, useLastMarks, useTemplate } from '../api/queries';
 import type { SessionDetail, SessionSetInput } from '../api/types';
 import { Badge, Button, Card, EmptyState, ErrorState, LoadingBlock, PageHeader, SectionTitle } from '../components/ui';
 import { ExerciseIllustration } from '../components/ExerciseIllustration';
+import { OfflineBanner } from '../components/SessionBanners';
 import { PlateBreakdown } from '../components/PlateBreakdown';
 import { repartirDiscos } from '../lib/discos';
+import { useOnlineStatus } from '../lib/online';
 import { FocusedSession } from './FocusedSession';
 import { formatWeight, fromKg, stepFor, toKg, useWeightUnit, type WeightUnit } from '../lib/units';
 
@@ -266,6 +268,7 @@ export function SessionPage() {
   const marks = useLastMarks(exerciseIds);
   const unit = useWeightUnit();
   const step = stepFor(unit);
+  const online = useOnlineStatus();
   const createSession = useCreateSession();
 
   const [draft, setDraft] = useState<SessionDraft | null>(null);
@@ -545,6 +548,7 @@ export function SessionPage() {
         draft={draft}
         now={now}
         unit={unit}
+        offline={!online}
         saving={createSession.isPending}
         finishError={finishError}
         nota={nota}
@@ -582,6 +586,8 @@ export function SessionPage() {
           </div>
         }
       />
+
+      {online ? null : <OfflineBanner />}
 
       {confirmDiscard ? (
         <Card className="mb-4 border-danger">

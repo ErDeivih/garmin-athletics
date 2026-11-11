@@ -1,7 +1,7 @@
 {
   "app": "http://192.168.1.139:8011",
-  "cuenta": "flujo+1794407466552@example.com",
-  "plantilla": "183e67d4-eb4f-4722-aa79-e9f3ebbd4224",
+  "cuenta": "flujo+1794409652048@example.com",
+  "plantilla": "0c212769-89b8-4885-a3fb-73dae4a78d64",
   "checks": {
     "plantilla_creada": "set_targets=60/65/70",
     "titulo": "Lyfta",
@@ -19,6 +19,11 @@
     },
     "envio_confirmado_simulado": true,
     "modo_enfocado": true,
+    "sin_scroll": {
+      "alto": 844,
+      "ventana": 844,
+      "cumple": true
+    },
     "registro_rapido": true,
     "descanso_visible": true,
     "discos": true,
@@ -41,7 +46,7 @@
       "peso_restaurado_al_volver": "61"
     },
     "sesion_guardada": {
-      "id": "7001fb44-3a04-477d-b278-059d7963dba3",
+      "id": "79f09f2e-e0b9-4310-a6d3-e93334746641",
       "series": 3,
       "pesos": [
         60,
