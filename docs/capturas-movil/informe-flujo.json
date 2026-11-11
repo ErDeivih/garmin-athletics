@@ -1,7 +1,7 @@
 {
   "app": "http://192.168.1.139:8011",
-  "cuenta": "flujo+1794394183165@example.com",
-  "plantilla": "9e465a35-c26e-45ca-bb7c-5e40ed1b38f8",
+  "cuenta": "flujo+1794396438181@example.com",
+  "plantilla": "50205c90-c1b6-450d-8219-860a6ccc50eb",
   "checks": {
     "plantilla_creada": "set_targets=60/65/70",
     "titulo": "Lyfta",
@@ -21,13 +21,14 @@
     "modo_enfocado": true,
     "registro_rapido": true,
     "discos": true,
+    "controles_sesion": true,
     "sin_conexion": {
       "borrador_guardado": true,
       "recarga_sin_red": "falla (sin HTTPS no hay service worker que sirva el shell)",
       "peso_restaurado_al_volver": "61"
     },
     "sesion_guardada": {
-      "id": "4b051c7a-fca8-416b-bb2f-f2bcecaac1e6",
+      "id": "5bb29ae4-dca6-4ed8-86df-561caad24fb6",
       "series": 3,
       "pesos": [
         60,
@@ -53,6 +54,7 @@
         70
       ]
     },
+    "diferencias_plan": true,
     "historial": true,
     "planificado_visible": true,
     "duplicado": true,
@@ -75,7 +77,7 @@
     "plantilla_desde_sesion": true,
     "exportar_historial": true,
     "resumen_semanal": true,
-    "errores_consola_esperados": 2
+    "errores_consola_esperados": 1
   },
   "capturas": [
     "01-login-movil.png",
@@ -89,13 +91,16 @@
     "26-sesion-enfocada.png",
     "27-registro-rapido.png",
     "28-discos-en-sesion.png",
+    "31-sesion-controles.png",
     "06-entrenar.png",
     "07-sesion-terminada.png",
     "08-sesion-guardada.png",
     "09-editar-tras-entrenar.png",
+    "30-historial-diferencias.png",
     "10-historial-sesion.png",
     "11-historial-completo.png",
     "12-planificado-vs-real.png",
+    "29-biblioteca.png",
     "13-biblioteca-filtros.png",
     "14-biblioteca-duplicar.png",
     "15-biblioteca-copia.png",
@@ -111,7 +116,6 @@
     "25-resumen-semanal.png"
   ],
   "erroresConsola": [
-    "Failed to load resource: the server responded with a status of 400 (Bad Request)",
     "Failed to load resource: the server responded with a status of 400 (Bad Request)"
   ],
   "resultado": "OK"

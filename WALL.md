@@ -83,6 +83,12 @@ crear entrenamientos de gimnasio, llevarlos al reloj y analizar todo.
   historial con **peso/reps previstos frente a reales** y diferencia en kg (`planned_weight_kg`
   y `planned_reps` en el export). Pruebas rojo → verde: `discos`, `exportar-historial`,
   `sesion-enfocada`; captura `28-discos-en-sesion`.
+- [x] Controles de sesión y diferencias planificado vs real. — 2026-11-11. En «Entrenar»,
+  **±2,5 kg** y **±1 rep** por serie y **«Anterior: …» bajo cada serie** (en el modo enfocado
+  también con ± peso); en el detalle del historial, cada serie marca **+2,5 kg / igual que el
+  plan / −1 reps** con color. Pruebas rojo → verde: `sesion-controles`, `historial-diferencias`,
+  `sesion-enfocada`; capturas `29-biblioteca`, `30-historial-diferencias`,
+  `31-sesion-controles`.
 - [ ] Watch-app Connect IQ propia (después del camino A). — **en curso**: `watch/lyfta-watch/`
   diseñada, implementada y compilada para fr255 y 4 perfiles más; backend `/watch/today` y
   `/watch/sets` probado; sensor de repeticiones y estimación de fuerza añadidos. Capturas del
@@ -93,13 +99,13 @@ reloj y el análisis está completo.
 
 ## Evidencia
 
-- Frontend: 73/73 pruebas en 34 ficheros (incluye PWA, servido SPA, pesos por serie, aviso del reloj real, biblioteca con filtros/duplicado, editor rápido, historial, JSON de planes, unidades, onboarding, progreso, exportación, resumen semanal, modo enfocado y discos).
+- Frontend: 75/75 pruebas en 36 ficheros (incluye PWA, servido SPA, pesos por serie, aviso del reloj real, biblioteca con filtros/duplicado, editor rápido, historial, JSON de planes, unidades, onboarding, progreso, exportación, resumen semanal, modo enfocado, discos, controles ± y diferencias planificado vs real).
 - Backend: 24/24 scripts (incluye perfil IMU en seco, auto-carga, watch-app, rutas, calendario recurrente, servido del frontend, corrección de pesos, biblioteca/planificado, progreso semanal y exportación del historial).
 - Despliegue: `deploy/verify-server.sh` en verde el 2026-11-09 — salud, rutas profundas, cabeceras del service worker y datos migrados. Captura del móvil contra la URL desplegada: `frontend-nuevo/screenshots/30-despliegue-login.png`.
 - Flujo móvil contra el despliegue: `scripts/flujo-movil-desplegado.mjs` recorre plan (60/65/70) → edición guardada en servidor → `dry_run` con `unmapped: []` → envío sin credencial (400 limpio) → 3 series → sesión guardada **con 60/65/70** (`coincide: true`); 8 capturas a 390 px e informe en `docs/capturas-movil/`, con las de antes en `antes/`.
 - Revisión de interfaz: `docs/revision-interfaz-movil.md` — inventario de las 6 pantallas del flujo, 17 capturas a 390 px, 10 problemas con evidencia y su arreglo CSS/texto, y el antes/después del arreglo de pesos por serie.
 - Regresión visual: 4/4 pantallas, 0 píxeles distintos, con la línea base regenerada por los cambios de esta tanda (editor rápido, enlace al historial y «Reloj real») en la instancia de verificación.
-- Capturas de la tanda de producto: `docs/capturas-movil/11`–`17` (historial, planificado vs real, biblioteca con filtros, duplicar, copia, editor rápido y aplicado), `00`, `18`–`20` (onboarding, JSON de planes, ajustes y unidades en lb), `21`–`25` (progreso, aplicar a un día, sesión como plantilla, exportar historial y resumen semanal), `26`–`27` (modo enfocado y registro rápido) y `28` (calculadora de discos), a 390 × 844.
+- Capturas de la tanda de producto: `docs/capturas-movil/11`–`17` (historial, planificado vs real, biblioteca con filtros, duplicar, copia, editor rápido y aplicado), `00`, `18`–`20` (onboarding, JSON de planes, ajustes y unidades en lb), `21`–`25` (progreso, aplicar a un día, sesión como plantilla, exportar historial y resumen semanal), `26`–`28` (modo enfocado, registro rápido y discos) y `29`–`31` (biblioteca, diferencias planificado vs real y controles de sesión), a 390 × 844.
 - Instalación PWA verificada: ventana de aplicación (`display-mode: standalone`, sin barra
   del navegador) con service worker controlando y **arranque sin cobertura**
   (`onLine: false`, `transferSize: 0`, `workerStart > 0`). Informe

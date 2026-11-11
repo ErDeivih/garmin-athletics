@@ -23,7 +23,7 @@ describe('registrar una sesión de gimnasio', () => {
     const first = renderApp('/gimnasio/entrenar?template=t-1');
 
     expect(await screen.findByRole('heading', { name: 'Entrenar' })).toBeInTheDocument();
-    expect(await screen.findByText(/anterior: 82,5 kg × 6/i)).toBeInTheDocument();
+    expect((await screen.findAllByText(/anterior: 82,5 kg × 6/i)).length).toBeGreaterThan(0);
     expect(screen.getByLabelText(/peso serie 1 de press de banca/i)).toHaveValue('82.5');
 
     await user.click(screen.getByRole('checkbox', { name: /serie 1 de press de banca/i }));

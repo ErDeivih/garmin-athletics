@@ -9,7 +9,7 @@ import { ExerciseIllustration } from '../components/ExerciseIllustration';
 import { PlateBreakdown } from '../components/PlateBreakdown';
 import { repartirDiscos } from '../lib/discos';
 import { FocusedSession } from './FocusedSession';
-import { formatWeight, fromKg, toKg, useWeightUnit, type WeightUnit } from '../lib/units';
+import { formatWeight, fromKg, stepFor, toKg, useWeightUnit, type WeightUnit } from '../lib/units';
 
 interface DraftSet {
   weight: string;
@@ -258,6 +258,7 @@ export function SessionPage() {
   );
   const marks = useLastMarks(exerciseIds);
   const unit = useWeightUnit();
+  const step = stepFor(unit);
   const createSession = useCreateSession();
 
   const [draft, setDraft] = useState<SessionDraft | null>(null);
@@ -336,6 +337,54 @@ export function SessionPage() {
         };
       });
       return { ...current, exercises };
+    });
+  };
+
+  /** ± peso de una serie, en la unidad elegida (2,5 kg o 5 lb por toque). */
+  const changeWeight = (exerciseIndex: number, setIndex: number, delta: number) => {
+    setDraft((current) => {
+      if (!current) return current;
+      const exercise = current.exercises[exerciseIndex];
+      const item = exercise?.sets[setIndex];
+      if (!exercise || !item) return current;
+      const siguiente = Math.max(0, toNumber(item.weight) + delta);
+      return {
+        ...current,
+        exercises: current.exercises.map((entry, index) =>
+          index === exerciseIndex
+            ? {
+                ...entry,
+                sets: entry.sets.map((set, indexSet) =>
+                  indexSet === setIndex ? { ...set, weight: String(Number(siguiente.toFixed(2))) } : set,
+                ),
+              }
+            : entry,
+        ),
+      };
+    });
+  };
+
+  /** ± una repetición de una serie. */
+  const changeReps = (exerciseIndex: number, setIndex: number, delta: number) => {
+    setDraft((current) => {
+      if (!current) return current;
+      const exercise = current.exercises[exerciseIndex];
+      const item = exercise?.sets[setIndex];
+      if (!exercise || !item) return current;
+      const siguiente = Math.max(0, Math.round(toNumber(item.reps) + delta));
+      return {
+        ...current,
+        exercises: current.exercises.map((entry, index) =>
+          index === exerciseIndex
+            ? {
+                ...entry,
+                sets: entry.sets.map((set, indexSet) =>
+                  indexSet === setIndex ? { ...set, reps: String(siguiente) } : set,
+                ),
+              }
+            : entry,
+        ),
+      };
     });
   };
 
@@ -495,6 +544,7 @@ export function SessionPage() {
         onNota={setNota}
         onExit={() => setFocused(false)}
         onComplete={completeSet}
+        onWeight={(exerciseIndex, setIndex, weight) => updateSet(exerciseIndex, setIndex, { weight })}
         onSkipRest={skipRest}
         onFinish={finish}
       />
@@ -579,63 +629,98 @@ export function SessionPage() {
               <div className="mb-3">
                 <ExerciseIllustration name={exercise.name} muscleGroup={exercise.muscleGroup} compact />
               </div>
-              <div className="grid grid-cols-[2.5rem_1fr_1fr_3.4rem_2.75rem] items-end gap-2 text-caption text-ink-muted">
-                <span>Serie</span>
-                <span>Peso (kg)</span>
-                <span>Reps</span>
-                <span>Esfuerzo</span>
-                <span className="text-right">Hecha</span>
-              </div>
-              <ul className="mt-1 flex flex-col gap-1">
+              <p className="mb-1 text-caption text-ink-muted">
+                Peso ({unit}) y reps con −/+ · «Hecha» al terminar cada serie
+              </p>
+              <ul className="mt-1 flex flex-col gap-2">
                 {exercise.sets.map((item, setIndex) => (
                   <li
                     key={`${exercise.exerciseId}-${setIndex}`}
-                    className={`grid min-w-0 grid-cols-[2.25rem_1fr_1fr_3rem_2.75rem] items-center gap-2 rounded-sm px-1 py-1 ${
-                      item.done ? 'bg-accent-soft/40' : ''
-                    }`}
+                    className={`rounded-md px-1 py-1 ${item.done ? 'bg-accent-soft/40' : ''}`}
                   >
-                    <span className="tnum text-caption text-ink-muted">{setIndex + 1}</span>
-                    <input
-                      aria-label={`Peso serie ${setIndex + 1} de ${exercise.name}`}
-                      inputMode="decimal"
-                      className="focus-ring min-h-11 w-full min-w-0 rounded-md border border-line-strong bg-raised px-2 text-right text-body text-ink"
-                      value={item.weight}
-                      onChange={(event) => updateSet(exerciseIndex, setIndex, { weight: event.target.value })}
-                    />
-                    <input
-                      aria-label={`Reps serie ${setIndex + 1} de ${exercise.name}`}
-                      inputMode="numeric"
-                      className="focus-ring min-h-11 w-full min-w-0 rounded-md border border-line-strong bg-raised px-2 text-right text-body text-ink"
-                      value={item.reps}
-                      onChange={(event) => updateSet(exerciseIndex, setIndex, { reps: event.target.value })}
-                    />
-                    <select
-                      aria-label={`Esfuerzo serie ${setIndex + 1} de ${exercise.name}`}
-                      className="focus-ring min-h-11 w-full min-w-0 rounded-md border border-line-strong bg-raised px-1 text-body text-ink"
-                      value={item.rpe}
-                      onChange={(event) => updateSet(exerciseIndex, setIndex, { rpe: event.target.value })}
-                    >
-                      <option value="">—</option>
-                      {[6, 7, 8, 9, 10].map((value) => (
-                        <option key={value} value={String(value)}>
-                          {value}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      role="checkbox"
-                      aria-checked={item.done}
-                      aria-label={`Serie ${setIndex + 1} de ${exercise.name}`}
-                      onClick={() => toggleSet(exerciseIndex, setIndex)}
-                      className={`focus-ring grid size-11 place-items-center rounded-md border ${
-                        item.done
-                          ? 'border-success bg-success text-on-accent'
-                          : 'border-line-strong bg-raised text-ink-muted'
-                      }`}
-                    >
-                      {item.done ? <Check aria-hidden="true" className="size-5" /> : <span aria-hidden="true" className="size-5" />}
-                    </button>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="tnum w-5 text-caption text-ink-muted">{setIndex + 1}</span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          aria-label={`Restar ${step} ${unit} a la serie ${setIndex + 1} de ${exercise.name}`}
+                          onClick={() => changeWeight(exerciseIndex, setIndex, -step)}
+                          className="focus-ring grid size-9 place-items-center rounded-md border border-line-strong text-title text-ink"
+                        >
+                          −
+                        </button>
+                        <input
+                          aria-label={`Peso serie ${setIndex + 1} de ${exercise.name}`}
+                          inputMode="decimal"
+                          className="focus-ring min-h-11 w-16 rounded-md border border-line-strong bg-raised px-2 text-right text-body text-ink"
+                          value={item.weight}
+                          onChange={(event) => updateSet(exerciseIndex, setIndex, { weight: event.target.value })}
+                        />
+                        <button
+                          type="button"
+                          aria-label={`Sumar ${step} ${unit} a la serie ${setIndex + 1} de ${exercise.name}`}
+                          onClick={() => changeWeight(exerciseIndex, setIndex, step)}
+                          className="focus-ring grid size-9 place-items-center rounded-md border border-line-strong text-title text-ink"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          aria-label={`Quitar una repetición a la serie ${setIndex + 1} de ${exercise.name}`}
+                          onClick={() => changeReps(exerciseIndex, setIndex, -1)}
+                          className="focus-ring grid size-9 place-items-center rounded-md border border-line-strong text-title text-ink"
+                        >
+                          −
+                        </button>
+                        <input
+                          aria-label={`Reps serie ${setIndex + 1} de ${exercise.name}`}
+                          inputMode="numeric"
+                          className="focus-ring min-h-11 w-12 rounded-md border border-line-strong bg-raised px-1 text-center text-body text-ink"
+                          value={item.reps}
+                          onChange={(event) => updateSet(exerciseIndex, setIndex, { reps: event.target.value })}
+                        />
+                        <button
+                          type="button"
+                          aria-label={`Añadir una repetición a la serie ${setIndex + 1} de ${exercise.name}`}
+                          onClick={() => changeReps(exerciseIndex, setIndex, 1)}
+                          className="focus-ring grid size-9 place-items-center rounded-md border border-line-strong text-title text-ink"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <select
+                        aria-label={`Esfuerzo serie ${setIndex + 1} de ${exercise.name}`}
+                        className="focus-ring min-h-11 w-14 rounded-md border border-line-strong bg-raised px-1 text-body text-ink"
+                        value={item.rpe}
+                        onChange={(event) => updateSet(exerciseIndex, setIndex, { rpe: event.target.value })}
+                      >
+                        <option value="">—</option>
+                        {[6, 7, 8, 9, 10].map((value) => (
+                          <option key={value} value={String(value)}>
+                            {value}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        role="checkbox"
+                        aria-checked={item.done}
+                        aria-label={`Serie ${setIndex + 1} de ${exercise.name}`}
+                        onClick={() => toggleSet(exerciseIndex, setIndex)}
+                        className={`focus-ring grid size-10 place-items-center rounded-md border ${
+                          item.done
+                            ? 'border-success bg-success text-on-accent'
+                            : 'border-line-strong bg-raised text-ink-muted'
+                        }`}
+                      >
+                        {item.done ? <Check aria-hidden="true" className="size-5" /> : <span aria-hidden="true" className="size-5" />}
+                      </button>
+                    </div>
+                    {exercise.previous ? (
+                      <p className="pl-6 text-caption text-ink-faint">{exercise.previous}</p>
+                    ) : null}
                   </li>
                 ))}
               </ul>

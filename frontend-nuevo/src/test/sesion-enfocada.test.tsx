@@ -82,6 +82,12 @@ describe('modo enfocado en el gimnasio', () => {
     expect(screen.getByText(/discos:/i)).toBeInTheDocument();
     expect(screen.getByText(/20 por lado/i)).toBeInTheDocument();
 
+    // ±2,5 kg en el propio modo enfocado.
+    await user.click(screen.getByRole('button', { name: /subir peso objetivo/i }));
+    expect(screen.getByText('62,5 kg')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /bajar peso objetivo/i }));
+    expect(screen.getByText('60 kg')).toBeInTheDocument();
+
     // Registro rápido: reps reales (7 en vez de 8) y RPE opcional.
     await user.click(screen.getByRole('button', { name: /^serie hecha$/i }));
     const reps = await screen.findByLabelText(/repeticiones reales/i);

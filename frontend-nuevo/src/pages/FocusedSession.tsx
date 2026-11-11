@@ -4,7 +4,7 @@ import { Button, Card, PageHeader, SectionTitle } from '../components/ui';
 import { PlateBreakdown } from '../components/PlateBreakdown';
 import { repartirDiscos } from '../lib/discos';
 import { formatNumber } from '../lib/format';
-import { formatWeight, toKg, type WeightUnit } from '../lib/units';
+import { formatWeight, stepFor, toKg, type WeightUnit } from '../lib/units';
 
 /**
  * Modo enfocado para el gimnasio: una sola serie a la vista, botón grande de
@@ -46,6 +46,7 @@ interface Props {
   onNota: (nota: string) => void;
   onExit: () => void;
   onComplete: (exerciseIndex: number, setIndex: number, patch: Partial<FocusedDraftSet>) => void;
+  onWeight: (exerciseIndex: number, setIndex: number, weight: string) => void;
   onSkipRest: () => void;
   onFinish: () => void;
 }
@@ -77,7 +78,7 @@ function serieActual(draft: FocusedDraft): { exerciseIndex: number; setIndex: nu
 }
 
 export function FocusedSession({
-  draft, now, unit, saving, finishError, nota, onNota, onExit, onComplete, onSkipRest, onFinish,
+  draft, now, unit, saving, finishError, nota, onNota, onExit, onComplete, onWeight, onSkipRest, onFinish,
 }: Props) {
   const actual = serieActual(draft);
   const exercise = actual ? draft.exercises[actual.exerciseIndex]! : null;
@@ -154,6 +155,33 @@ export function FocusedSession({
               <span className="tnum font-display text-display text-ink">
                 {formatWeight(numero(set.weight), unit)}
               </span>
+              <div className="mt-2 flex items-center justify-center gap-3">
+                <button
+                  type="button"
+                  aria-label="Bajar peso objetivo"
+                  onClick={() => onWeight(
+                    actual.exerciseIndex,
+                    actual.setIndex,
+                    String(Number((numero(set.weight) - stepFor(unit)).toFixed(2))),
+                  )}
+                  className="focus-ring grid size-11 place-items-center rounded-md border border-line-strong text-title text-ink"
+                >
+                  −
+                </button>
+                <span className="text-caption text-ink-faint">{stepFor(unit)} {unit}</span>
+                <button
+                  type="button"
+                  aria-label="Subir peso objetivo"
+                  onClick={() => onWeight(
+                    actual.exerciseIndex,
+                    actual.setIndex,
+                    String(Number((numero(set.weight) + stepFor(unit)).toFixed(2))),
+                  )}
+                  className="focus-ring grid size-11 place-items-center rounded-md border border-line-strong text-title text-ink"
+                >
+                  +
+                </button>
+              </div>
               <span className="mt-1 block text-body text-ink-muted">× {set.reps} reps</span>
               <PlateBreakdown reparto={repartirDiscos(toKg(numero(set.weight), unit))} />
             </div>

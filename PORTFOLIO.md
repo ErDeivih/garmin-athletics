@@ -70,7 +70,8 @@ Todas están tomadas a 390 × 844 (viewport real de móvil) contra la app desple
 | **Sesión → plantilla** — guardar lo entrenado como plantilla. [23-guardar-plantilla.png](docs/capturas-movil/23-guardar-plantilla.png) | **Exportar historial** — CSV o JSON desde la lista de sesiones. [24-exportar-historial.png](docs/capturas-movil/24-exportar-historial.png) |
 | **Resumen semanal** — volumen, series por grupo y adherencia al plan. [25-resumen-semanal.png](docs/capturas-movil/25-resumen-semanal.png) | |
 | **Modo enfocado** — serie actual, peso objetivo y botón grande. [26-sesion-enfocada.png](docs/capturas-movil/26-sesion-enfocada.png) | **Registro rápido** — reps reales y RPE opcional por serie. [27-registro-rapido.png](docs/capturas-movil/27-registro-rapido.png) |
-| **Calculadora de discos** — barra y discos por lado. [28-discos-en-sesion.png](docs/capturas-movil/28-discos-en-sesion.png) | |
+| **Calculadora de discos** — barra y discos por lado. [28-discos-en-sesion.png](docs/capturas-movil/28-discos-en-sesion.png) | **Biblioteca** — nombre, búsqueda, foco y fechas. [29-biblioteca.png](docs/capturas-movil/29-biblioteca.png) |
+| **Planificado vs real** — diferencias marcadas por serie. [30-historial-diferencias.png](docs/capturas-movil/30-historial-diferencias.png) | **Controles de sesión** — ±2,5 kg, ±1 rep y «anterior» por serie. [31-sesion-controles.png](docs/capturas-movil/31-sesion-controles.png) |
 
 Los datos de las capturas son de una ejecución real contra el despliegue (copia
 desechable de la base, sin tocar la cuenta de Garmin). Informe:
@@ -80,7 +81,7 @@ desechable de la base, sin tocar la cuenta de Garmin). Informe:
 
 | Suite | Resultado |
 |---|---|
-| Frontend (Vitest + Testing Library) | **73/73 pruebas en 34 ficheros** |
+| Frontend (Vitest + Testing Library) | **75/75 pruebas en 36 ficheros** |
 | Backend (guiones de contrato con TestClient) | **24/24**, base SQLite efímera |
 | Regresión visual (Playwright + pixelmatch) | **4/4 pantallas, 0 píxeles** distintos |
 | PWA instalada (Chrome, ventana `--app`) | `display-mode: standalone`, service worker controlando, **arranque sin cobertura** (`onLine: false`, `transferSize: 0`, `workerStart > 0`) |

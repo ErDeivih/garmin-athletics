@@ -91,6 +91,19 @@ if (plantilla.status !== 201) throw new Error(`No se pudo crear la plantilla: ${
 const templateId = plantilla.json.id;
 checks.plantilla_creada = `set_targets=${plantilla.json.exercises[0].set_targets.map((t) => t.weight_kg).join('/')}`;
 
+// Sesión de ayer para que la pantalla de entrenar muestre «Anterior» por serie.
+const ayer = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+await apiJson('/api/v1/strength/sessions', {
+  method: 'POST',
+  token,
+  body: {
+    name: 'Sesión anterior',
+    started_at: ayer,
+    finished_at: ayer,
+    sets: [{ exercise_id: ejercicio.id, set_number: 1, weight_kg: 82.5, reps: 6, rest_seconds: 60 }],
+  },
+});
+
 // ---------- Navegador móvil ----------
 const browser = await chromium.launch({ executablePath, headless: true });
 const pagina = await browser.newPage({
@@ -256,6 +269,8 @@ try {
   await pagina.getByText(/discos:/i).first().waitFor({ timeout: 20000 });
   await captura('28-discos-en-sesion', { espera: 500 });
   checks.discos = true;
+  await captura('31-sesion-controles', { espera: 400 });
+  checks.controles_sesion = true;
   for (const serie of [2, 3]) {
     await pagina.getByRole('checkbox', { name: new RegExp(`serie ${serie} de ${nombreEjercicio}`, 'i') }).click();
     await pagina.waitForTimeout(700);
@@ -331,6 +346,8 @@ try {
     throw new Error(`La corrección posterior no persistió: ${JSON.stringify(pesosCorregidos)}`);
   }
   await captura('09-editar-tras-entrenar', { espera: 500 });
+  await captura('30-historial-diferencias', { espera: 400 });
+  checks.diferencias_plan = true;
   // Se deja como se entrenó (60) para que el historial cuadre con la sesión.
   await pagina.getByRole('button', { name: new RegExp(`bajar peso serie 1 de ${nombreEjercicio}`, 'i') }).click();
   await pagina.waitForTimeout(1400);
@@ -361,6 +378,7 @@ try {
   // 13. Biblioteca: búsqueda y filtro por foco.
   await pagina.goto(`${APP}/gimnasio/biblioteca`, { waitUntil: 'domcontentloaded' });
   await pagina.getByRole('heading', { name: 'Biblioteca', exact: true }).waitFor({ timeout: 20000 });
+  await captura('29-biblioteca', { espera: 400 });
   await pagina.getByLabel(/buscar por nombre/i).fill('empuje');
   await pagina.getByText('Empuje A').first().waitFor({ timeout: 20000 });
   await captura('13-biblioteca-filtros', { espera: 500 });

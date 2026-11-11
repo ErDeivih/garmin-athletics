@@ -180,6 +180,21 @@ export function SessionEditPage() {
                     {item.planned_reps != null ? ` × ${item.planned_reps}` : ''}
                   </span>
                 ) : null}
+                {item.planned_weight_kg != null ? (() => {
+                  const diferencia = Number((item.weight_kg - item.planned_weight_kg).toFixed(2));
+                  const repsDiferencia = item.planned_reps == null ? 0 : item.reps - item.planned_reps;
+                  if (diferencia === 0 && repsDiferencia === 0) {
+                    return <span className="ml-2 whitespace-nowrap rounded-sm border border-line px-1.5 py-0.5 text-caption text-ink-muted">igual que el plan</span>;
+                  }
+                  return (
+                    <span className={`ml-2 whitespace-nowrap rounded-sm border px-1.5 py-0.5 text-caption ${
+                      diferencia > 0 ? 'border-success text-success' : 'border-danger text-danger'
+                    }`}>
+                      {diferencia === 0 ? '' : `${diferencia > 0 ? '+' : ''}${formatWeight(diferencia, unit)}`}
+                      {repsDiferencia !== 0 ? ` ${repsDiferencia > 0 ? '+' : ''}${repsDiferencia} reps` : ''}
+                    </span>
+                  );
+                })() : null}
                 {item.needs_review ? (
                   <span className="ml-2 rounded-sm border border-warning px-1.5 py-0.5 text-caption text-warning">
                     Revisar
